@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+test {
+    failFast = false
+    useJUnitPlatform {
+        includeEngines("junit-jupiter")
+    }
+
+}
+
+
+
+
