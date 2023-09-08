@@ -1,4 +1,4 @@
 # AWS Java Toolkit
 
-## Libraries for testing code using AWS Services
+## Java libraries for abstracting basic actions in AWS
 
