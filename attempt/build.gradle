@@ -1,0 +1,15 @@
+plugins {
+    id 'com.github.awsjavakit.java-library-conventions'
+    id 'com.github.awsjavakit.publishing'
+}
+
+
+dependencies {
+
+    implementation libs.bundles.json
+    implementation libs.bundles.logging
+    testImplementation project(":testingutils")
+    testImplementation libs.bundles.testing
+
+
+}
