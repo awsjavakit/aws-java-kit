@@ -1,4 +1,4 @@
-name: build-and-validate
+name: publish
 
 on:
   pull_request:
@@ -27,4 +27,3 @@ jobs:
           ORG_GRADLE_PROJECT_publish_packages_username: ${{ github.actor }}
           ORG_GRADLE_PROJECT_publish_packages_token: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew publish
-
