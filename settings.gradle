@@ -5,3 +5,4 @@ plugins {
 
 rootProject.name = 'aws-java-kit'
 include('apigateway')
+include('testingutils')

@@ -1,7 +1,8 @@
-package com.github.awsjavakit.apigateway;
+package com.github.awsjavakit.testingutils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.apigateway.ApiGatewayEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;

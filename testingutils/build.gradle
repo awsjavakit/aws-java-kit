@@ -6,12 +6,10 @@ plugins {
 
 dependencies {
 
-    implementation libs.lambda.core
+
+    compileOnly project(":apigateway")
     implementation libs.aws.apigateway
     implementation libs.bundles.json
-
-
-    testImplementation project(":testingutils")
     testImplementation libs.bundles.testing
 
 
