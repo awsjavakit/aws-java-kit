@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class ApiGatewayRequestBuilder {
+
   private final ObjectMapper objectMapper;
   private final ApiGatewayEvent event;
 

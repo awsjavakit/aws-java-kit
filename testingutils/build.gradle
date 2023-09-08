@@ -1,0 +1,17 @@
+plugins {
+    id 'com.github.awsjavakit.java-library-conventions'
+    id 'com.github.awsjavakit.publishing'
+}
+
+
+dependencies {
+
+
+    compileOnly project(":apigateway")
+    implementation libs.aws.apigateway
+    implementation libs.bundles.json
+    testImplementation libs.bundles.testing
+
+
+
+}
