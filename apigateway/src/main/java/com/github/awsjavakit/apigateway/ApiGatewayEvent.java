@@ -1,7 +1,10 @@
 package com.github.awsjavakit.apigateway;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ApiGatewayEvent {
 
@@ -14,11 +17,17 @@ public class ApiGatewayEvent {
   @JsonProperty("httpMethod")
   private HttpMethod httpMethod;
   @JsonProperty("isBase64Encoded")
-  private Boolean isBase64Encoded;
+  private Boolean base64Encoded;
   @JsonProperty("queryStringParameters")
   private Map<String, String> queryParameters;
   @JsonProperty("pathParameters")
   private Map<String, String> pathParameters;
+
+  private final Map<String, Object> otherFields;
+
+  public ApiGatewayEvent() {
+    this.otherFields = new ConcurrentHashMap<>();
+  }
 
   public String getBody() {
     return body;
@@ -53,11 +62,11 @@ public class ApiGatewayEvent {
   }
 
   public Boolean getBase64Encoded() {
-    return isBase64Encoded;
+    return base64Encoded;
   }
 
   public void setBase64Encoded(Boolean base64Encoded) {
-    isBase64Encoded = base64Encoded;
+    this.base64Encoded = base64Encoded;
   }
 
   public Map<String, String> getQueryParameters() {
@@ -74,5 +83,15 @@ public class ApiGatewayEvent {
 
   public void setPathParameters(Map<String, String> pathParameters) {
     this.pathParameters = pathParameters;
+  }
+
+  @JsonAnySetter
+  public void setOtherField(String key, Object value) {
+    this.otherFields.put(key, value);
+  }
+
+  @JsonAnyGetter
+  public Map<String, Object> getOtherField() {
+    return this.otherFields;
   }
 }
