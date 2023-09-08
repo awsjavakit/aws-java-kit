@@ -5,13 +5,9 @@ plugins {
 
 
 dependencies {
-
-
     compileOnly project(":apigateway")
     implementation libs.aws.apigateway
     implementation libs.bundles.json
     testImplementation libs.bundles.testing
-
-
 
 }
