@@ -4,4 +4,4 @@ plugins {
 }
 
 rootProject.name = 'aws-java-kit'
-include('greetings')
+include('apigateway')
