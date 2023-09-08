@@ -1,0 +1,21 @@
+name: build-and-validate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pr-build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: java-setup
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build

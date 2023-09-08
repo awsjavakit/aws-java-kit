@@ -1,5 +1,7 @@
 plugins {
-    id 'conventions.java-conventions'
+    id 'com.github.awsjavakit.java-common-conventions'
+    id 'com.github.awsjavakit.publishing'
+
 }
 
 

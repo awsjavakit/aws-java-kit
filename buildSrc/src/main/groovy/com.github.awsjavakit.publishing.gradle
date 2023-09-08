@@ -1,0 +1,85 @@
+plugins {
+    id 'maven-publish'
+    id 'signing'
+}
+
+
+group = 'com.github.awsjavakit'
+version = '0.0.1'
+
+java {
+    withSourcesJar()
+}
+
+
+publishing {
+    System.out.println(project.property('publish_packages_token'))
+    repositories {
+        maven {
+            name = "GithubPackages"
+            url = uri("https://maven.pkg.github.com/awsjavakit/aws-java-kit")
+            credentials {
+                username = project.property('publish_packages_username')
+                password = project.property('publish_packages_token')
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = project.name
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = project.name
+                description = 'AWS Java kit'
+                url = 'https://github.com/awsjavakit/aws-java-kit'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://github.com/awsjavakit/aws-java-kit'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'axthosarouris'
+                        name = 'Orestis Gkorgkas'
+                        email = 'orestis.gorgas@gmail.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/awsjavakit/aws-java-kit.git'
+                    developerConnection = 'scm:git:git://github.com/awsjavakit/aws-java-kit.git'
+                    url = "https://github.com/awsjavakit-media/aws-java-kit"
+                }
+            }
+        }
+    }
+
+}
+
+static def should_sign_release() {
+    return false
+}
+
+signing {
+    if (should_sign_release()) {
+        def signingKey = findProperty("signingKey")
+        def signingPassword = findProperty("signingPassword")
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign publishing.publications.mavenJava
+    }
+
+}
+
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
