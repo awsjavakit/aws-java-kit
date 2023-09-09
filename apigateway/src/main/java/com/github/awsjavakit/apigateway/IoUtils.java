@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public final class IoUtils {
 
   private IoUtils() {
-
+    // NO-OP
   }
 
   public static String stringFromResources(Path resourcePath) {

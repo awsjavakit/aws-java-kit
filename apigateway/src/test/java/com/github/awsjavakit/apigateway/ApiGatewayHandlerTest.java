@@ -23,6 +23,7 @@ public class ApiGatewayHandlerTest {
   public static final int ARBITRARY_CEILING = 120;
   private static final int MIN_RANDOM_STRING_LENGTH = 10;
   private static final int MAX_RANDOM_STRING_LENGTH = 20;
+  private static final Map<String, String> CONTENT_TYPE_APPLICATION_JSON = Map.of("Content-Type", "application/json");
   private ObjectMapper objectMapper;
   private ByteArrayOutputStream outputStream;
 
@@ -37,7 +38,7 @@ public class ApiGatewayHandlerTest {
   }
 
   @Test
-  public void shouldParseRequestBody() throws IOException {
+  void shouldParseRequestBody() throws IOException {
     var handler = new DemoHandler(objectMapper);
     var sampleInput = new SampleInput(randomString(), 1900 + randomInteger());
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
@@ -55,8 +56,8 @@ public class ApiGatewayHandlerTest {
   }
 
   private SampleOutput parseResponse() {
-    var reseponse = GatewayResponse.fromOutputStream(outputStream, objectMapper);
-    return reseponse.getBody(objectMapper, SampleOutput.class);
+    var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
+    return response.getBody(objectMapper, SampleOutput.class);
   }
 
   private int calculateAge(int birthYear) {
@@ -74,15 +75,14 @@ public class ApiGatewayHandlerTest {
     }
 
     @Override
-    public SampleOutput processInput(SampleInput input, ApiGatewayEvent apiGatewayEvent,
-      Context context) {
+    public SampleOutput processInput(SampleInput input, ApiGatewayEvent apiGatewayEvent, Context context) {
       var currentYear = Calendar.getInstance().get(YEAR);
       return new SampleOutput(input.name(), currentYear - input.birthYear());
     }
 
     @Override
     protected Map<String, String> getSuccessHeaders() {
-      return Map.of("Content-Type", "application/json");
+      return CONTENT_TYPE_APPLICATION_JSON;
     }
 
     @Override
@@ -90,5 +90,4 @@ public class ApiGatewayHandlerTest {
       return HttpURLConnection.HTTP_OK;
     }
   }
-
 }

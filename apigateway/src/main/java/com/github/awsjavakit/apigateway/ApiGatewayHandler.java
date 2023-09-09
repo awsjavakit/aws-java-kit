@@ -72,5 +72,4 @@ public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
   private boolean inputIsStringAndExpectedInputIsString(JsonNode json) {
     return iClass.equals(String.class) && json.isTextual();
   }
-
 }

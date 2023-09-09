@@ -10,18 +10,16 @@ import org.junit.jupiter.api.Test;
 class ApiGatewayEventTest {
 
   public static final ObjectMapper JSON = new ObjectMapper();
+  public static final String SAMPLE_APIGATEWAY_EVENT = IoUtils.
+          stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
 
   @Test
   void shouldParseApiGatewayEventVersion1() throws JsonProcessingException {
-    var sampleEventString = IoUtils.
-      stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
-    var json = JSON.readTree(sampleEventString);
-    var parsedEvent = JSON.readValue(sampleEventString, ApiGatewayEvent.class);
+    var json = JSON.readTree(SAMPLE_APIGATEWAY_EVENT);
+    var parsedEvent = JSON.readValue(SAMPLE_APIGATEWAY_EVENT, ApiGatewayEvent.class);
     var reserializedEvent = JSON.writeValueAsString(parsedEvent);
     var asJsonAgain = JSON.readTree(reserializedEvent);
 
     assertThat(asJsonAgain).isEqualTo(json);
-
   }
-
 }
