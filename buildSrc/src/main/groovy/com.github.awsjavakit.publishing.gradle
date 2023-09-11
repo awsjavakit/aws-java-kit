@@ -12,6 +12,10 @@ java {
     withJavadocJar()
 }
 
+javadoc {
+    options.addBooleanOption('Xdoclint:none', true)
+}
+
 
 publishing {
     System.out.println(project.property('publish_packages_token'))

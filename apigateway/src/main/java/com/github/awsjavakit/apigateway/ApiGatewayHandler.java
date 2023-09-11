@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.bodyparsing.BodyParser;
+import com.github.awsjavakit.apigateway.exception.ApiGatewayException;
 import com.github.awsjavakit.apigateway.responses.ResponseProvider;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,7 +17,7 @@ import java.io.OutputStreamWriter;
 public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
 
   private final ObjectMapper objectMapper;
-  private final ResponseProvider responseProvider;
+  private final ResponseProvider successResponseProvider;
   private final BodyParser<I> bodyParser;
 
   protected ApiGatewayHandler(Class<I> iClass, ObjectMapper objectMapper) {
@@ -31,30 +32,47 @@ public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
     ResponseProvider responseProvider,
     BodyParser<I> bodyParser) {
     this.objectMapper = objectMapper;
-    this.responseProvider = responseProvider;
+    this.successResponseProvider = responseProvider;
     this.bodyParser = bodyParser;
   }
 
   @Override
   public void handleRequest(InputStream input, OutputStream output, Context context)
     throws IOException {
+    try {
+      var inputString = inputStreamToString(input);
+      var apiGatewayEvent = objectMapper.readValue(inputString, ApiGatewayEvent.class);
+      var body = apiGatewayEvent.getBody();
+      var parsedBody = parseBody(body);
+      var o = processInput(parsedBody, apiGatewayEvent, context);
+      writeSuccess(o, output);
+    } catch (ApiGatewayException expectedException) {
+      writeFailure(output, expectedException);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
 
-    var inputString = inputStreamToString(input);
-    var apiGatewayEvent = objectMapper.readValue(inputString, ApiGatewayEvent.class);
-    var body = apiGatewayEvent.getBody();
-    var parsedBody = parseBody(body);
-    var o = processInput(parsedBody, apiGatewayEvent, context);
-    writeSuccess(o, output);
   }
 
-  public abstract O processInput(I body, ApiGatewayEvent apiGatewayEvent, Context context);
+  public abstract O processInput(I body, ApiGatewayEvent apiGatewayEvent, Context context)
+    throws ApiGatewayException;
+
+  private void writeFailure(OutputStream outputStream, ApiGatewayException expectedException)
+    throws IOException {
+    write(outputStream, expectedException.message(), expectedException);
+  }
 
   private void writeSuccess(O o, OutputStream outputStream) throws IOException {
+    write(outputStream, o, successResponseProvider);
+  }
+
+  private <ResponseBody> void write(OutputStream outputStream,
+    ResponseBody responseBody, ResponseProvider responseProvider) throws IOException {
     try (var writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       var gateWayResponse =
-        GatewayResponse.create(o,
+        GatewayResponse.create(responseBody,
           responseProvider.statusCode(),
-          responseProvider.successHeaders(),
+          responseProvider.headers(),
           objectMapper);
       writer.write(gateWayResponse.toJsonString());
     }
