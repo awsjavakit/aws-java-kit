@@ -9,7 +9,7 @@ dependencies {
     implementation libs.lambda.core
     implementation libs.aws.apigateway
     implementation libs.bundles.json
-
+    implementation project(":attempt")
 
     testImplementation project(":testingutils")
     testImplementation libs.bundles.testing

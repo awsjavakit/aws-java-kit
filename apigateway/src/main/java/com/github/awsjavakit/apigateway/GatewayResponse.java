@@ -1,5 +1,7 @@
 package com.github.awsjavakit.apigateway;
 
+import static com.gtihub.awsjavakit.attempt.Try.attempt;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -76,11 +78,7 @@ public class GatewayResponse {
   }
 
   public <I> I getBody(ObjectMapper objectMapper, Class<I> bodyClass) {
-    try {
-      return objectMapper.readValue(body, bodyClass);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return attempt(() -> objectMapper.readValue(body, bodyClass)).orElseThrow();
 
   }
 
