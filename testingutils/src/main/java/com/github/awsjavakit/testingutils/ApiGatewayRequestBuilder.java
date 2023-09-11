@@ -7,21 +7,36 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ApiGatewayRequestBuilder {
+/**
+ * Utility class for building HttpRequests v1.0 for ApiGateway.
+ */
+public final class ApiGatewayRequestBuilder {
 
   private final ObjectMapper objectMapper;
   private final ApiGatewayEvent event;
 
-  public ApiGatewayRequestBuilder(ObjectMapper objectMapper) {
-
+  private ApiGatewayRequestBuilder(ObjectMapper objectMapper) {
     this.objectMapper = objectMapper;
     this.event = new ApiGatewayEvent();
   }
 
+  /**
+   * The default factory method.
+   *
+   * @param objectMapper the mapper for serializing the ApiGateway Request event.
+   * @return an {@link ApiGatewayRequestBuilder}
+   */
   public static ApiGatewayRequestBuilder create(ObjectMapper objectMapper) {
     return new ApiGatewayRequestBuilder(objectMapper);
   }
 
+  /**
+   * The request body.
+   *
+   * @param body the request body.
+   * @param <I>  the body type
+   * @return the builder.
+   */
   public <I> ApiGatewayRequestBuilder withBody(I body) {
     try {
       var bodyString = objectMapper.writeValueAsString(body);
@@ -32,6 +47,12 @@ public class ApiGatewayRequestBuilder {
     }
   }
 
+  /**
+   * An {@link InputStream} that will be supplied to the
+   * {@link com.github.awsjavakit.apigateway.ApiGatewayHandler#handleRequest} method
+   *
+   * @return an InputStream containing a serialized ApiGateway event;
+   */
   public InputStream build() {
     try {
       var eventString = objectMapper.writeValueAsString(event);
