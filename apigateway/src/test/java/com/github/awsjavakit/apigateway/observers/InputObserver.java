@@ -9,7 +9,7 @@ public interface InputObserver {
     return new InputObserver() {
       @Override
       public <I> void observe(I body) throws ApiGatewayException {
-        //NO-OP;
+        //NO-OP
       }
     };
   }
