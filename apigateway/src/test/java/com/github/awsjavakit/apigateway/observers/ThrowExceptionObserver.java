@@ -1,4 +1,4 @@
-package com.github.awsjavakit.apigateway;
+package com.github.awsjavakit.apigateway.observers;
 
 import com.github.awsjavakit.apigateway.exception.ApiGatewayException;
 

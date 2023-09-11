@@ -1,6 +1,7 @@
 package com.github.awsjavakit.apigateway.bodyparsing;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static java.util.Objects.nonNull;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +18,10 @@ public class DefaultJsonParser<I> implements BodyParser<I> {
 
   @Override
   public I parseBody(String body) {
+    return nonNull(body) ? parseNonNullBody(body) : null;
+  }
+
+  private I parseNonNullBody(String body) {
     var json = attempt(() -> objectMapper.readTree(body)).orElseThrow();
     if (inputIsStringAndExpectedInputIsString(json)) {
       return inputAsString(json);
