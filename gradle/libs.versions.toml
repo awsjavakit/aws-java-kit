@@ -10,8 +10,8 @@ jackson = { strictly = '2.14.1' }
 guava = { strictly = '32.0.0-jre' }
 apacheCommons = { strictly = '3.12.0' }
 datafaker = { strictly = '1.9.0' }
-
-
+hamcrest = { strictly = '2.2' }
+hamcrestOptional = { strictly = '2.0.0' }
 
 
 [libraries]
@@ -23,8 +23,7 @@ slf4j = { group = 'org.slf4j', name = 'slf4j-api', version.ref = 'slf4j' }
 slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j18-impl', version.ref = 'log4j' }
 lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', version.ref = 'lambda-log4j2' }
 
-aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2' }
-aws-apigateway  = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
+aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
 
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
@@ -36,6 +35,7 @@ jackson-time-module = { group = 'com.fasterxml.jackson.datatype', name = 'jackso
 jackson-csv = { group = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-csv', version.ref = 'jackson' }
 
 
+
 guava = { group = 'com.google.guava', name = 'guava', version.ref = 'guava' }
 
 junit-api = { group = 'org.junit.jupiter', name = 'junit-jupiter-api', version.ref = 'junit' }
@@ -44,9 +44,12 @@ junit-params = { group = 'org.junit.jupiter', name = 'junit-jupiter-params', ver
 assertj = { group = 'org.assertj', name = 'assertj-core', version.ref = 'assertj' }
 commons-lang = { group = 'org.apache.commons', name = 'commons-lang3', version.ref = 'apacheCommons' }
 datafaker = { group = 'net.datafaker', name = 'datafaker', version.ref = 'datafaker' }
+hamcrest = { group = 'org.hamcrest', name = 'hamcrest', version.ref = 'hamcrest' }
+hamcrest-optional = { group = 'com.github.npathai', name = 'hamcrest-optional', version.ref = 'hamcrestOptional' }
 
 
 [bundles]
-testing = ["junit-api", "junit-engine", "junit-params","assertj","commons-lang","datafaker"]
-json =['jackson-core','jackson-datatype-jdk8','jackson-databind','jackson-annotations']
+testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest","hamcrest-optional"]
+json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations']
+logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 

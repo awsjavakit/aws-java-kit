@@ -89,6 +89,7 @@ public class ApiGatewayHandlerTest {
     protected int getSuccessStatusCode() {
       return HttpURLConnection.HTTP_OK;
     }
+
   }
 
 }
