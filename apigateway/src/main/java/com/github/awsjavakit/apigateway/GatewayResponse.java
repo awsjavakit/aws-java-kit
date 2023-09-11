@@ -103,5 +103,4 @@ public class GatewayResponse {
       throw new RuntimeException(e);
     }
   }
-
 }

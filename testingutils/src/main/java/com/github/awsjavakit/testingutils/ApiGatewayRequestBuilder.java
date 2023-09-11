@@ -39,6 +39,5 @@ public class ApiGatewayRequestBuilder {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-
   }
 }
