@@ -3,6 +3,7 @@ package com.github.awsjavakit.testingutils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.ApiGatewayEvent;
+import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,16 @@ public final class ApiGatewayRequestBuilder {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Add the query path.
+   * @param path the path.
+   * @return the builder.
+   */
+  public ApiGatewayRequestBuilder withPath(UnixPath path) {
+    event.setPath(path.addRoot().toString());
+    return this;
   }
 
   /**
