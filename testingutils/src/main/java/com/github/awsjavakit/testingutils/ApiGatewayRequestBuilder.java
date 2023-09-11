@@ -48,6 +48,11 @@ public final class ApiGatewayRequestBuilder {
     }
   }
 
+  /**
+   * Add queryParameters.
+   * @param queryParameters map
+   * @return the builder.
+   */
   public ApiGatewayRequestBuilder withQueryParameters(Map<String, String> queryParameters) {
     event.setQueryParameters(queryParameters);
     return this;
