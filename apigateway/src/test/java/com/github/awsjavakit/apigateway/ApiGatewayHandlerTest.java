@@ -86,7 +86,7 @@ public class ApiGatewayHandlerTest {
   void shouldParseNonDefinedInputAsNullInstanceOfSuppliedType() throws IOException {
     var request = ApiGatewayRequestBuilder.create(objectMapper).build();
     var observer = new BodyObserver<SampleInput>();
-    this.handler = new EchoHandler<>(SampleInput.class, objectMapper, observer);
+    this.handler = new EchoHandler<>(Void.class, objectMapper, observer);
     handler.handleRequest(request, outputStream, EMPTY_CONTEXT);
     var bodyInsideHandler = observer.getBody();
     assertThat(bodyInsideHandler).isEqualTo(NULL_SAMPLE_INPUT);
