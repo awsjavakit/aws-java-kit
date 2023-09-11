@@ -17,8 +17,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.hamcrest.MatcherAssert;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -26,14 +24,14 @@ import org.junit.jupiter.api.function.Executable;
 public class SuccessTest {
 
   private static final String NOT_EXPECTED_MESSAGE = "Not expected message";
-  private final Integer sample = 1;
+  private static final Integer SAMPLE = 1;
 
   @Test
   @DisplayName("orElseThrow throws illegalStateException for null argument")
   public void shouldThrowIllegalStateExceptionForNullArgument() {
 
     Executable action =
-      () -> Try.of(sample).orElseThrow((Function<Failure<Integer>, ? extends Exception>) null);
+      () -> Try.of(SAMPLE).orElseThrow((Function<Failure<Integer>, ? extends Exception>) null);
     IllegalStateException exception = assertThrows(IllegalStateException.class, action);
     assertThat(exception.getMessage(), is(equalTo(Failure.NULL_ACTION_MESSAGE)));
   }
@@ -42,10 +40,10 @@ public class SuccessTest {
   @DisplayName("orElseThrow returns the calculated value and does not throw an exception")
   public void shouldReturnTheCalculatedValueAndNotThrowException()
     throws TestException {
-    Integer actual = Try.of(sample)
+    Integer actual = Try.of(SAMPLE)
       .orElseThrow(f -> new TestException(f.getException(), NOT_EXPECTED_MESSAGE));
 
-    assertThat(actual, is(equalTo(sample)));
+    assertThat(actual, is(equalTo(SAMPLE)));
   }
 
   @Test
@@ -65,10 +63,10 @@ public class SuccessTest {
   @DisplayName("orElse returns the calculated value and does not perform the defined action")
   public void orElseThrowsReturnsTheCalculatedValueAndDoesNotPerformTheDefinedAction()
     throws TestException {
-    Integer actual = Try.of(sample)
+    Integer actual = Try.of(SAMPLE)
       .orElse(f -> anotherIllegalAction(NOT_EXPECTED_MESSAGE));
 
-    assertThat(actual, is(equalTo(sample)));
+    assertThat(actual, is(equalTo(SAMPLE)));
   }
 
   @Test
@@ -76,7 +74,7 @@ public class SuccessTest {
   public void orElseThrowsIllegalStateExceptionWhenTheInputArgumentIsNull() {
 
     Executable action =
-      () -> Try.of(sample)
+      () -> Try.of(SAMPLE)
         .orElse(null);
 
     assertThrows(IllegalStateException.class, action);
@@ -85,78 +83,78 @@ public class SuccessTest {
   @Test
   @DisplayName("flatMap returns the value of the nested Try")
   public void flatMapReturnsAFailureWithTheFirstException() {
-    Try<Integer> actual = Try.of(sample)
+    Try<Integer> actual = Try.of(SAMPLE)
       .map(this::identity)
       .flatMap(this::tryIdentity);
 
     assertTrue(actual.isSuccess());
-    assertThat(actual.get(), is(equalTo(sample)));
+    assertThat(actual.get(), is(equalTo(SAMPLE)));
   }
 
   @Test
   @DisplayName("getException throws IllegalStateException")
   public void shouldThrowExceptionWhenTryingToGetTheExceptionOfSuccess() {
-    Executable action = () -> Try.of(sample).getException();
+    Executable action = () -> Try.of(SAMPLE).getException();
     assertThrows(IllegalStateException.class, action);
   }
 
   @Test
   @DisplayName("stream returns an emptyStream")
   public void shouldReturnAStreamWithTheContainedValue() {
-    List<Integer> list = Try.of(sample).stream()
+    List<Integer> list = Try.of(SAMPLE).stream()
       .collect(Collectors.toList());
     Integer actual = list.stream().findFirst().get();
     assertThat(list, is(not(empty())));
-    assertThat(actual, is(sample));
+    assertThat(actual, is(SAMPLE));
   }
 
   @Test
   @DisplayName("isSuccess returns true")
   public void shouldReturnThatItisASuccess() {
-    boolean actual = Try.of(sample).isSuccess();
+    boolean actual = Try.of(SAMPLE).isSuccess();
     assertTrue(actual);
   }
 
   @Test
   @DisplayName("isFailure returns false")
   public void shouldReturnThatItisNotAFailure() {
-    boolean actual = Try.of(sample).isFailure();
+    boolean actual = Try.of(SAMPLE).isFailure();
     assertFalse(actual);
   }
 
   @Test
   public void shouldReturnVoidSuccessWhenConsumingTheContainedValueSuccessfully() {
-    Try<Void> result = Try.of(sample).forEach(this::consume);
+    Try<Void> result = Try.of(SAMPLE).forEach(value->consume());
     assertTrue(result.isSuccess());
   }
 
   @Test
-  public void shouldReturnVoidFalureWhenConsumingTheContainedValueUnsuccessfully() {
-    Try<Void> result = Try.of(sample).forEach(this::throwException);
+  public void shouldReturnVoidFailureWhenConsumingTheContainedValueUnsuccessfully() {
+    Try<Void> result = Try.of(SAMPLE).forEach(this::throwException);
     assertTrue(result.isFailure());
   }
 
   @Test
-  public void toOptionalWithFunctionReturnsPresentOptional() {
-    Try<Integer> success = Try.of(sample);
+  public void shouldReturnPresentOptionalWhenCalledWithFailureAction() {
+    Try<Integer> success = Try.of(SAMPLE);
     assertThat(success.isSuccess(), is(true));
     Optional<Integer> value = success.toOptional(fail -> doNothing());
     assertThat(value.isPresent(), is(true));
-    assertThat(value.get(), is(equalTo(sample)));
+    assertThat(value.get(), is(equalTo(SAMPLE)));
   }
 
   @Test
-  public void toOptionalReturnsPresentOptionalWithTheContainedValue() {
-    Try<Integer> success = Try.of(sample);
+  public void shouldReturnPresentOptionalWithTheContainedValue() {
+    Try<Integer> success = Try.of(SAMPLE);
     assertThat(success.isSuccess(), is(true));
     Optional<Integer> value = success.toOptional();
     assertThat(value.isPresent(), is(true));
-    assertThat(value.get(), is(equalTo(sample)));
+    assertThat(value.get(), is(equalTo(SAMPLE)));
   }
 
   @Test
-  public void toOptionalWithFunctionDoesNotRunFunctionForFailure() {
-    Try<Integer> success = Try.of(sample);
+  public void shouldNotRunSuppliedFailureActionWhenConvertingToOptionalAndSuccessful() {
+    Try<Integer> success = Try.of(SAMPLE);
     AtomicBoolean actionAfterFailureRun = new AtomicBoolean(false);
     success.toOptional(fail -> actionAfterFailureRun.set(true));
 
@@ -165,7 +163,7 @@ public class SuccessTest {
   }
 
   @Test
-  public void orElseThrowThrowsRuntimeExceptionWhenTryisSuccess() {
+  public void shouldReturnValueWhenTryingToGetValue() {
     int expectedValue = 2;
     int actualValue = Try.of(expectedValue)
       .map(this::identity)
@@ -182,7 +180,8 @@ public class SuccessTest {
     assertThat(left.hashCode(), is(equalTo(right.hashCode())));
   }
 
-  private void consume(int value) {
+  private void consume() {
+    //NO-OP
   }
 
   private void throwException(int value) {
