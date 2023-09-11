@@ -8,11 +8,21 @@ import java.util.Map;
 
 public class JsonOk implements ResponseProvider {
 
+  /**
+   * Return the header "ContentType=application/json".
+   *
+   * @return the header "ContentType=application/json".
+   */
   @Override
-  public Map<String, String> successHeaders() {
+  public Map<String, String> headers() {
     return Map.of(Headers.CONTENT_TYPE, APPLICATION_JSON);
   }
 
+  /**
+   * OK.
+   *
+   * @return OK.
+   */
   @Override
   public int statusCode() {
     return HttpURLConnection.HTTP_OK;

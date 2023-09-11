@@ -8,6 +8,7 @@ dependencies {
     compileOnly project(":apigateway")
     implementation project (":attempt")
     implementation project (":misc")
+    implementation libs.lambda.core
     implementation libs.aws.apigateway
     implementation libs.bundles.json
     implementation libs.bundles.testing

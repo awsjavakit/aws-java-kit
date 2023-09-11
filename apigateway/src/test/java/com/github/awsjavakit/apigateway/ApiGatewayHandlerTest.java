@@ -61,11 +61,23 @@ public class ApiGatewayHandlerTest {
   @Test
   void shouldReturnBodyAsIsWhenInputTypeIsString() throws IOException {
     var sampleInput = randomString();
-    this.handler = new EchoHandler(objectMapper);
+    this.handler = new EchoHandler(objectMapper, InputObserver.noOp());
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
     var responseBody = response.getBody(objectMapper, String.class);
     assertThat(responseBody).isEqualTo(sampleInput);
+  }
+
+  @Test
+  void shouldReturnStatusCodeSpecifiedByApiGatewayException() throws IOException {
+    var sampleInput = randomString();
+    var expectedException = new NotFoundException();
+    this.handler =
+      new EchoHandler(objectMapper, InputObserver.throwException(expectedException));
+    handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
+    var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
+    assertThat(response.getStatusCode()).isEqualTo(expectedException.statusCode());
+
   }
 
   private SampleInput createSampleInput() {
