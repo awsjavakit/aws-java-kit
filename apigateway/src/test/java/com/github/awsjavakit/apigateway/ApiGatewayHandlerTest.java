@@ -9,7 +9,6 @@ import com.github.awsjavakit.testingutils.ApiGatewayRequestBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.Random;
@@ -23,9 +22,11 @@ public class ApiGatewayHandlerTest {
   public static final int ARBITRARY_CEILING = 120;
   private static final int MIN_RANDOM_STRING_LENGTH = 10;
   private static final int MAX_RANDOM_STRING_LENGTH = 20;
-  private static final Map<String, String> CONTENT_TYPE_APPLICATION_JSON = Map.of("Content-Type", "application/json");
+  private static final Map<String, String> CONTENT_TYPE_APPLICATION_JSON = Map.of("Content-Type",
+    "application/json");
   private ObjectMapper objectMapper;
   private ByteArrayOutputStream outputStream;
+  private ApiGatewayHandler<?, ?> handler;
 
   public static String randomString() {
     return RandomStringUtils.randomAlphanumeric(MIN_RANDOM_STRING_LENGTH, MAX_RANDOM_STRING_LENGTH);
@@ -35,12 +36,12 @@ public class ApiGatewayHandlerTest {
   public void init() {
     this.outputStream = new ByteArrayOutputStream();
     this.objectMapper = new ObjectMapper();
+    this.handler = new DemoHandler(objectMapper);
   }
 
   @Test
   void shouldParseRequestBody() throws IOException {
-    var handler = new DemoHandler(objectMapper);
-    var sampleInput = new SampleInput(randomString(), 1900 + randomInteger());
+    var sampleInput = createSampleInput();
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var actualResponseBody = parseResponse();
     var expectedResponseBody = new SampleOutput(sampleInput.name(),
@@ -48,7 +49,30 @@ public class ApiGatewayHandlerTest {
     assertThat(actualResponseBody).isEqualTo(expectedResponseBody);
   }
 
-  private InputStream createRequest(SampleInput sampleInput) {
+  @Test
+  void shouldReturnSpecifiedHeaderWhenSuccessful() throws IOException {
+    var sampleInput = createSampleInput();
+    handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
+    var actualResponse =
+      GatewayResponse.fromOutputStream(outputStream, objectMapper);
+    assertThat(actualResponse.getHeaders()).isEqualTo(CONTENT_TYPE_APPLICATION_JSON);
+  }
+
+  @Test
+  void shouldReturnBodyAsIsWhenInputTypeIsString() throws IOException {
+    var sampleInput = randomString();
+    this.handler = new EchoHandler(objectMapper);
+    handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
+    var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
+    var responseBody = response.getBody(objectMapper, String.class);
+    assertThat(responseBody).isEqualTo(sampleInput);
+  }
+
+  private SampleInput createSampleInput() {
+    return new SampleInput(randomString(), 1900 + randomInteger());
+  }
+
+  private <I> InputStream createRequest(I sampleInput) {
     return ApiGatewayRequestBuilder
       .create(objectMapper)
       .withBody(sampleInput)
@@ -75,20 +99,10 @@ public class ApiGatewayHandlerTest {
     }
 
     @Override
-    public SampleOutput processInput(SampleInput input, ApiGatewayEvent apiGatewayEvent, Context context) {
+    public SampleOutput processInput(SampleInput input, ApiGatewayEvent apiGatewayEvent,
+      Context context) {
       var currentYear = Calendar.getInstance().get(YEAR);
       return new SampleOutput(input.name(), currentYear - input.birthYear());
     }
-
-    @Override
-    protected Map<String, String> getSuccessHeaders() {
-      return CONTENT_TYPE_APPLICATION_JSON;
-    }
-
-    @Override
-    protected int getSuccessStatusCode() {
-      return HttpURLConnection.HTTP_OK;
-    }
-
   }
 }
