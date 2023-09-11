@@ -6,6 +6,7 @@ import com.github.awsjavakit.apigateway.ApiGatewayEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * Utility class for building HttpRequests v1.0 for ApiGateway.
@@ -45,6 +46,11 @@ public final class ApiGatewayRequestBuilder {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public ApiGatewayRequestBuilder withQueryParameters(Map<String, String> queryParameters) {
+    event.setQueryParameters(queryParameters);
+    return this;
   }
 
   /**

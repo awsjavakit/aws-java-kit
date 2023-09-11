@@ -77,7 +77,6 @@ public class ApiGatewayHandlerTest {
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
     assertThat(response.getStatusCode()).isEqualTo(expectedException.statusCode());
-
   }
 
   private SampleInput createSampleInput() {
