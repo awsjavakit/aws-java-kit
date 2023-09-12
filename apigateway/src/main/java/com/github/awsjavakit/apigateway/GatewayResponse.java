@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Map;
 
 public class GatewayResponse {
@@ -33,7 +32,7 @@ public class GatewayResponse {
     this.statusCode = statusCode;
     this.headers = headers;
     this.objectMapper = objectMapper;
-    this.body = serializeObject(objectMapper, body);
+    this.body = serialize(objectMapper, body);
 
   }
 
@@ -78,7 +77,9 @@ public class GatewayResponse {
   }
 
   public <I> I getBody(ObjectMapper objectMapper, Class<I> bodyClass) {
-    return attempt(() -> objectMapper.readValue(body, bodyClass)).orElseThrow();
+    return bodyClass.equals(String.class)
+      ? bodyClass.cast(body)
+      : attempt(() -> objectMapper.readValue(body, bodyClass)).orElseThrow();
   }
 
   @JsonIgnore
@@ -91,18 +92,16 @@ public class GatewayResponse {
   }
 
   public String toJsonString() {
-    try {
-      return objectMapper.writeValueAsString(this);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return attempt(() -> objectMapper.writeValueAsString(this)).orElseThrow();
   }
 
-  private String serializeObject(ObjectMapper objectMapper, Object object) {
-    try {
-      return objectMapper.writeValueAsString(object);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+  private static String serializeBody(ObjectMapper objectMapper, Object object) {
+    return attempt(() -> objectMapper.writeValueAsString(object)).orElseThrow();
+  }
+
+  private String serialize(ObjectMapper objectMapper, Object object) {
+    return object instanceof String string
+      ? string
+      : serializeBody(objectMapper, object);
   }
 }
