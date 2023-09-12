@@ -11,7 +11,6 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.X509ExtendedTrustManager;
 import org.junit.jupiter.api.Assertions;
 
-@JacocoGenerated
 public final class WiremockHttpClient {
 
   public static final String TEST_CONFIGURATION_TRUST_MANAGER_FAILURE =
@@ -88,5 +87,6 @@ public final class WiremockHttpClient {
       }
     };
   }
+
 }
 

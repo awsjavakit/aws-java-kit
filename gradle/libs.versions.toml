@@ -4,7 +4,8 @@ junit = { strictly = '5.9.3' }
 lambda = { strictly = '1.2.2' }
 assertj = { strictly = '3.23.1' }
 log4j = { strictly = '2.17.2' }
-slf4j = { strictly = '1.8.0-beta4' }
+#wiremock has some old slf4j dependecies
+slf4j = { require = '1.8.0-beta4' }
 lambda-log4j2 = { strictly = '1.5.1' }
 jackson = { strictly = '2.14.1' }
 guava = { strictly = '32.0.0-jre' }
@@ -12,7 +13,7 @@ apacheCommons = { strictly = '3.12.0' }
 datafaker = { strictly = '1.9.0' }
 hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
-
+wiremock = { strictly = '3.0.4' }
 
 [libraries]
 
@@ -46,6 +47,7 @@ commons-lang = { group = 'org.apache.commons', name = 'commons-lang3', version.r
 datafaker = { group = 'net.datafaker', name = 'datafaker', version.ref = 'datafaker' }
 hamcrest = { group = 'org.hamcrest', name = 'hamcrest', version.ref = 'hamcrest' }
 hamcrest-optional = { group = 'com.github.npathai', name = 'hamcrest-optional', version.ref = 'hamcrestOptional' }
+wiremock = { group = 'org.wiremock', name = 'wiremock', version.ref = 'wiremock' }
 
 
 [bundles]

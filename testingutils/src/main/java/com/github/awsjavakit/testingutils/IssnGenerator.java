@@ -1,5 +1,9 @@
 package com.github.awsjavakit.testingutils;
 
+import com.github.awsjavakit.misc.JacocoGenerated;
+
+
+@JacocoGenerated
 final class IssnGenerator {
 
     public static final String SYMBOL_FOR_NUMBER_TEN = "X";

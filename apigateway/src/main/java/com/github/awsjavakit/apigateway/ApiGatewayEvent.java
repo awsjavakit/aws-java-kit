@@ -3,13 +3,17 @@ package com.github.awsjavakit.apigateway;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-
-
 public class ApiGatewayEvent {
 
+  private final Map<String, Object> otherFields;
+  @JsonProperty("headers")
+  private Map<String, String> headers;
+  @JsonProperty("multiValueHeaders")
+  private Map<String, List<String>> multiValueHeaders;
   @JsonProperty("body")
   private String body;
   @JsonProperty("resource")
@@ -25,10 +29,25 @@ public class ApiGatewayEvent {
   @JsonProperty("pathParameters")
   private Map<String, String> pathParameters;
 
-  private final Map<String, Object> otherFields;
-
   public ApiGatewayEvent() {
     this.otherFields = new ConcurrentHashMap<>();
+  }
+
+  public Map<String, String> getHeaders() {
+    return headers;
+  }
+
+  public void setHeaders(Map<String, String> headers) {
+    this.headers = headers;
+  }
+
+  public Map<String, List<String>> getMultiValueHeaders() {
+    return multiValueHeaders;
+  }
+
+  public void setMultiValueHeaders(
+    Map<String, List<String>> multiValueHeaders) {
+    this.multiValueHeaders = multiValueHeaders;
   }
 
   public String getBody() {

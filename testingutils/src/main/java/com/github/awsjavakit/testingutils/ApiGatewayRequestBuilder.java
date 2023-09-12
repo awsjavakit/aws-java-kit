@@ -7,7 +7,11 @@ import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for building HttpRequests v1.0 for ApiGateway.
@@ -41,8 +45,11 @@ public final class ApiGatewayRequestBuilder {
    */
   public <I> ApiGatewayRequestBuilder withBody(I body) {
     try {
-      var bodyString = objectMapper.writeValueAsString(body);
-      event.setBody(bodyString);
+      if (body instanceof String string) {
+        event.setBody(string);
+      } else {
+        event.setBody(objectMapper.writeValueAsString(body));
+      }
       return this;
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
@@ -51,6 +58,7 @@ public final class ApiGatewayRequestBuilder {
 
   /**
    * Add the query path.
+   *
    * @param path the path.
    * @return the builder.
    */
@@ -61,11 +69,19 @@ public final class ApiGatewayRequestBuilder {
 
   /**
    * Add queryParameters.
+   *
    * @param queryParameters map
    * @return the builder.
    */
   public ApiGatewayRequestBuilder withQueryParameters(Map<String, String> queryParameters) {
     event.setQueryParameters(queryParameters);
+    return this;
+  }
+
+  public ApiGatewayRequestBuilder withHeaders(Map<String, String> headers) {
+    event.setHeaders(Collections.unmodifiableMap(headers));
+    var mulitValueHeaders = convertToMultiValueHeaders(headers);
+    event.setMultiValueHeaders(mulitValueHeaders);
     return this;
   }
 
@@ -82,5 +98,16 @@ public final class ApiGatewayRequestBuilder {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private Map<String, List<String>> convertToMultiValueHeaders(Map<String, String> headers) {
+    return headers.entrySet().stream()
+      .map(entry -> Map.entry(entry.getKey(), createSingleItemList(entry.getValue())))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+  }
+
+  private List<String> createSingleItemList(String value) {
+    return Collections.singletonList(value);
   }
 }
