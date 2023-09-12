@@ -10,7 +10,7 @@ class GatewayResponseTest {
   @Test
   void shouldProvideResponseBodyExactlyAsReceived() {
     var response = new GatewayResponse();
-    String expectedResponseBody = randomJson();
+    var expectedResponseBody = randomJson();
     response.setBody(expectedResponseBody);
     assertThat(response.getBodyString()).isEqualTo(expectedResponseBody);
   }
