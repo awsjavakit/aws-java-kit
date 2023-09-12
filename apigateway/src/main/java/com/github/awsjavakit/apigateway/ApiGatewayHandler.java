@@ -71,8 +71,8 @@ public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
     try (var writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       var gateWayResponse =
         GatewayResponse.create(responseBody,
-          responseProvider.statusCode(),
-          responseProvider.headers(),
+          responseProvider.getStatusCode(),
+          responseProvider.getHeaders(),
           objectMapper);
       writer.write(gateWayResponse.toJsonString());
     }
