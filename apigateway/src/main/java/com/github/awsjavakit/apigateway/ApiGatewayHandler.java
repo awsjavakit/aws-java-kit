@@ -16,8 +16,8 @@ import java.io.OutputStreamWriter;
 
 public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
 
+  protected final ResponseProvider successResponseProvider;
   private final ObjectMapper objectMapper;
-  private final ResponseProvider successResponseProvider;
   private final BodyParser<I> bodyParser;
 
   protected ApiGatewayHandler(Class<I> iClass, ObjectMapper objectMapper) {
