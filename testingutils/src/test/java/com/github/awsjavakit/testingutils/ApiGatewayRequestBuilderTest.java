@@ -34,10 +34,10 @@ class ApiGatewayRequestBuilderTest {
     assertThat(generatedDeserialized.getQueryParameters()).isEqualTo(
       deserialized.getQueryParameters());
     assertThat(generatedDeserialized.getHeaders()).isEqualTo(deserialized.getHeaders());
-    assertThatMutliValueHeadersAreAsExpected(generatedDeserialized, deserialized);
+    assertThatMultiValueHeadersAreAsExpected(generatedDeserialized, deserialized);
   }
 
-  private static void assertThatMutliValueHeadersAreAsExpected(ApiGatewayEvent generatedDeserialized,
+  private static void assertThatMultiValueHeadersAreAsExpected(ApiGatewayEvent generatedDeserialized,
     ApiGatewayEvent deserialized) {
     assertThat(generatedDeserialized.getMultiValueHeaders().keySet()).isEqualTo(
       deserialized.getMultiValueHeaders().keySet());
