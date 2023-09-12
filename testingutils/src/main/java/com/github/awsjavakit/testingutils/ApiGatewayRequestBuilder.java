@@ -45,8 +45,8 @@ public final class ApiGatewayRequestBuilder {
    */
   public <I> ApiGatewayRequestBuilder withBody(I body) {
     try {
-      if (body instanceof String) {
-        event.setBody(body.toString());
+      if (body instanceof String string) {
+        event.setBody(string);
       } else {
         event.setBody(objectMapper.writeValueAsString(body));
       }
