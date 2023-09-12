@@ -3,6 +3,7 @@ package com.github.awsjavakit.testingutils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.ApiGatewayEvent;
+import com.github.awsjavakit.apigateway.HttpMethod;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -98,6 +99,11 @@ public final class ApiGatewayRequestBuilder {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public ApiGatewayRequestBuilder withMethod(HttpMethod httpMethod) {
+    event.setHttpMethod(httpMethod);
+    return this;
   }
 
   private Map<String, List<String>> convertToMultiValueHeaders(Map<String, String> headers) {
