@@ -79,7 +79,11 @@ public class GatewayResponse {
 
   public <I> I getBody(ObjectMapper objectMapper, Class<I> bodyClass) {
     return attempt(() -> objectMapper.readValue(body, bodyClass)).orElseThrow();
+  }
 
+  @JsonIgnore
+  public String getBodyString() {
+    return body;
   }
 
   public void setBody(String body) {
