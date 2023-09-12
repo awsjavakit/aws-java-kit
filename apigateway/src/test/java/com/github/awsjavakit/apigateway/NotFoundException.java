@@ -7,12 +7,12 @@ import java.util.Map;
 public class NotFoundException extends ApiGatewayException {
 
   @Override
-  public Map<String, String> headers() {
+  public Map<String, String> getHeaders() {
     return Headers.CONTENT_TYPE_APPLICATION_JSON;
   }
 
   @Override
-  public int statusCode() {
+  public int getStatusCode() {
     return HttpURLConnection.HTTP_NOT_FOUND;
   }
 

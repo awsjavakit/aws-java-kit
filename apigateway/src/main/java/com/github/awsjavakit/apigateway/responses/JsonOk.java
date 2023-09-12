@@ -14,7 +14,7 @@ public class JsonOk implements ResponseProvider {
    * @return the header "ContentType=application/json".
    */
   @Override
-  public Map<String, String> headers() {
+  public Map<String, String> getHeaders() {
     return Map.of(Headers.CONTENT_TYPE, APPLICATION_JSON);
   }
 
@@ -24,7 +24,7 @@ public class JsonOk implements ResponseProvider {
    * @return OK.
    */
   @Override
-  public int statusCode() {
+  public int getStatusCode() {
     return HttpURLConnection.HTTP_OK;
   }
 }

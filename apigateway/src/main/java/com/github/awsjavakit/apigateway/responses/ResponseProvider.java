@@ -22,12 +22,12 @@ public interface ResponseProvider {
    * The headers that will be included in the response.
    * @return the headers that will be included in the response
    */
-  Map<String, String> headers();
+  Map<String, String> getHeaders();
 
   /**
    * The response status code.
    * @return the response status code.
    */
-  int statusCode();
+  int getStatusCode();
 
 }
