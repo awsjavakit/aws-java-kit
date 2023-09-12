@@ -3,7 +3,6 @@ package com.github.awsjavakit.apigateway.bodyparsing;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.nonNull;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class DefaultJsonParser<I> implements BodyParser<I> {
@@ -22,22 +21,19 @@ public class DefaultJsonParser<I> implements BodyParser<I> {
   }
 
   private I parseNonNullBody(String body) {
-    var json = attempt(() -> objectMapper.readTree(body)).orElseThrow();
-    if (inputIsStringAndExpectedInputIsString(json)) {
-      return inputAsString(json);
+    if (expectedInputIsString()){
+      return iClass.cast(body);
     }
     return parseJsonString(body);
+
+  }
+
+  private boolean expectedInputIsString() {
+    return String.class.equals(iClass);
   }
 
   private I parseJsonString(String body) {
     return attempt(() -> objectMapper.readValue(body, iClass)).orElseThrow();
   }
 
-  private I inputAsString(JsonNode json) {
-    return iClass.cast(json.textValue());
-  }
-
-  private boolean inputIsStringAndExpectedInputIsString(JsonNode json) {
-    return iClass.equals(String.class) && json.isTextual();
-  }
 }
