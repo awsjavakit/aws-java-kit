@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.apigateway.observers.BodyObserver;
+import com.github.awsjavakit.apigateway.observers.InputObserver;
 import com.github.awsjavakit.testingutils.ApiGatewayRequestBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +22,7 @@ public class ApiGatewayHandlerTest {
 
   public static final Context EMPTY_CONTEXT = null;
   public static final int ARBITRARY_CEILING = 120;
+  public static final SampleInput NULL_SAMPLE_INPUT = null;
   private static final int MIN_RANDOM_STRING_LENGTH = 10;
   private static final int MAX_RANDOM_STRING_LENGTH = 20;
   private static final Map<String, String> CONTENT_TYPE_APPLICATION_JSON = Map.of("Content-Type",
@@ -61,7 +64,7 @@ public class ApiGatewayHandlerTest {
   @Test
   void shouldReturnBodyAsIsWhenInputTypeIsString() throws IOException {
     var sampleInput = randomString();
-    this.handler = new EchoHandler(objectMapper, InputObserver.noOp());
+    this.handler = new EchoHandler<>(String.class, objectMapper, InputObserver.noOp());
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
     var responseBody = response.getBody(objectMapper, String.class);
@@ -73,10 +76,25 @@ public class ApiGatewayHandlerTest {
     var sampleInput = randomString();
     var expectedException = new NotFoundException();
     this.handler =
-      new EchoHandler(objectMapper, InputObserver.throwException(expectedException));
+      new EchoHandler<>(String.class, objectMapper, InputObserver.throwException(expectedException));
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
     assertThat(response.getStatusCode()).isEqualTo(expectedException.statusCode());
+  }
+
+  @Test
+  void shouldParseNonDefinedInputAsNullInstanceOfSuppliedType() throws IOException {
+    var request = requestWithoutBody();
+    var observer = new BodyObserver<SampleInput>();
+    this.handler = new EchoHandler<>(Void.class, objectMapper, observer);
+    handler.handleRequest(request, outputStream, EMPTY_CONTEXT);
+    var bodyInsideHandler = observer.getBody();
+    assertThat(bodyInsideHandler).isEqualTo(NULL_SAMPLE_INPUT);
+
+  }
+
+  private InputStream requestWithoutBody() {
+    return ApiGatewayRequestBuilder.create(objectMapper).build();
   }
 
   private SampleInput createSampleInput() {
