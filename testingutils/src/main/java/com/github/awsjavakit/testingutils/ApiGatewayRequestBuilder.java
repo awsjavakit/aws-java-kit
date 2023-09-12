@@ -18,9 +18,6 @@ import java.util.stream.Collectors;
  */
 public final class ApiGatewayRequestBuilder {
 
-  public static final String COMMA = ",";
-  public static final String SPACE = " ";
-  public static final String MULTI_VALUE_HEADER_DELIMITER = COMMA + SPACE;
   private final ObjectMapper objectMapper;
   private final ApiGatewayEvent event;
 
