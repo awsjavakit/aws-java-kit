@@ -29,22 +29,11 @@ class ApiGatewayRequestBuilderTest {
     var generatedAsString = IoUtils.streamToString(generatedInputStream);
     var generatedDeserialized = JSON.readValue(generatedAsString, ApiGatewayEvent.class);
 
-    assertThat(generatedDeserialized.getPath()).isEqualTo(deserialized.getPath());
-    assertThat(generatedDeserialized.getBody()).isEqualTo(deserialized.getBody());
-    assertThat(generatedDeserialized.getQueryParameters()).isEqualTo(
-      deserialized.getQueryParameters());
-    assertThat(generatedDeserialized.getHeaders()).isEqualTo(deserialized.getHeaders());
-    assertThatMultiValueHeadersAreAsExpected(generatedDeserialized, deserialized);
-  }
+    assertThat(generatedDeserialized)
+      .usingRecursiveComparison()
+      .comparingOnlyFields("path", "body", "queryParameters", "headers", "multiValueHeader")
+      .isEqualTo(deserialized);
 
-  private static void assertThatMultiValueHeadersAreAsExpected(ApiGatewayEvent generatedDeserialized,
-    ApiGatewayEvent deserialized) {
-    assertThat(generatedDeserialized.getMultiValueHeaders().keySet()).isEqualTo(
-      deserialized.getMultiValueHeaders().keySet());
-    for (var header : generatedDeserialized.getMultiValueHeaders().keySet()) {
-      assertThat(generatedDeserialized.getMultiValueHeaders().get(header))
-        .isEqualTo(deserialized.getMultiValueHeaders().get(header));
-    }
   }
 
 }
