@@ -5,7 +5,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -58,8 +58,7 @@ class SecretsReaderTest {
   }
 
   @Test
-  void fetchSecretReturnsSecretValueWhenSecretNameAndSecretKeyAreCorrect()
-    throws ErrorReadingSecretException {
+  void fetchSecretReturnsSecretValueWhenSecretNameAndSecretKeyAreCorrect() {
     var value = secretsReader.fetchSecret(SECRET_NAME, SECRET_KEY);
     assertThat(value, is(equalTo(SECRET_VALUE)));
   }

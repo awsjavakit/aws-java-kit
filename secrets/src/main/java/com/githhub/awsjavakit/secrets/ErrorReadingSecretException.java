@@ -6,12 +6,7 @@ public class ErrorReadingSecretException extends RuntimeException {
     super(errorMessage(secretName), cause);
   }
 
-  public ErrorReadingSecretException(Throwable cause) {
-    super(cause);
-  }
-
   private static String errorMessage(String secretName) {
     return String.format("Could not read secret: %s", secretName);
   }
-
 }

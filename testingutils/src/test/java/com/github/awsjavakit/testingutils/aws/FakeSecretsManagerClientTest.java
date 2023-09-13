@@ -4,7 +4,7 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomStrin
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.githhub.awsjavakit.secrets.SecretsReader;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.function.Executable;
 
 class FakeSecretsManagerClientTest {
 
-  private final ObjectMapper JSON = new ObjectMapper();
+  private static final ObjectMapper JSON = new ObjectMapper();
 
   @Test
   void shouldBeUsableWithSecretsReader() {

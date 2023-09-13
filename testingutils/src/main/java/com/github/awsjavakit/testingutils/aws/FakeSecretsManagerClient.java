@@ -2,7 +2,7 @@ package com.github.awsjavakit.testingutils.aws;
 
 /**
  * Copied from https://github.com/BIBSYSDEV/nva-commons.
- * */
+ */
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
@@ -20,11 +20,11 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRespon
 
 public class FakeSecretsManagerClient implements SecretsManagerClient {
 
+  private final Map<SecretName, Map<SecretKey, String>> secrets = new ConcurrentHashMap<>();
   private final Map<SecretName, String> plainTextSecrets = new ConcurrentHashMap<>();
   private final ObjectMapper json;
-  public Map<SecretName, Map<SecretKey, String>> secrets = new ConcurrentHashMap<>();
 
-  public FakeSecretsManagerClient(ObjectMapper json){
+  public FakeSecretsManagerClient(ObjectMapper json) {
     this.json = json;
   }
 
@@ -46,7 +46,8 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
   public FakeSecretsManagerClient putPlainTextSecret(String name, String value) {
     var secretName = new SecretName(name);
     if (secrets.containsKey(secretName)) {
-      throw new IllegalArgumentException(String.format("Secret already present as a key/value secret: %s", name));
+      throw new IllegalArgumentException(
+        String.format("Secret already present as a key/value secret: %s", name));
     }
 
     plainTextSecrets.put(secretName, value);
@@ -71,7 +72,7 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
   @JacocoGenerated
   @Override
   public void close() {
-
+    //NO-OP
   }
 
   private static GetSecretValueResponse addSecretContents(String secretContents,
@@ -106,7 +107,7 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
     secrets.get(secretName).put(new SecretKey(key), value);
   }
 
-  private static class SecretName {
+  private static final class SecretName {
 
     private final String value;
 
@@ -124,7 +125,7 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
     @JacocoGenerated
     @Override
     public int hashCode() {
-      return value != null ? value.hashCode() : 0;
+      return value == null ? 0 : value.hashCode();
     }
 
     @JacocoGenerated
@@ -143,7 +144,7 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
     }
   }
 
-  private static class SecretKey {
+  private static final class SecretKey {
 
     private final String value;
 
@@ -160,7 +161,7 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
     @JacocoGenerated
     @Override
     public int hashCode() {
-      return value != null ? value.hashCode() : 0;
+      return value == null ? 0 : value.hashCode();
     }
 
     @JacocoGenerated
