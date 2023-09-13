@@ -17,6 +17,12 @@ class ApiGatewayRequestBuilderTest {
 
   public static final String BODY_FIELD = "body";
   private static final ObjectMapper JSON = new ObjectMapper();
+  public static final String PATH_FIELD = "path";
+  public static final String QUERY_PARAMETERS_FIELD = "queryParameters";
+  public static final String HEADERS_FIELD = "headers";
+  public static final String MULTI_VALUE_HEADER_FIELD = "multiValueHeader";
+  public static final String METHOD_FIELD = "method";
+
 
   @Test
   void shouldGenerateValidEvent() throws JsonProcessingException {
@@ -36,8 +42,12 @@ class ApiGatewayRequestBuilderTest {
 
     assertThat(generatedDeserialized)
       .usingRecursiveComparison()
-      .comparingOnlyFields("path", BODY_FIELD, "queryParameters", "headers", "multiValueHeader",
-        "method")
+      .comparingOnlyFields(PATH_FIELD,
+        BODY_FIELD,
+        QUERY_PARAMETERS_FIELD,
+        HEADERS_FIELD,
+        MULTI_VALUE_HEADER_FIELD,
+        METHOD_FIELD)
       .isEqualTo(deserialized);
   }
 
