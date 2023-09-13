@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
+import java.util.Objects;
 
 public class GatewayResponse {
 
@@ -50,6 +51,25 @@ public class GatewayResponse {
       throw new RuntimeException(e);
     }
 
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    GatewayResponse that = (GatewayResponse) o;
+    return statusCode == that.statusCode && Objects.equals(objectMapper, that.objectMapper)
+      && Objects.equals(isBase64Encoded, that.isBase64Encoded) && Objects.equals(
+      headers, that.headers) && Objects.equals(body, that.body);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(objectMapper, isBase64Encoded, statusCode, headers, body);
   }
 
   public Boolean getBase64Encoded() {
