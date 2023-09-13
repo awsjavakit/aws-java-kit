@@ -62,14 +62,14 @@ public class GatewayResponse {
       return false;
     }
     GatewayResponse that = (GatewayResponse) o;
-    return statusCode == that.statusCode && Objects.equals(objectMapper, that.objectMapper)
+    return statusCode == that.statusCode
       && Objects.equals(isBase64Encoded, that.isBase64Encoded) && Objects.equals(
       headers, that.headers) && Objects.equals(body, that.body);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(objectMapper, isBase64Encoded, statusCode, headers, body);
+    return Objects.hash(isBase64Encoded, statusCode, headers, body);
   }
 
   public Boolean getBase64Encoded() {
@@ -115,6 +115,7 @@ public class GatewayResponse {
     return attempt(() -> objectMapper.writeValueAsString(this)).orElseThrow();
   }
 
+  @Override
   public String toString() {
     return serialize(new ObjectMapper(), this);
   }

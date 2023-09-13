@@ -1,6 +1,5 @@
 package com.github.awsjavakit.apigateway;
 
-import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomBoolean;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
@@ -35,7 +34,7 @@ class GatewayResponseTest {
   }
 
   @Test
-  void identicalGatewayResponsesShouldBeEqual() {
+  void identicalGatewayResponsesShouldBeEqualWithoutConsideringTheObjectMapper() {
 
     int statusCode = randomInteger();
     var body = randomString();
@@ -46,7 +45,6 @@ class GatewayResponseTest {
 
     assertThat(left).isEqualTo(right);
     assertThat(left.hashCode()).isEqualTo(right.hashCode());
-    assertThat(left).usingRecursiveComparison().isEqualTo(right);
   }
 
   @Test
@@ -54,11 +52,12 @@ class GatewayResponseTest {
     var response =
       createResponse(randomInteger(), randomString(), newMap(randomMap()));
     assertThat(response.toString()).isEqualTo(response.toJsonString());
+
   }
 
   private static GatewayResponse createResponse(int statusCode, String body,
     Map<String, String> headers) {
-    return GatewayResponse.create(body,statusCode,headers,JSON);
+    return GatewayResponse.create(body,statusCode,headers,new ObjectMapper());
   }
 
   private Map<String, String> newMap(Map<String, String> headers) {
