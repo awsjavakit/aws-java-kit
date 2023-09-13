@@ -1,6 +1,5 @@
 package com.github.awsjavakit.apigateway;
 
-import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomBoolean;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
