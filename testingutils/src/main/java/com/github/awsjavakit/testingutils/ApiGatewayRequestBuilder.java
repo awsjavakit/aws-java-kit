@@ -1,5 +1,8 @@
 package com.github.awsjavakit.testingutils;
 
+import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static java.util.Objects.nonNull;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.ApiGatewayEvent;
@@ -45,17 +48,13 @@ public final class ApiGatewayRequestBuilder {
    * @return the builder.
    */
   public <I> ApiGatewayRequestBuilder withBody(I body) {
-    try {
-      if (body instanceof String string) {
-        event.setBody(string);
-      } else {
-        event.setBody(objectMapper.writeValueAsString(body));
-      }
-      return this;
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
+    if (nonNull(body)) {
+      return attempt(() -> addBodyToEvent(body)).orElseThrow();
     }
+    event.setBody(null);
+    return this;
   }
+
 
   /**
    * Add the query path.
@@ -103,6 +102,15 @@ public final class ApiGatewayRequestBuilder {
 
   public ApiGatewayRequestBuilder withMethod(HttpMethod httpMethod) {
     event.setHttpMethod(httpMethod);
+    return this;
+  }
+
+  private <I> ApiGatewayRequestBuilder addBodyToEvent(I body) throws JsonProcessingException {
+    if (body instanceof String string) {
+      event.setBody(string);
+    } else {
+      event.setBody(objectMapper.writeValueAsString(body));
+    }
     return this;
   }
 
