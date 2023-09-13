@@ -14,6 +14,7 @@ datafaker = { strictly = '1.9.0' }
 hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
 wiremock = { strictly = '3.0.4' }
+mockito = { strictly = '5.5.0' }
 
 [libraries]
 
@@ -25,6 +26,8 @@ slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j18-impl
 lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', version.ref = 'lambda-log4j2' }
 
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
+aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', version.ref = 'awsSdk2' }
+
 
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
@@ -48,10 +51,12 @@ datafaker = { group = 'net.datafaker', name = 'datafaker', version.ref = 'datafa
 hamcrest = { group = 'org.hamcrest', name = 'hamcrest', version.ref = 'hamcrest' }
 hamcrest-optional = { group = 'com.github.npathai', name = 'hamcrest-optional', version.ref = 'hamcrestOptional' }
 wiremock = { group = 'org.wiremock', name = 'wiremock', version.ref = 'wiremock' }
+mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mockito' }
+mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
 
 
 [bundles]
-testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest","hamcrest-optional"]
+testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit"]
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations']
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 
