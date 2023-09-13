@@ -39,26 +39,26 @@ class GatewayResponseTest {
 
     int statusCode = randomInteger();
     var body = randomString();
-    boolean base64Encoded = randomBoolean();
     var headers = randomMap();
 
-    var left = createResponse(statusCode, body, newMap(headers), base64Encoded);
-    var right = createResponse(statusCode, body, newMap(headers), base64Encoded);
+    var left = createResponse(statusCode, body, newMap(headers));
+    var right = createResponse(statusCode, body, newMap(headers));
 
     assertThat(left).isEqualTo(right);
     assertThat(left.hashCode()).isEqualTo(right.hashCode());
     assertThat(left).usingRecursiveComparison().isEqualTo(right);
+  }
 
+  @Test
+  void shouldReturnJsonStringAsStringRepresentation() {
+    var response =
+      createResponse(randomInteger(), randomString(), newMap(randomMap()));
+    assertThat(response.toString()).isEqualTo(response.toJsonString());
   }
 
   private static GatewayResponse createResponse(int statusCode, String body,
-    Map<String, String> headers, boolean base64Encoded) {
-    var response = new GatewayResponse();
-    response.setStatusCode(statusCode);
-    response.setBody(body);
-    response.setHeaders(headers);
-    response.setBase64Encoded(base64Encoded);
-    return response;
+    Map<String, String> headers) {
+    return GatewayResponse.create(body,statusCode,headers,JSON);
   }
 
   private Map<String, String> newMap(Map<String, String> headers) {

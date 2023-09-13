@@ -115,6 +115,10 @@ public class GatewayResponse {
     return attempt(() -> objectMapper.writeValueAsString(this)).orElseThrow();
   }
 
+  public String toString() {
+    return serialize(new ObjectMapper(), this);
+  }
+
   private static String serializeBody(ObjectMapper objectMapper, Object object) {
     return attempt(() -> objectMapper.writeValueAsString(object)).orElseThrow();
   }
