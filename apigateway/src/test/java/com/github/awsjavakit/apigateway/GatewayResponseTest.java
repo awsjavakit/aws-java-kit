@@ -52,7 +52,6 @@ class GatewayResponseTest {
     var response =
       createResponse(randomInteger(), randomString(), newMap(randomMap()));
     assertThat(response.toString()).isEqualTo(response.toJsonString());
-
   }
 
   private static GatewayResponse createResponse(int statusCode, String body,
