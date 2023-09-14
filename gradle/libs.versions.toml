@@ -2,7 +2,7 @@
 awsSdk2 = { strictly = '2.20.103' }
 junit = { strictly = '5.9.3' }
 lambda = { strictly = '1.2.2' }
-assertj = { strictly = '3.23.1' }
+assertj = { strictly = '3.24.2' }
 log4j = { strictly = '2.17.2' }
 #wiremock has some old slf4j dependecies
 slf4j = { require = '1.8.0-beta4' }
