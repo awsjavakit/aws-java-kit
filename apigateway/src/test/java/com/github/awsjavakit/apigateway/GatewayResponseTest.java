@@ -40,11 +40,18 @@ class GatewayResponseTest {
     var body = randomString();
     var headers = randomMap();
 
-    var left = createResponse(statusCode, body, newMap(headers) );
+    var left = createResponse(statusCode, body, newMap(headers));
     var right = createResponse(statusCode, body, newMap(headers));
 
     assertThat(left).isEqualTo(right);
     assertThat(left.hashCode()).isEqualTo(right.hashCode());
+  }
+
+  @Test
+  void shouldReturnJsonStringAsStringRepresentation() {
+    var response =
+      createResponse(randomInteger(), randomString(), newMap(randomMap()));
+    assertThat(response.toString()).isEqualTo(response.toJsonString());
   }
 
   private static GatewayResponse createResponse(int statusCode, String body,
