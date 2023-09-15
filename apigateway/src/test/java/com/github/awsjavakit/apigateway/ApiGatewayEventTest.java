@@ -4,14 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ApiGatewayEventTest {
 
   public static final ObjectMapper JSON = new ObjectMapper();
-  public static final String SAMPLE_APIGATEWAY_EVENT = IoUtils.
-          stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
+  public static final String SAMPLE_APIGATEWAY_EVENT =
+    IoUtils.stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
 
   @Test
   void shouldParseApiGatewayEventVersion1() throws JsonProcessingException {

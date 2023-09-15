@@ -10,6 +10,7 @@ dependencies {
     implementation libs.aws.apigateway
     implementation libs.bundles.json
     implementation project(":attempt")
+    implementation project(":misc")
 
     testImplementation project(":testingutils")
     testImplementation libs.bundles.testing

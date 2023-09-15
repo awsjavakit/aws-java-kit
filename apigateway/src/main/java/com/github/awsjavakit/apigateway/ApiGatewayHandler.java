@@ -1,6 +1,5 @@
 package com.github.awsjavakit.apigateway;
 
-import static com.github.awsjavakit.apigateway.IoUtils.inputStreamToString;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
@@ -8,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.bodyparsing.BodyParser;
 import com.github.awsjavakit.apigateway.exception.ApiGatewayException;
 import com.github.awsjavakit.apigateway.responses.ResponseProvider;
+import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +40,7 @@ public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
   public void handleRequest(InputStream input, OutputStream output, Context context)
     throws IOException {
     try {
-      var inputString = inputStreamToString(input);
+      var inputString = IoUtils.streamToString(input);
       var apiGatewayEvent = objectMapper.readValue(inputString, ApiGatewayEvent.class);
       var body = apiGatewayEvent.getBody();
       var parsedBody = parseBody(body);
