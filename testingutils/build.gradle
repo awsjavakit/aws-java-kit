@@ -8,11 +8,15 @@ dependencies {
     compileOnly project(":apigateway")
     implementation project (":attempt")
     implementation project (":misc")
-    testImplementation project (":apigateway")
+
     implementation libs.lambda.core
     implementation libs.aws.apigateway
+    implementation libs.aws.secrets
     implementation libs.bundles.json
     implementation libs.bundles.testing
+
+    testImplementation project (":apigateway")
+    testImplementation project (":secrets")
     testImplementation libs.wiremock
 
 }
