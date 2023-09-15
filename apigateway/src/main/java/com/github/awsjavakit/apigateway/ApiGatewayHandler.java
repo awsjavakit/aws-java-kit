@@ -1,6 +1,5 @@
 package com.github.awsjavakit.apigateway;
 
-
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,16 +56,16 @@ public abstract class ApiGatewayHandler<I, O> implements RequestStreamHandler {
   public abstract O processInput(I body, ApiGatewayEvent apiGatewayEvent, Context context)
     throws ApiGatewayException;
 
-  private void writeFailure(OutputStream outputStream, ApiGatewayException expectedException)
+  protected void writeFailure(OutputStream outputStream, ApiGatewayException expectedException)
     throws IOException {
     write(outputStream, expectedException.message(), expectedException);
   }
 
-  private void writeSuccess(O o, OutputStream outputStream) throws IOException {
+  protected void writeSuccess(O o, OutputStream outputStream) throws IOException {
     write(outputStream, o, successResponseProvider);
   }
 
-  private <ResponseBody> void write(OutputStream outputStream,
+  protected <ResponseBody> void write(OutputStream outputStream,
     ResponseBody responseBody, ResponseProvider responseProvider) throws IOException {
     try (var writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
       var gateWayResponse =
