@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRespon
 
 public class SecretsReader {
 
+  private static final String SECRET_NAME_KEY_DELIMITER = ":";
   private final SecretsManagerClient awsSecretsManager;
   private final ObjectMapper json;
 
@@ -87,7 +88,7 @@ public class SecretsReader {
 
   private <T> ErrorReadingSecretException errorReadingSecret(Failure<T> fail,
     String... secretDetails) {
-    var secretDetailsString = String.join(":", secretDetails);
+    var secretDetailsString = String.join(SECRET_NAME_KEY_DELIMITER, secretDetails);
     return new ErrorReadingSecretException(secretDetailsString, fail.getException());
   }
 
