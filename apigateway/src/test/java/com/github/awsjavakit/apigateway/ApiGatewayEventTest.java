@@ -1,6 +1,7 @@
 package com.github.awsjavakit.apigateway;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ class ApiGatewayEventTest {
   public static final ObjectMapper JSON = new ObjectMapper();
   public static final String SAMPLE_APIGATEWAY_EVENT =
     IoUtils.stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
+  public static final String APIGATEWAY_EVENT_WITH_NULL_VALUES =
+    IoUtils.stringFromResources(Path.of("apigateway", "event-with-null-values.json"));
 
   @Test
   void shouldParseApiGatewayEventVersion1() throws JsonProcessingException {
@@ -22,5 +25,10 @@ class ApiGatewayEventTest {
     var asJsonAgain = JSON.readTree(reserializedEvent);
 
     assertThat(asJsonAgain).isEqualTo(json);
+  }
+
+  @Test
+  void shouldBeAbleToHandleNullValues() {
+    assertDoesNotThrow(()->JSON.readValue(APIGATEWAY_EVENT_WITH_NULL_VALUES, ApiGatewayEvent.class));
   }
 }

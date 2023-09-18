@@ -1,5 +1,7 @@
 package com.github.awsjavakit.apigateway;
 
+import static java.util.Objects.nonNull;
+
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -108,7 +110,10 @@ public class ApiGatewayEvent {
 
   @JsonAnySetter
   public void setOtherField(String key, Object value) {
-    this.otherFields.put(key, value);
+    if (nonNull(value)) {
+      this.otherFields.put(key, value);
+    }
+
   }
 
   @JsonAnyGetter
