@@ -3,10 +3,6 @@ plugins {
     id 'signing'
 }
 
-
-group = 'io.github.awsjavakit'
-version = '0.3.11'
-
 java {
     withSourcesJar()
     withJavadocJar()
@@ -18,17 +14,8 @@ javadoc {
 
 
 publishing {
-    System.out.println(project.property('publish_packages_token'))
-    repositories {
-        maven {
-            name = "GithubPackages"
-            url = uri("https://maven.pkg.github.com/awsjavakit/aws-java-kit")
-            credentials {
-                username = project.property('publish_packages_username')
-                password = project.property('publish_packages_token')
-            }
-        }
-    }
+
+
     publications {
         mavenJava(MavenPublication) {
             artifactId = project.name
@@ -70,13 +57,27 @@ publishing {
 }
 
 static def should_sign_release() {
-    return false
+    return isMainBranch()
+}
+
+static def gitBranch() {
+    def branch = ""
+    def proc = "git rev-parse --abbrev-ref HEAD".execute()
+    proc.in.eachLine { line -> branch = line }
+    proc.err.eachLine { line -> println line }
+    proc.waitFor()
+    branch
+}
+
+static def isMainBranch() {
+    def branch = gitBranch()
+    return (branch == "main")
 }
 
 signing {
     if (should_sign_release()) {
-        def signingKey = findProperty("signingKey")
-        def signingPassword = findProperty("signingPassword")
+        def signingKey = findProperty("signing_key")
+        def signingPassword = findProperty("signing_password")
         useInMemoryPgpKeys(signingKey, signingPassword)
         sign publishing.publications.mavenJava
     }

@@ -5,6 +5,10 @@ plugins {
   id 'jacoco'
 }
 
+
+group 'io.github.awsjavakit'
+version = '0.3.11'
+
 repositories {
   mavenCentral()
   maven{ url= "https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/release"}
