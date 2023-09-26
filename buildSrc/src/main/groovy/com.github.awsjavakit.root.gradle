@@ -10,7 +10,6 @@ wrapper {
 }
 
 nexusPublishing {
-    System.out.println(findProperty("publish_packages_username"))
     repositories {
         sonatype {
             username = findProperty("publish_packages_username")
