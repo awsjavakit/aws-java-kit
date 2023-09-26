@@ -27,8 +27,8 @@ lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', vers
 
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
 aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', version.ref = 'awsSdk2' }
-
-
+aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2' }
+aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
 jackson-datatype-jdk8 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', version.ref = 'jackson' }
