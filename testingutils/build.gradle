@@ -11,6 +11,7 @@ dependencies {
 
     implementation libs.lambda.core
     implementation libs.aws.apigateway
+    implementation libs.aws.s3
     implementation libs.aws.secrets
     implementation libs.bundles.json
     implementation libs.bundles.testing
