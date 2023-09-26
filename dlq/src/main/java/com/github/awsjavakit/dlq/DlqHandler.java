@@ -1,4 +1,4 @@
-package no.unit.nva.commons.dlq;
+package com.github.awsjavakit.dlq;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;

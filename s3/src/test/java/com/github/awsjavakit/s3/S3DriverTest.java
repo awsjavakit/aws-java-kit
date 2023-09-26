@@ -1,6 +1,6 @@
-package no.unit.nva.s3;
+package com.github.awsjavakit.s3;
 
-import static no.unit.nva.s3.S3Driver.S3_SCHEME;
+import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
@@ -85,7 +85,6 @@ class S3DriverTest {
 
     @Test
     void shouldReturnTheContentsOfAllFilesInFolder() throws IOException {
-
         final UnixPath firstFilePath = UnixPath.of(SOME_PATH, randomString());
         final UnixPath secondFilePath = UnixPath.of(SOME_PATH, randomString());
         final String firstFileContent = randomString();

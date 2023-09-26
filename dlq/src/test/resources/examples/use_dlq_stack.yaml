@@ -25,7 +25,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: some-lambda
-      Handler: no.sikt.nva.lambda.SomeHandler::handleRequest
+      Handler: com.github.awsjavakit.lambda.SomeHandler::handleRequest
       PackageType: Zip
       EventInvokeConfig:
         DestinationConfig:

@@ -1,4 +1,4 @@
-package no.unit.nva.commons.dlq;
+package com.github.awsjavakit.dlq;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;

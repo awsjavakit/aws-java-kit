@@ -1,4 +1,4 @@
-package nva.commons.logutils;
+package com.github.awsjavakit;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;

@@ -25,7 +25,7 @@ Resources:
     Properties:
       CodeUri: ../dlq
       PackageType: Zip
-      Handler: no.unit.nva.commons.dlq.DlqHandler::handleRequest
+      Handler: com.github.awsjavakit.dlq.DlqHandler::handleRequest
       Role: !GetAtt DlqHandlerRole.Arn
       Runtime: java11
       Timeout: 30

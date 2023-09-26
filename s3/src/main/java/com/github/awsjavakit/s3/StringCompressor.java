@@ -1,4 +1,4 @@
-package no.unit.nva.s3;
+package com.github.awsjavakit.s3;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

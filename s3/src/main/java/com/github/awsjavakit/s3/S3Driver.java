@@ -1,4 +1,4 @@
-package no.unit.nva.s3;
+package com.github.awsjavakit.s3;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
