@@ -16,7 +16,3 @@ dependencies {
     testImplementation libs.wiremock
 
 }
-
-test{
-    environment "EXISTING_NON_EMPTY_VARIABLE", "some_value"
-}
