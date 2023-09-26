@@ -13,6 +13,7 @@ dependencies {
     implementation libs.aws.apigateway
     implementation libs.aws.s3
     implementation libs.aws.secrets
+    implementation libs.aws.firehose
     implementation libs.bundles.json
     implementation libs.bundles.testing
 

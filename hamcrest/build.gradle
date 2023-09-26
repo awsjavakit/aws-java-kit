@@ -1,0 +1,17 @@
+plugins {
+    id 'com.github.awsjavakit.java-library-conventions'
+    id 'com.github.awsjavakit.publishing'
+    id "io.freefair.lombok" version "8.3"
+}
+
+
+dependencies {
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    implementation libs.bundles.json
+    implementation libs.hamcrest
+
+    testImplementation libs.bundles.testing
+
+}

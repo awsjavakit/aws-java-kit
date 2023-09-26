@@ -10,6 +10,4 @@ dependencies {
     implementation libs.bundles.logging
     testImplementation project(":testingutils")
     testImplementation libs.bundles.testing
-
-
 }

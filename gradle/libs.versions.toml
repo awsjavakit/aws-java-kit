@@ -15,6 +15,10 @@ hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
 wiremock = { strictly = '3.0.4' }
 mockito = { strictly = '5.5.0' }
+awsLambdaEvents = { strictly = '3.11.2' }
+awsLambdaCore = { strictly = '1.2.2' }
+lombok = { strictly = '1.18.28' }
+
 
 [libraries]
 
@@ -28,9 +32,15 @@ lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', vers
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
 aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', version.ref = 'awsSdk2' }
 aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2' }
+aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.ref = 'awsSdk2' }
+aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }
 aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
+aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
+aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
+
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
+jackson-datatype-jsr310 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
 jackson-datatype-jdk8 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', version.ref = 'jackson' }
 jackson-databind = { group = 'com.fasterxml.jackson.core', name = 'jackson-databind', version.ref = 'jackson' }
 jackson-annotations = { group = 'com.fasterxml.jackson.core', name = 'jackson-annotations', version.ref = 'jackson' }
@@ -53,10 +63,10 @@ hamcrest-optional = { group = 'com.github.npathai', name = 'hamcrest-optional', 
 wiremock = { group = 'org.wiremock', name = 'wiremock', version.ref = 'wiremock' }
 mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mockito' }
 mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
-
+lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
 
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit"]
-json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations']
+json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations',"jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 

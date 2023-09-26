@@ -4,6 +4,7 @@ plugins {
 }
 
 rootProject.name = 'aws-java-kit'
+include('jsonconfig')
 include('attempt')
 include('apigateway')
 include('secrets')
@@ -11,3 +12,7 @@ include('misc')
 include('testingutils')
 include('http')
 include('s3')
+include('events')
+include('dlq')
+include('hamcrest')
+include('logutils')
