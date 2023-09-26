@@ -28,4 +28,4 @@ jobs:
           ORG_GRADLE_PROJECT_publish_packages_token: ${{ secrets.ORG_GRADLE_PROJECT_PUBLISH_PACKAGES_TOKEN }}
           ORG_GRADLE_PROJECT_signing_key : ${{secrets.ORG_GRADLE_PROJECT_SIGNING_KEY}}
           ORG_GRADLE_PROJECT_signing_password: ${{secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD}}
-        run: ./gradlew publish
+        run: ./gradlew signMavenJavaPublication publishToSonatype closeAndReleaseSonatypeStagingRepository
