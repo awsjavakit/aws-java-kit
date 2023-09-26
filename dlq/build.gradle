@@ -8,6 +8,12 @@ dependencies {
 
     implementation libs.bundles.json
     implementation libs.bundles.logging
+    implementation libs.aws.firehose
+    implementation libs.aws.lambda.events
+    implementation libs.aws.lambda.core
+    implementation libs.guava
     testImplementation project(":testingutils")
+    testImplementation project(":attempt")
     testImplementation libs.bundles.testing
+
 }
