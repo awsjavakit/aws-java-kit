@@ -50,7 +50,6 @@ class OAuth2CredentialsFromSecretsManagerTest {
     this.httpClient = WiremockHttpClient.create().build();
     this.secretsClient = new FakeSecretsManagerClient(JSON);
     this.expectedResponseBody = randomString();
-
   }
 
   @Test
@@ -66,7 +65,6 @@ class OAuth2CredentialsFromSecretsManagerTest {
     var response = authorizedClient.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
     assertThat(response.body()).isEqualTo(expectedResponseBody);
-
   }
 
   private void persistSecretsInSecretsManager() {
@@ -84,7 +82,5 @@ class OAuth2CredentialsFromSecretsManagerTest {
     server.stubFor(WireMock.get(urlPathEqualTo(SECURED_ENDPOINT_PATH))
       .withHeader(AUTHORIZATION_HEADER, new EqualToPattern("Bearer " + accessToken))
       .willReturn(aResponse().withStatus(HTTP_OK).withBody(expectedResponseBody)));
-
   }
-
 }
