@@ -13,7 +13,7 @@ apacheCommons = { strictly = '3.13.0' }
 datafaker = { strictly = '2.0.1' }
 hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
-wiremock = { strictly = '2.35.0' }
+wiremock = { strictly = '3.0.2' }
 mockito = { strictly = '5.5.0' }
 awsLambdaEvents = { strictly = '3.11.2' }
 awsLambdaCore = { strictly = '1.2.2' }
