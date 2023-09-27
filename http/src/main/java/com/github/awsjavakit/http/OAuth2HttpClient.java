@@ -155,8 +155,8 @@ public class OAuth2HttpClient extends HttpClient {
 
   private HttpRequest formatRequestForOauth2Token() {
     return HttpRequest.newBuilder(credentialsProvider.getAuthorizationEndpoint())
-      .setHeader(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
-      .setHeader(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
+      .header(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
+      .header(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
       .POST(clientCredentialsAuthType())
       .build();
   }
