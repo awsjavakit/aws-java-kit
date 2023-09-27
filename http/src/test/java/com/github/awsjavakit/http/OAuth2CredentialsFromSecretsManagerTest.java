@@ -25,7 +25,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class CredentialsAsSecretsTest {
+class OAuth2CredentialsFromSecretsManagerTest {
 
   public static final ObjectMapper JSON = new ObjectMapper();
   public static final String SECURED_ENDPOINT_PATH = "/secured/endpoint";
