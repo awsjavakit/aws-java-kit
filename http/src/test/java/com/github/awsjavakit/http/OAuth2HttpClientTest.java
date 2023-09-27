@@ -74,6 +74,20 @@ class OAuth2HttpClientTest {
   }
 
   @Test
+  void shouldRemoveAnyOtherExistingAuthorizationHeader()
+    throws IOException, InterruptedException {
+    setupCredentialsResponse();
+    var client =
+      OAuth2HttpClient.create(httpClient,
+        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    var request = HttpRequest.newBuilder(protectedEndpoint()).GET()
+      .setHeader(AUTHORIZATION_HEADER,randomString())
+      .build();
+    HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+    assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+  }
+
+  @Test
   void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequest()
     throws InterruptedException, ExecutionException {
     setupCredentialsResponse();

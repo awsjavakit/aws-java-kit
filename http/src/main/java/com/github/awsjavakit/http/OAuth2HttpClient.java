@@ -47,6 +47,7 @@ public class OAuth2HttpClient extends HttpClient {
 
   protected OAuth2HttpClient(HttpClient httpClient,
     OAuthCredentialsProvider credentialsProvider) {
+    super();
     this.httpClient = httpClient;
     this.credentialsProvider = credentialsProvider;
   }
@@ -132,19 +133,19 @@ public class OAuth2HttpClient extends HttpClient {
     return httpClient.executor();
   }
 
-  private BiPredicate<String, String> filterOutAuthorizationHeader() {
-    return (headerName, headerValue) -> !AUTHORIZATION_HEADER.equals(headerName);
-  }
-
   private HttpRequest authorizeRequest(HttpRequest request) {
     var bearerToken = authenticate();
     return addAuthorizationHeader(request, bearerToken);
   }
 
   private HttpRequest addAuthorizationHeader(HttpRequest request, String accessToken) {
-    return HttpRequest.newBuilder(request, filterOutAuthorizationHeader())
-      .header(AUTHORIZATION_HEADER, accessToken)
+    return HttpRequest.newBuilder(request, filterOutAuthHeader())
+      .setHeader(AUTHORIZATION_HEADER, accessToken)
       .build();
+  }
+
+  private BiPredicate<String, String> filterOutAuthHeader() {
+    return (headerName, headerValue) -> !AUTHORIZATION_HEADER.equals(headerName);
   }
 
   private String authenticate() {
