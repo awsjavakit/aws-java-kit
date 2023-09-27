@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -18,29 +17,27 @@ import java.util.Objects;
 
 public class OAuth2HttpClient {
 
-  private static final String JWT_TOKEN_FIELD = "access_token";
-  private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
-  private static final String AUTHORIZATION_HEADER = "Authorization";
+  public static final String JWT_TOKEN_FIELD = "access_token";
+  public static final String AUTHORIZATION_HEADER = "Authorization";
+  public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
   private static final String CONTENT_TYPE_HEADER = "Content-Type";
 
   private final HttpClient httpClient;
-  private final URI authUrl;
   private final OAuthCredentialsProvider credentialsProvider;
 
-  protected OAuth2HttpClient(HttpClient httpClient, URI authUrl,
+  protected OAuth2HttpClient(HttpClient httpClient,
     OAuthCredentialsProvider credentialsProvider) {
     this.httpClient = httpClient;
-    this.authUrl = authUrl;
     this.credentialsProvider = credentialsProvider;
   }
 
   public static OAuth2HttpClient create(HttpClient httpClient,
-    URI authUrl,
     OAuthCredentialsProvider credentialsProvider) {
-    return new OAuth2HttpClient(httpClient, authUrl, credentialsProvider);
+    return new OAuth2HttpClient(httpClient, credentialsProvider);
 
   }
 
@@ -58,18 +55,13 @@ public class OAuth2HttpClient {
     return HttpRequest.BodyPublishers.ofString(queryParameters);
   }
 
-  private static URI standardOauth2TokenEndpoint(URI cognitoHost) {
-    return UriWrapper.fromUri(cognitoHost).addChild("oauth2").addChild("token").getUri();
-  }
-
   private String authenticate() {
-    var tokenUri = standardOauth2TokenEndpoint(this.authUrl);
-    var request = formatRequestForJwtToken(tokenUri);
+    var request = formatRequestForOauth2Token();
     return sendRequestAndExtractToken(request);
   }
 
-  private HttpRequest formatRequestForJwtToken(URI tokenUri) {
-    return HttpRequest.newBuilder(tokenUri)
+  private HttpRequest formatRequestForOauth2Token() {
+    return HttpRequest.newBuilder(credentialsProvider.getAuthorizationEndpoint())
       .setHeader(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
       .setHeader(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
       .POST(clientCredentialsAuthType())

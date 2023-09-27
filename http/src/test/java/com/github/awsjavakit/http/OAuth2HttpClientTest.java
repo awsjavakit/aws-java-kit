@@ -1,5 +1,7 @@
-package com.gitthub.awsjavakit.http;
+package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.http.OAuth2HttpClient.AUTHORIZATION_HEADER;
+import static com.github.awsjavakit.http.OAuthCredentialsProvider.OAUTH2_TOKEN_PATH;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -11,8 +13,6 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.awsjavakit.http.OAuth2HttpClient;
-import com.github.awsjavakit.http.OAuthCredentialsProvider;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -58,8 +58,8 @@ class OAuth2HttpClientTest {
   void shouldFetchBearerTokenFromBearerTokenProvider() throws IOException, InterruptedException {
     setupCredentialsResponse();
     var client =
-      OAuth2HttpClient.create(httpClient, serverUrl,
-        new CredentialsProvider(clientId, clientSecret));
+      OAuth2HttpClient.create(httpClient,
+        new CredentialsProvider(serverUrl,clientId, clientSecret));
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET();
     HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
@@ -71,13 +71,13 @@ class OAuth2HttpClientTest {
   }
 
   private void setupCredentialsResponse() {
-    authServer.stubFor(post(urlPathEqualTo("/oauth2/token"))
+    authServer.stubFor(post(urlPathEqualTo(OAUTH2_TOKEN_PATH))
       .withBasicAuth(clientId, clientSecret)
       .withFormParam("grant_type", new EqualToPattern("client_credentials"))
       .willReturn(aResponse().withStatus(HTTP_OK).withBody(createOAuthResponse())));
 
     authServer.stubFor(get(urlPathEqualTo(PROTECTED_ENDPOINT_PATH))
-      .withHeader("Authorization", new EqualToPattern("Bearer " + authToken))
+      .withHeader(AUTHORIZATION_HEADER, new EqualToPattern("Bearer " + authToken))
       .willReturn(aResponse().withStatus(HTTP_OK).withBody(expectedResponseBody)));
 
   }
@@ -87,25 +87,23 @@ class OAuth2HttpClientTest {
     return toJsonString(response);
   }
 
-  private static class CredentialsProvider implements OAuthCredentialsProvider {
-
-    private final String clientId;
-    private final String clientSecret;
-
-    public CredentialsProvider(String clientId, String clientSecret) {
-      this.clientId = clientId;
-      this.clientSecret = clientSecret;
-    }
+  private record CredentialsProvider(URI serverUri, String clientId, String clientSecret) implements
+    OAuthCredentialsProvider {
 
     @Override
-    public String getUsername() {
-      return clientId;
-    }
+      public String getUsername() {
+        return clientId;
+      }
 
-    @Override
-    public String getPassword() {
-      return clientSecret;
-    }
+      @Override
+      public String getPassword() {
+        return clientSecret;
+      }
 
-  }
+      @Override
+      public URI getAuthServerUri() {
+        return serverUri;
+      }
+
+    }
 }
