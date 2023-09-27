@@ -22,7 +22,14 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.net.http.HttpResponse.PushPromiseHandler;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -55,15 +62,47 @@ class OAuth2HttpClientTest {
   }
 
   @Test
-  void shouldFetchBearerTokenFromBearerTokenProvider() throws IOException, InterruptedException {
+  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingSyncedRequest()
+    throws IOException, InterruptedException {
     setupCredentialsResponse();
     var client =
       OAuth2HttpClient.create(httpClient,
-        new CredentialsProvider(serverUrl,clientId, clientSecret));
-    var request = HttpRequest.newBuilder(protectedEndpoint()).GET();
+        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
     HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+  }
 
+  @Test
+  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequest()
+    throws InterruptedException, ExecutionException {
+    setupCredentialsResponse();
+    var client =
+      OAuth2HttpClient.create(httpClient,
+        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
+    HttpResponse<String> response = client.sendAsync(request, BodyHandlers.ofString()).get();
+    assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+  }
+
+  @Test
+  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequestWithPushPromiseHandler()
+    throws InterruptedException, ExecutionException {
+    setupCredentialsResponse();
+    var client =
+      OAuth2HttpClient.create(httpClient,
+        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
+    HttpResponse<String> response = client.sendAsync(request,
+      BodyHandlers.ofString(),
+      dummyPushPromiseHandler()).get();
+    assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+  }
+
+  private static PushPromiseHandler<String> dummyPushPromiseHandler() {
+    Function<HttpRequest, BodyHandler<String>> dummyHandler = httpRequest -> BodyHandlers.ofString();
+    ConcurrentMap<HttpRequest, CompletableFuture<HttpResponse<String>>> map = new ConcurrentHashMap<>();
+    return PushPromiseHandler.of(dummyHandler, map);
   }
 
   private URI protectedEndpoint() {
@@ -91,19 +130,19 @@ class OAuth2HttpClientTest {
     OAuthCredentialsProvider {
 
     @Override
-      public String getUsername() {
-        return clientId;
-      }
-
-      @Override
-      public String getPassword() {
-        return clientSecret;
-      }
-
-      @Override
-      public URI getAuthServerUri() {
-        return serverUri;
-      }
-
+    public String getClientId() {
+      return clientId;
     }
+
+    @Override
+    public String getClientSecret() {
+      return clientSecret;
+    }
+
+    @Override
+    public URI getAuthServerUri() {
+      return serverUri;
+    }
+
+  }
 }

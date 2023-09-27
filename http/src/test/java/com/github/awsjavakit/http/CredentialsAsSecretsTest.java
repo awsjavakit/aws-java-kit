@@ -62,7 +62,7 @@ class CredentialsAsSecretsTest {
       new OAuth2HttpClient(httpClient,
         new OAuth2CredentialsAsSecrets(secretsClient, SECRET_NAME, JSON));
     var requestUri = UriWrapper.fromUri(serverUri).addChild(SECURED_ENDPOINT_PATH).getUri();
-    var request = HttpRequest.newBuilder(requestUri).GET();
+    var request = HttpRequest.newBuilder(requestUri).GET().build();
     var response = authorizedClient.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
     assertThat(response.body()).isEqualTo(expectedResponseBody);

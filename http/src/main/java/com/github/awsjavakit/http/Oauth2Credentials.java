@@ -8,6 +8,14 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 
+/**
+ * Structure containing all the necessary information for an OAuth2 authentication handshake with
+ * for grant_type "client_credentials".
+ *
+ * @param serverUri    the URI of the authentication server (without the "/oauth2/token" path)
+ * @param clientId     the client id (username)
+ * @param clientSecret the client secret (password)
+ */
 @JsonTypeInfo(use = Id.NAME, property = "type")
 public record Oauth2Credentials(
   @JsonProperty("serverUri") URI serverUri,

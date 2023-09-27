@@ -4,18 +4,34 @@ import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import java.io.IOException;
+import java.net.Authenticator;
+import java.net.CookieHandler;
+import java.net.ProxySelector;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.net.http.HttpResponse.PushPromiseHandler;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.BiPredicate;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 
-public class OAuth2HttpClient {
+/**
+ * A wrapper of HttpClient that performs an OAuth2 authentication of "grant_type"
+ * "client_credentials" before each query.
+ */
+public class OAuth2HttpClient extends HttpClient {
 
   public static final String JWT_TOKEN_FIELD = "access_token";
   public static final String AUTHORIZATION_HEADER = "Authorization";
@@ -41,18 +57,94 @@ public class OAuth2HttpClient {
 
   }
 
-  public <T> HttpResponse<T> send(HttpRequest.Builder requestBuilder,
-    BodyHandler<T> responseBodyHandler)
+  @Override
+  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
     throws IOException, InterruptedException {
-    var bearerToken = authenticate();
-    var authorizedRequest = requestBuilder.setHeader(AUTHORIZATION_HEADER, bearerToken).build();
+    var authorizedRequest = authorizeRequest(request);
     return httpClient.send(authorizedRequest, responseBodyHandler);
   }
 
-  private static HttpRequest.BodyPublisher clientCredentialsAuthType() {
-    var queryParameters = UriWrapper.fromHost("notimportant")
-      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
-    return HttpRequest.BodyPublishers.ofString(queryParameters);
+  @Override
+  public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
+    BodyHandler<T> responseBodyHandler) {
+    var authorizedRequest = authorizeRequest(request);
+    return httpClient.sendAsync(authorizedRequest, responseBodyHandler);
+  }
+
+  @Override
+  public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
+    BodyHandler<T> responseBodyHandler, PushPromiseHandler<T> pushPromiseHandler) {
+    var authorizedRequest = authorizeRequest(request);
+    return httpClient.sendAsync(authorizedRequest, responseBodyHandler, pushPromiseHandler);
+  }
+
+  @JacocoGenerated
+  @Override
+  public Optional<CookieHandler> cookieHandler() {
+    return httpClient.cookieHandler();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Optional<Duration> connectTimeout() {
+    return httpClient.connectTimeout();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Redirect followRedirects() {
+    return httpClient.followRedirects();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Optional<ProxySelector> proxy() {
+    return httpClient.proxy();
+  }
+
+  @JacocoGenerated
+  @Override
+  public SSLContext sslContext() {
+    return httpClient.sslContext();
+  }
+
+  @JacocoGenerated
+  @Override
+  public SSLParameters sslParameters() {
+    return httpClient.sslParameters();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Optional<Authenticator> authenticator() {
+    return httpClient.authenticator();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Version version() {
+    return httpClient.version();
+  }
+
+  @JacocoGenerated
+  @Override
+  public Optional<Executor> executor() {
+    return httpClient.executor();
+  }
+
+  private BiPredicate<String, String> filterOutAuthorizationHeader() {
+    return (headerName, headerValue) -> !AUTHORIZATION_HEADER.equals(headerName);
+  }
+
+  private HttpRequest authorizeRequest(HttpRequest request) {
+    var bearerToken = authenticate();
+    return addAuthorizationHeader(request, bearerToken);
+  }
+
+  private HttpRequest addAuthorizationHeader(HttpRequest request, String accessToken) {
+    return HttpRequest.newBuilder(request, filterOutAuthorizationHeader())
+      .header(AUTHORIZATION_HEADER, accessToken)
+      .build();
   }
 
   private String authenticate() {
@@ -68,6 +160,12 @@ public class OAuth2HttpClient {
       .build();
   }
 
+  private HttpRequest.BodyPublisher clientCredentialsAuthType() {
+    var queryParameters = UriWrapper.fromHost("notimportant")
+      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
+    return HttpRequest.BodyPublishers.ofString(queryParameters);
+  }
+
   private String createBearerToken(String accessToken) {
     return "Bearer " + accessToken;
   }
@@ -76,7 +174,7 @@ public class OAuth2HttpClient {
     return attempt(
       () -> this.httpClient.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8)))
       .map(HttpResponse::body)
-      .map(body -> JSON.readTree(body))
+      .map(JSON::readTree)
       .map(json -> json.get(JWT_TOKEN_FIELD))
       .map(JsonNode::textValue)
       .map(Objects::toString)
