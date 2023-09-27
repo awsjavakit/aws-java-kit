@@ -35,9 +35,9 @@ class OAuth2CredentialsFromSecretsManagerTest {
   private String accessToken;
   private String clientId;
   private String clientSecret;
-  private HttpClient httpClient;
   private FakeSecretsManagerClient secretsClient;
   private String expectedResponseBody;
+  private OAuth2HttpClient authorizedClient;
 
   @BeforeEach
   public void init() {
@@ -47,25 +47,26 @@ class OAuth2CredentialsFromSecretsManagerTest {
     this.accessToken = randomString();
     this.clientId = randomString();
     this.clientSecret = randomString();
-    this.httpClient = WiremockHttpClient.create().build();
     this.secretsClient = new FakeSecretsManagerClient(JSON);
     this.expectedResponseBody = randomString();
+    persistSecretsInSecretsManager();
+    setupAuthAndServiceServer();
+    this.authorizedClient =
+      new OAuth2HttpClient(WiremockHttpClient.create().build(),
+        new OAuth2CredentialsFromSecretsManager(secretsClient, SECRET_NAME, JSON)
+      );
   }
 
   @Test
   void shouldReadClientIdAndClientSecretFromSecretsManager()
     throws IOException, InterruptedException {
-    persistSecretsInSecretsManager();
-    setupAuthAndServiceServer();
-    var authorizedClient =
-      new OAuth2HttpClient(httpClient,
-        new OAuth2CredentialsFromSecretsManager(secretsClient, SECRET_NAME, JSON));
     var requestUri = UriWrapper.fromUri(serverUri).addChild(SECURED_ENDPOINT_PATH).getUri();
     var request = HttpRequest.newBuilder(requestUri).GET().build();
     var response = authorizedClient.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
     assertThat(response.body()).isEqualTo(expectedResponseBody);
   }
+
 
   private void persistSecretsInSecretsManager() {
     var oauthCredentials = new Oauth2Credentials(serverUri, clientId, clientSecret);

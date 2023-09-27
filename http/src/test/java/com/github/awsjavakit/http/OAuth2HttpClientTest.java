@@ -37,13 +37,13 @@ class OAuth2HttpClientTest {
 
   public static final String PROTECTED_ENDPOINT_PATH = "/protected/endpoint";
   private static final ObjectMapper JSON = new ObjectMapper();
-  private HttpClient httpClient;
   private WireMockServer authServer;
   private URI serverUrl;
   private String clientId;
   private String clientSecret;
   private String authToken;
   private String expectedResponseBody;
+  private OAuth2HttpClient client;
 
   @BeforeEach
   public void init() {
@@ -54,7 +54,11 @@ class OAuth2HttpClientTest {
     this.clientId = randomString();
     this.clientSecret = randomString();
     this.authToken = randomString();
-    this.httpClient = WiremockHttpClient.create().build();
+
+    this.client=
+      OAuth2HttpClient.create(WiremockHttpClient.create().build(),
+        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    setupCredentialsResponse();
   }
 
   public String toJsonString(Object object) {
@@ -64,10 +68,6 @@ class OAuth2HttpClientTest {
   @Test
   void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingSyncedRequest()
     throws IOException, InterruptedException {
-    setupCredentialsResponse();
-    var client =
-      OAuth2HttpClient.create(httpClient,
-        new CredentialsProvider(serverUrl, clientId, clientSecret));
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
     HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
@@ -76,26 +76,18 @@ class OAuth2HttpClientTest {
   @Test
   void shouldRemoveAnyOtherExistingAuthorizationHeader()
     throws IOException, InterruptedException {
-    setupCredentialsResponse();
-    var client =
-      OAuth2HttpClient.create(httpClient,
-        new CredentialsProvider(serverUrl, clientId, clientSecret));
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET()
       .setHeader(AUTHORIZATION_HEADER,randomString())
       .build();
-    HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
+    var response = client.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
   }
 
   @Test
   void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequest()
     throws InterruptedException, ExecutionException {
-    setupCredentialsResponse();
-    var client =
-      OAuth2HttpClient.create(httpClient,
-        new CredentialsProvider(serverUrl, clientId, clientSecret));
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
-    HttpResponse<String> response = client.sendAsync(request, BodyHandlers.ofString()).get();
+    var response = client.sendAsync(request, BodyHandlers.ofString()).get();
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
   }
 
@@ -103,13 +95,11 @@ class OAuth2HttpClientTest {
   void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequestWithPushPromiseHandler()
     throws InterruptedException, ExecutionException {
     setupCredentialsResponse();
-    var client =
-      OAuth2HttpClient.create(httpClient,
-        new CredentialsProvider(serverUrl, clientId, clientSecret));
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
-    HttpResponse<String> response = client.sendAsync(request,
+    var response = client.sendAsync(request,
       BodyHandlers.ofString(),
       dummyPushPromiseHandler()).get();
+
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
   }
 
