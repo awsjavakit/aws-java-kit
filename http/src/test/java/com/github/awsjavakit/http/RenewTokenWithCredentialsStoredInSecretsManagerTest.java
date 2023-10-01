@@ -24,7 +24,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class OAuth2CredentialsFromSecretsManagerTest {
+class RenewTokenWithCredentialsStoredInSecretsManagerTest {
 
   public static final ObjectMapper JSON = new ObjectMapper();
   public static final String SECURED_ENDPOINT_PATH = "/secured/endpoint";
@@ -50,14 +50,15 @@ class OAuth2CredentialsFromSecretsManagerTest {
     this.expectedResponseBody = randomString();
     persistSecretsInSecretsManager();
     setupAuthAndServiceServer();
+    var httpClient = WiremockHttpClient.create().build();
+    var tokenProvider = TokenProvider.defaultProvider(httpClient,
+      new OAuth2CredentialsFromSecretsManager(secretsClient,SECRET_NAME,JSON));
     this.authorizedClient =
-      new OAuth2HttpClient(WiremockHttpClient.create().build(),
-        new OAuth2CredentialsFromSecretsManager(secretsClient, SECRET_NAME, JSON)
-      );
+      new OAuth2HttpClient(WiremockHttpClient.create().build(), tokenProvider);
   }
 
   @Test
-  void shouldReadClientIdAndClientSecretFromSecretsManager()
+  void shouldSendAuthorizedRequestWhenFetchingOAuthCredentialsFromSecretsManager()
     throws IOException, InterruptedException {
     var requestUri = UriWrapper.fromUri(serverUri).addChild(SECURED_ENDPOINT_PATH).getUri();
     var request = HttpRequest.newBuilder(requestUri).GET().build();

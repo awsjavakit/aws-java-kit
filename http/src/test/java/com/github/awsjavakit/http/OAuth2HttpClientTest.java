@@ -1,18 +1,14 @@
 package com.github.awsjavakit.http;
 
 import static com.github.awsjavakit.http.OAuth2HttpClient.AUTHORIZATION_HEADER;
-import static com.github.awsjavakit.http.OAuthCredentialsProvider.OAUTH2_TOKEN_PATH;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -35,11 +31,8 @@ import org.junit.jupiter.api.Test;
 class OAuth2HttpClientTest {
 
   public static final String PROTECTED_ENDPOINT_PATH = "/protected/endpoint";
-  private static final ObjectMapper JSON = new ObjectMapper();
   private WireMockServer authServer;
   private URI serverUrl;
-  private String clientId;
-  private String clientSecret;
   private String authToken;
   private String expectedResponseBody;
   private OAuth2HttpClient client;
@@ -50,22 +43,16 @@ class OAuth2HttpClientTest {
     this.authServer.start();
     this.serverUrl = URI.create(authServer.baseUrl());
     this.expectedResponseBody = randomString();
-    this.clientId = randomString();
-    this.clientSecret = randomString();
     this.authToken = randomString();
-
-    this.client=
-      OAuth2HttpClient.create(WiremockHttpClient.create().build(),
-        new CredentialsProvider(serverUrl, clientId, clientSecret));
+    var tokenProvider = new SimpleTokenProvider(authToken);
+    var httpClient = WiremockHttpClient.create().build();
+    this.client =
+      OAuth2HttpClient.create(httpClient, tokenProvider);
     setupCredentialsResponse();
   }
 
-  public String toJsonString(Object object) {
-    return attempt(() -> JSON.writeValueAsString(object)).orElseThrow();
-  }
-
   @Test
-  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingSyncedRequest()
+  void shouldFetchBearerTokenFromTokenProviderWhenSendingSyncedRequest()
     throws IOException, InterruptedException {
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
     HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
@@ -76,14 +63,14 @@ class OAuth2HttpClientTest {
   void shouldRemoveAnyOtherExistingAuthorizationHeader()
     throws IOException, InterruptedException {
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET()
-      .setHeader(AUTHORIZATION_HEADER,randomString())
+      .setHeader(AUTHORIZATION_HEADER, randomString())
       .build();
     var response = client.send(request, BodyHandlers.ofString());
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
   }
 
   @Test
-  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequest()
+  void shouldFetchBearerTokenFromTokenProviderWhenSendingAsyncRequest()
     throws InterruptedException, ExecutionException {
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
     var response = client.sendAsync(request, BodyHandlers.ofString()).get();
@@ -91,7 +78,7 @@ class OAuth2HttpClientTest {
   }
 
   @Test
-  void shouldFetchBearerTokenFromBearerTokenProviderWhenSendingAsyncRequestWithPushPromiseHandler()
+  void shouldFetchBearerTokenFromTokenProviderWhenSendingAsyncRequestWithPushPromiseHandler()
     throws InterruptedException, ExecutionException {
     setupCredentialsResponse();
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET().build();
@@ -113,39 +100,17 @@ class OAuth2HttpClientTest {
   }
 
   private void setupCredentialsResponse() {
-    authServer.stubFor(post(urlPathEqualTo(OAUTH2_TOKEN_PATH))
-      .withBasicAuth(clientId, clientSecret)
-      .withFormParam("grant_type", new EqualToPattern("client_credentials"))
-      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createOAuthResponse())));
-
     authServer.stubFor(get(urlPathEqualTo(PROTECTED_ENDPOINT_PATH))
       .withHeader(AUTHORIZATION_HEADER, new EqualToPattern("Bearer " + authToken))
       .willReturn(aResponse().withStatus(HTTP_OK).withBody(expectedResponseBody)));
 
   }
 
-  private String createOAuthResponse() {
-    var response = new OAuthResponse(authToken, randomString(), randomString());
-    return toJsonString(response);
-  }
-
-  private record CredentialsProvider(URI serverUri, String clientId, String clientSecret) implements
-    OAuthCredentialsProvider {
+  private record SimpleTokenProvider(String token) implements TokenProvider {
 
     @Override
-    public String getClientId() {
-      return clientId;
+    public String fetchToken() {
+      return token;
     }
-
-    @Override
-    public String getClientSecret() {
-      return clientSecret;
-    }
-
-    @Override
-    public URI getAuthServerUri() {
-      return serverUri;
-    }
-
   }
 }
