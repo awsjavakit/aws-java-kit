@@ -16,7 +16,6 @@ public class SortableIdentifier {
   public SortableIdentifier(String value) {
     validate(value);
     this.value = value;
-
   }
 
   public static SortableIdentifier create() {
