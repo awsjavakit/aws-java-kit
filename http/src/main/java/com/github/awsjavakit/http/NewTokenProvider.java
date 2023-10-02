@@ -25,6 +25,7 @@ public class NewTokenProvider implements TokenProvider {
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
   private static final String CONTENT_TYPE_HEADER = "Content-Type";
+  public static final String DUMMY_HOST = "notimportant";
 
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
@@ -54,12 +55,12 @@ public class NewTokenProvider implements TokenProvider {
     return HttpRequest.newBuilder(credentialsProvider.getAuthorizationEndpoint())
       .header(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
       .header(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
-      .POST(clientCredentialsAuthType())
+      .POST(clientCredentialsInXWwwFormUrlEncodedBody())
       .build();
   }
 
-  private HttpRequest.BodyPublisher clientCredentialsAuthType() {
-    var queryParameters = UriWrapper.fromHost("notimportant")
+  private HttpRequest.BodyPublisher clientCredentialsInXWwwFormUrlEncodedBody() {
+    var queryParameters = UriWrapper.fromHost(DUMMY_HOST)
       .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
     return HttpRequest.BodyPublishers.ofString(queryParameters);
   }
