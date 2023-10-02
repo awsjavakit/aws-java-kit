@@ -21,12 +21,11 @@ public class NewTokenProvider implements TokenProvider {
   public static final String JWT_TOKEN_FIELD = "access_token";
   public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
   public static final String AUTHORIZATION_HEADER = "Authorization";
+  private static final String DUMMY_HOST = "notimportant";
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
   private static final String CONTENT_TYPE_HEADER = "Content-Type";
-  public static final String DUMMY_HOST = "notimportant";
-
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
 
@@ -37,8 +36,8 @@ public class NewTokenProvider implements TokenProvider {
   }
 
   public static NewTokenProvider create(HttpClient httpClient,
-    OAuthCredentialsProvider credentialsProvider){
-    return new NewTokenProvider(httpClient,credentialsProvider);
+    OAuthCredentialsProvider credentialsProvider) {
+    return new NewTokenProvider(httpClient, credentialsProvider);
   }
 
   @Override
