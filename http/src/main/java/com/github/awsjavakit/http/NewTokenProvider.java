@@ -25,18 +25,11 @@ public class NewTokenProvider implements TokenProvider {
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
-  private  static final String AUTH_REQUEST_BODY =
+  private static final String AUTH_REQUEST_BODY =
     formatPostParametersAsXWwwFormUrlEncodedBody();
-
-  private static String formatPostParametersAsXWwwFormUrlEncodedBody() {
-    return UriWrapper.fromHost(DUMMY_HOST)
-      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
-  }
-
   private static final String CONTENT_TYPE_HEADER = "Content-Type";
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
-
   protected NewTokenProvider(HttpClient httpClient,
     OAuthCredentialsProvider credentialsProvider) {
     this.httpClient = httpClient;
@@ -51,6 +44,11 @@ public class NewTokenProvider implements TokenProvider {
   @Override
   public String fetchToken() {
     return authenticate();
+  }
+
+  private static String formatPostParametersAsXWwwFormUrlEncodedBody() {
+    return UriWrapper.fromHost(DUMMY_HOST)
+      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
   }
 
   private String authenticate() {
