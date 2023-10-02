@@ -25,6 +25,14 @@ public class NewTokenProvider implements TokenProvider {
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
+  private  static final String AUTH_REQUEST_BODY =
+    formatPostParametersAsXWwwFormUrlEncodedBody();
+
+  private static String formatPostParametersAsXWwwFormUrlEncodedBody() {
+    return UriWrapper.fromHost(DUMMY_HOST)
+      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
+  }
+
   private static final String CONTENT_TYPE_HEADER = "Content-Type";
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
@@ -59,9 +67,7 @@ public class NewTokenProvider implements TokenProvider {
   }
 
   private HttpRequest.BodyPublisher clientCredentialsInXWwwFormUrlEncodedBody() {
-    var queryParameters = UriWrapper.fromHost(DUMMY_HOST)
-      .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();
-    return HttpRequest.BodyPublishers.ofString(queryParameters);
+    return HttpRequest.BodyPublishers.ofString(AUTH_REQUEST_BODY);
   }
 
   private String sendRequestAndExtractToken(HttpRequest request) {
