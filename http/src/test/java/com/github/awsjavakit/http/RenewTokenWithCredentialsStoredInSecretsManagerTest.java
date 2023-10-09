@@ -1,7 +1,6 @@
 package com.github.awsjavakit.http;
 
 import static com.github.awsjavakit.http.OAuth2HttpClient.AUTHORIZATION_HEADER;
-import static com.github.awsjavakit.http.OAuthCredentialsProvider.OAUTH2_TOKEN_PATH;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -29,6 +28,7 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
   public static final ObjectMapper JSON = new ObjectMapper();
   public static final String SECURED_ENDPOINT_PATH = "/secured/endpoint";
   public static final String SECRET_NAME = "oauthCredentials";
+  private static final String OAUTH2_TOKEN_PATH = "/oauth2/token";
   private WireMockServer server;
   private URI serverUri;
   private String accessToken;
@@ -69,7 +69,8 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
 
 
   private void persistSecretsInSecretsManager() {
-    var oauthCredentials = new Oauth2Credentials(serverUri, clientId, clientSecret);
+    var authEndpoint = UriWrapper.fromUri(serverUri).addChild(OAUTH2_TOKEN_PATH).getUri();
+    var oauthCredentials = new Oauth2Credentials(authEndpoint, clientId, clientSecret);
     secretsClient.putPlainTextSecret(SECRET_NAME, oauthCredentials.toJsonString(JSON));
   }
 

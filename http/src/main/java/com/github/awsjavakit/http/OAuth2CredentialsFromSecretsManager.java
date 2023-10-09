@@ -33,7 +33,9 @@ public class OAuth2CredentialsFromSecretsManager implements OAuthCredentialsProv
   }
 
   @Override
-  public URI getAuthServerUri() {
-    return credentials.serverUri();
+  public URI getAuthorizationEndpoint() {
+    return credentials.authEndpointUri();
   }
+
+
 }
