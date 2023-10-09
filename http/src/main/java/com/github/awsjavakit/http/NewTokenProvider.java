@@ -57,7 +57,7 @@ public class NewTokenProvider implements TokenProvider {
   }
 
   private HttpRequest formatRequestForOauth2Token() {
-    return HttpRequest.newBuilder(credentialsProvider.getAuthorizationEndpoint())
+    return HttpRequest.newBuilder(credentialsProvider.getAuthEndpointUri())
       .header(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
       .header(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
       .POST(clientCredentialsInXWwwFormUrlEncodedBody())
