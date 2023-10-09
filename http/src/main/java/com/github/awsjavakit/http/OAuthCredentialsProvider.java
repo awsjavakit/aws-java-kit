@@ -13,7 +13,7 @@ public interface OAuthCredentialsProvider {
 
   String getClientSecret();
 
-  URI getAuthEndpointUri();
+  URI getAuthorizationEndpoint();
 
   default String getAuthorizationHeader(){
     return "Basic " + Base64.getEncoder().encodeToString(formatCredentialsForBasicAuth());
