@@ -6,8 +6,10 @@ plugins {
 
 dependencies {
     compileOnly project(":apigateway")
+    implementation project(":events")
     implementation project (":attempt")
     implementation project (":misc")
+
 
     implementation libs.lambda.core
     implementation libs.aws.apigateway

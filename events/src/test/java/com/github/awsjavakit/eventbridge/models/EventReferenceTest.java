@@ -7,6 +7,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 
+import com.github.awsjavakit.jsonconfig.JsonConfig;
 import java.net.URI;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
@@ -15,20 +16,21 @@ class EventReferenceTest {
 
     @Test
     void shouldSerializeToJsonObjectThatContainsTopicAndUri() {
-        String expectedTopic = randomString();
-        URI expectedUri = randomUri();
-        EventReference eventReference = new EventReference(expectedTopic, expectedUri);
-        String json = eventReference.toJsonString();
+        var expectedTopic = randomString();
+        var expectedUri = randomUri();
+        var eventReference = new EventReference(expectedTopic, expectedUri);
+        String json = JsonConfig.writeValueAsString(eventReference);
         assertThat(json, containsString(expectedTopic));
         assertThat(json, containsString(expectedUri.toString()));
     }
     
     @Test
     void shouldDeSerializeFromJsonObjectWithoutInformationLoss() {
-        String expectedTopic = randomString();
-        URI expectedUri = randomUri();
-        EventReference eventReference = new EventReference(expectedTopic, expectedUri);
-        EventReference deserializedEventReference = EventReference.fromJson(eventReference.toJsonString());
+        var expectedTopic = randomString();
+        var expectedUri = randomUri();
+        var eventReference = new EventReference(expectedTopic, expectedUri);
+        EventReference deserializedEventReference =
+          EventReference.fromJson(JsonConfig.writeValueAsString(eventReference));
         assertThat(deserializedEventReference, is(equalTo(eventReference)));
     }
     
