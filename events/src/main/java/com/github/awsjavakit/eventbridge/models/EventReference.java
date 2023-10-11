@@ -3,7 +3,6 @@ package com.github.awsjavakit.eventbridge.models;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.awsjavakit.jsonconfig.JsonConfig;
-import com.github.awsjavakit.jsonconfig.JsonSerializable;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.net.URI;
 import java.time.Instant;
@@ -14,7 +13,7 @@ import java.util.Objects;
  * are stored to a location. The location is stored in the EventReference as a URI. The
  * {@link EventReference} contains also the topic of the event
  */
-public class EventReference implements JsonSerializable, EventBody {
+public class EventReference implements EventBody {
 
   public static final String TOPIC = "topic";
   public static final String URI = "uri";
@@ -79,11 +78,6 @@ public class EventReference implements JsonSerializable, EventBody {
   }
 
   @Override
-  public String toJsonString() {
-    return JsonConfig.writeValueAsOneLine(this);
-  }
-
-  @Override
   @JacocoGenerated
   public boolean equals(Object o) {
     if (this == o) {
@@ -103,4 +97,5 @@ public class EventReference implements JsonSerializable, EventBody {
   public int hashCode() {
     return Objects.hash(getTopic(), getSubtopic(), getUri(), getTimestamp());
   }
+
 }
