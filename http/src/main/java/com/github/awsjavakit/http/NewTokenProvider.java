@@ -1,5 +1,8 @@
 package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.http.HttpConstants.HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED;
+import static com.github.awsjavakit.http.HttpConstants.HttpHeaders.AUTHORIZATION;
+import static com.github.awsjavakit.http.HttpConstants.HttpHeaders.CONTENT_TYPE;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,15 +22,14 @@ import java.util.Objects;
 public class NewTokenProvider implements TokenProvider {
 
   public static final String JWT_TOKEN_FIELD = "access_token";
-  public static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
-  public static final String AUTHORIZATION_HEADER = "Authorization";
+
   private static final String DUMMY_HOST = "notimportant";
   private static final ObjectMapper JSON = new ObjectMapper();
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
     "client_credentials");
   private static final String AUTH_REQUEST_BODY =
     formatPostParametersAsXWwwFormUrlEncodedBody();
-  private static final String CONTENT_TYPE_HEADER = "Content-Type";
+
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
   protected NewTokenProvider(HttpClient httpClient,
@@ -58,8 +60,8 @@ public class NewTokenProvider implements TokenProvider {
 
   private HttpRequest formatRequestForOauth2Token() {
     return HttpRequest.newBuilder(credentialsProvider.getAuthorizationEndpoint())
-      .header(AUTHORIZATION_HEADER, credentialsProvider.getAuthorizationHeader())
-      .header(CONTENT_TYPE_HEADER, APPLICATION_X_WWW_FORM_URLENCODED)
+      .header(AUTHORIZATION, credentialsProvider.getAuthorizationHeader())
+      .header(CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED)
       .POST(clientCredentialsInXWwwFormUrlEncodedBody())
       .build();
   }
