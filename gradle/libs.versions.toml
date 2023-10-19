@@ -1,28 +1,26 @@
 [versions]
-awsSdk2 = { strictly = '2.20.141' }
-junit = { strictly = '5.9.3' }
-lambda = { strictly = '1.2.2' }
+awsSdk2 = { strictly = '2.21.2' }
+junit = { strictly = '5.10.0' }
 assertj = { strictly = '3.24.2' }
 log4j = { strictly = '2.18.0' }
 #wiremock has some old slf4j dependecies
-slf4j = { require = '2.0.5' }
+slf4j = { require = '2.0.9' }
 lambda-log4j2 = { strictly = '1.5.1' }
-jackson = { strictly = '2.14.1' }
-guava = { strictly = '32.0.0-jre' }
+jackson = { strictly = '2.15.3' }
+guava = { strictly = '32.1.3-jre' }
 apacheCommons = { strictly = '3.13.0' }
-datafaker = { strictly = '2.0.1' }
+datafaker = { strictly = '2.0.2' }
 hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
-wiremock = { strictly = '3.0.2' }
+wiremock = { strictly = '3.2.0' }
 mockito = { strictly = '5.5.0' }
-awsLambdaEvents = { strictly = '3.11.2' }
-awsLambdaCore = { strictly = '1.2.2' }
-lombok = { strictly = '1.18.28' }
+awsLambdaEvents = { strictly = '3.11.3' }
+awsLambdaCore = { strictly = '1.2.3' }
+lombok = { strictly = '1.18.30' }
 
 
 [libraries]
 
-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'lambda' }
 
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
 slf4j = { group = 'org.slf4j', name = 'slf4j-api', version.ref = 'slf4j' }

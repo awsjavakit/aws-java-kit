@@ -30,7 +30,7 @@ public class EventReference implements EventBody {
 
   @JsonCreator
   public EventReference(@JsonProperty(TOPIC) String topic,
-    @JsonProperty(SUBTOPIC) String subtopic,
+    @JsonProperty(value = SUBTOPIC) String subtopic,
     @JsonProperty(URI) URI uri,
     @JsonProperty(TIMESTAMP) Instant timestamp) {
     this.topic = topic;
