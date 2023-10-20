@@ -25,73 +25,73 @@ class UriWrapperTest {
 
   @Test
   void shouldRemovePathDelimiterFromTheEndOfTheUri() {
-    String inputPath = "/some/folder/file.json/";
-    UriWrapper uriWrapper = UriWrapper.fromUri("http://www.example.org" + inputPath);
-    String actualPath = uriWrapper.getPath().toString();
-    String expectedPath = "/some/folder/file.json";
+    var inputPath = "/some/folder/file.json/";
+    var uriWrapper = UriWrapper.fromUri("http://www.example.org" + inputPath);
+    var actualPath = uriWrapper.getPath().toString();
+    var expectedPath = "/some/folder/file.json";
     assertThat(actualPath, is(equalTo(expectedPath)));
   }
 
   @Test
   void shouldReturnParentPathIfParentExists() {
-    UriWrapper uriWrapper = UriWrapper.fromUri(HOST + "/level1/level2/file.json");
-    UriWrapper parent = uriWrapper.getParent().orElseThrow();
+    var uriWrapper = UriWrapper.fromUri(HOST + "/level1/level2/file.json");
+    var parent = uriWrapper.getParent().orElseThrow();
     assertThat(parent.getPath().toString(), is(equalTo("/level1/level2")));
-    UriWrapper grandParent = parent.getParent().orElseThrow();
+    var grandParent = parent.getParent().orElseThrow();
     assertThat(grandParent.getPath().toString(), is(equalTo("/level1")));
   }
 
   @Test
   void shouldReturnEmptyWhenPathIsRoot() {
-    UriWrapper uriWrapper = UriWrapper.fromUri(HOST + "/");
+    var uriWrapper = UriWrapper.fromUri(HOST + "/");
     Optional<UriWrapper> parent = uriWrapper.getParent();
     assertThat(parent.isEmpty(), is(true));
   }
 
   @Test
   void shouldReturnHostUri() {
-    UriWrapper uriWrapper = UriWrapper.fromUri(HOST + "/some/path/is.here");
-    URI expectedUri = URI.create(HOST);
+    var uriWrapper = UriWrapper.fromUri(HOST + "/some/path/is.here");
+    var expectedUri = URI.create(HOST);
     assertThat(uriWrapper.getHost().getUri(), is(equalTo(expectedUri)));
   }
 
   @Test
   void shouldAddChildToPath() {
-    String originalPath = "/some/path";
-    UriWrapper parent = UriWrapper.fromUri(HOST + originalPath);
-    UriWrapper child = parent.addChild("level1", "level2", "level3");
-    URI expectedChildUri = URI.create(HOST + originalPath + "/level1/level2/level3");
+    var originalPath = "/some/path";
+    var parent = UriWrapper.fromUri(HOST + originalPath);
+    var child = parent.addChild("level1", "level2", "level3");
+    var expectedChildUri = URI.create(HOST + originalPath + "/level1/level2/level3");
     assertThat(child.getUri(), is(equalTo(expectedChildUri)));
 
-    UriWrapper anotherChild = parent.addChild("level4").addChild("level5");
-    URI expectedAnotherChildUri = URI.create(HOST + originalPath + "/level4/level5");
+    var anotherChild = parent.addChild("level4").addChild("level5");
+    var expectedAnotherChildUri = URI.create(HOST + originalPath + "/level4/level5");
     assertThat(anotherChild.getUri(), is(equalTo(expectedAnotherChildUri)));
   }
 
   @Test
   void shouldReturnPathWithChildWhenChildDoesNotStartWithDelimiter() {
-    UriWrapper parentPath = UriWrapper.fromUri(HOST);
-    String inputChildPath = "some/path";
-    URI expectedResult = URI.create(HOST + ROOT + inputChildPath);
-    UriWrapper actualResult = parentPath.addChild(inputChildPath);
+    var parentPath = UriWrapper.fromUri(HOST);
+    var inputChildPath = "some/path";
+    var expectedResult = URI.create(HOST + ROOT + inputChildPath);
+    var actualResult = parentPath.addChild(inputChildPath);
     assertThat(actualResult.getUri(), is(equalTo(expectedResult)));
   }
 
   @Test
   void shouldReturnS3BucketPathWithoutRoot() {
-    String expectedPath = "parent1/parent2/filename.txt";
-    URI s3Uri = URI.create("s3://somebucket" + ROOT + expectedPath);
-    UriWrapper wrapper = UriWrapper.fromUri(s3Uri);
-    UnixPath s3Path = wrapper.toS3bucketPath();
+    var expectedPath = "parent1/parent2/filename.txt";
+    var s3Uri = URI.create("s3://somebucket" + ROOT + expectedPath);
+    var wrapper = UriWrapper.fromUri(s3Uri);
+    var s3Path = wrapper.toS3bucketPath();
     assertThat(s3Path.toString(), is(equalTo(expectedPath)));
   }
 
   @Test
   void shouldReturnFilenameOfUri() {
-    String expectedFilename = "filename.txt";
-    String filePath = String.join(UnixPath.PATH_DELIMITER, "parent1", "parent2", expectedFilename);
-    URI s3Uri = URI.create("s3://somebucket" + ROOT + filePath);
-    UriWrapper wrapper = UriWrapper.fromUri(s3Uri);
+    var expectedFilename = "filename.txt";
+    var filePath = String.join(UnixPath.PATH_DELIMITER, "parent1", "parent2", expectedFilename);
+    var s3Uri = URI.create("s3://somebucket" + ROOT + filePath);
+    var wrapper = UriWrapper.fromUri(s3Uri);
     assertThat(wrapper.getLastPathElement(), is(equalTo(expectedFilename)));
   }
 
@@ -103,9 +103,9 @@ class UriWrapperTest {
 
   @Test
   void shouldReturnUriWithQueryParametersWhenSingleQueryParameterIsPresent() {
-    URI expectedUri = URI.create("https://www.example.org/path1/path2?key1=value1");
-    URI uri = URI.create("https://www.example.org/");
-    URI actualUri = UriWrapper.fromUri(uri)
+    var expectedUri = URI.create("https://www.example.org/path1/path2?key1=value1");
+    var uri = URI.create("https://www.example.org/");
+    var actualUri = UriWrapper.fromUri(uri)
       .addChild("path1")
       .addQueryParameter("key1", "value1")
       .addChild("path2")
@@ -127,9 +127,9 @@ class UriWrapperTest {
 
   @Test
   void shouldReturnUriWithQueryParametersWhenManyQueryParametersArePresent() {
-    URI expectedUri = URI.create("https://www.example.org/path1/path2?key1=value1&key2=value2");
-    URI uri = URI.create("https://www.example.org/");
-    URI actualUri = UriWrapper.fromUri(uri)
+    var expectedUri = URI.create("https://www.example.org/path1/path2?key1=value1&key2=value2");
+    var uri = URI.create("https://www.example.org/");
+    var actualUri = UriWrapper.fromUri(uri)
       .addChild("path1")
       .addQueryParameter("key1", "value1")
       .addQueryParameter("key2", "value2")
@@ -140,11 +140,11 @@ class UriWrapperTest {
 
   @Test
   void shouldReturnUriWithQueryParametersWhenQueryParametersAreMap() {
-    URI expectedUri = URI.create(
+    var expectedUri = URI.create(
       "https://www.example.org/path1/path2?key1=value1&key2=value2&key3=value3");
-    URI uri = URI.create("https://www.example.org/");
+    var uri = URI.create("https://www.example.org/");
     final Map<String, String> parameters = getOrderedParametersMap();
-    URI actualUri = UriWrapper.fromUri(uri)
+    var actualUri = UriWrapper.fromUri(uri)
       .addChild("path1")
       .addQueryParameters(parameters)
       .addChild("path2")
@@ -155,9 +155,9 @@ class UriWrapperTest {
 
   @Test
   void shouldReturnStringRepresentationOfUri() {
-    URI expectedUri = URI.create(
+    var expectedUri = URI.create(
       "https://www.example.org/path1/path2?key1=value1&key2=value2&key3=value3");
-    UriWrapper uri = new UriWrapper("https", "www.example.org")
+    var uri = new UriWrapper("https", "www.example.org")
       .addChild("path1")
       .addChild("path2")
       .addQueryParameter("key1", "value1")
@@ -196,7 +196,7 @@ class UriWrapperTest {
 
   @Test
   void shouldReturnQueryParameters() throws URISyntaxException {
-    String queryString = "key1=withoutSpace&key2=with space&key3=with\\&ampersand";
+    var queryString = "key1=withoutSpace&key2=with space&key3=with\\&ampersand";
     var uri = new URI("https", "www.example.com", "/some/path", queryString, EMPTY_FRAGMENT);
 
     var wrapped = UriWrapper.fromUri(uri);
