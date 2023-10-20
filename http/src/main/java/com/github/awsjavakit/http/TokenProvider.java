@@ -1,6 +1,7 @@
 package com.github.awsjavakit.http;
 
 import java.net.http.HttpClient;
+import java.time.Duration;
 
 public interface TokenProvider {
 
@@ -16,6 +17,16 @@ public interface TokenProvider {
     OAuthCredentialsProvider authCredentialsProvider) {
     return NewTokenProvider.create(httpClient, authCredentialsProvider);
   }
+
+  static TokenProvider locallyCachedTokenProvider(
+    HttpClient httpClient,
+    OAuthCredentialsProvider authCredentialsProvider,
+    Duration maxTokenAge) {
+    var tokenRefresher =
+      NewTokenProvider.create(httpClient,authCredentialsProvider);
+    return new CachedTokenProvider(tokenRefresher,maxTokenAge);
+  }
+
 
   String fetchToken();
 }
