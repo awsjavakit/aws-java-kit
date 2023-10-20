@@ -173,6 +173,10 @@ public class UriWrapper {
     return this.getUri().toString();
   }
 
+  public Map<String, String> getQueryParameters() {
+    return new QueryStringSplitter(this.uri).toMap();
+  }
+
   private static URI createUriWithSchemeAndHost(String scheme, String host, int port) {
 
     return
