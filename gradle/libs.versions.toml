@@ -33,8 +33,10 @@ aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2
 aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.ref = 'awsSdk2' }
 aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }
 aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
+aws-ssm = { group = 'software.amazon.awssdk', name = 'ssm', version.ref = 'awsSdk2' }
 aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
+
 
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
@@ -65,6 +67,6 @@ lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' 
 
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit"]
-json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations',"jackson-datatype-jsr310"]
+json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 
