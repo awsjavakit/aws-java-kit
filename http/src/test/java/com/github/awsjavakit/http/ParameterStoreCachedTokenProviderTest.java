@@ -30,6 +30,7 @@ class ParameterStoreCachedTokenProviderTest {
   private String accessToken;
   private HttpClient httpClient;
   private  SimpleCredentialsProvider authCredentialsProvider;
+
   private static final Duration SOME_LARGE_DURATION= Duration.ofDays(1);
 
   @BeforeEach
