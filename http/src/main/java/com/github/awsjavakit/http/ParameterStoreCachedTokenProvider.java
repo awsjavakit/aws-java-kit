@@ -73,6 +73,7 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
       .dataType(DATATYPE)
       .tier(TIER)
       .value(toJson(tokenEntry))
+      .overwrite(true)
       .build());
     return tokenEntry;
   }
