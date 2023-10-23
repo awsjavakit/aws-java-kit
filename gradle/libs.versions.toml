@@ -2,7 +2,7 @@
 awsSdk2 = { strictly = '2.21.2' }
 junit = { strictly = '5.10.0' }
 assertj = { strictly = '3.24.2' }
-log4j = { strictly = '2.18.0' }
+log4j = { strictly = '2.21.0' }
 #wiremock has some old slf4j dependecies
 slf4j = { require = '2.0.9' }
 lambda-log4j2 = { strictly = '1.5.1' }
@@ -24,7 +24,7 @@ lombok = { strictly = '1.18.30' }
 
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
 slf4j = { group = 'org.slf4j', name = 'slf4j-api', version.ref = 'slf4j' }
-slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j18-impl', version.ref = 'log4j' }
+slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j2-impl', version.ref = 'log4j' }
 lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', version.ref = 'lambda-log4j2' }
 
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }

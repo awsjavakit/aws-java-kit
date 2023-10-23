@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import software.amazon.awssdk.services.ssm.model.GetParameterRequest;
+import software.amazon.awssdk.services.ssm.model.ParameterAlreadyExistsException;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 
@@ -25,7 +26,7 @@ class FakeSsmClientTest {
   void shouldStoreParameterInParameterStore() {
     var parameterName = randomString();
     var parameterValue = randomString();
-    var putRequest = createPutRequest(parameterName, parameterValue);
+    var putRequest = createPutRequest(parameterName, parameterValue, null);
     client.putParameter(putRequest);
     var response = client.getParameter(createGetRequest(parameterName));
     var parameter = response.parameter();
@@ -37,32 +38,51 @@ class FakeSsmClientTest {
   void shouldThrowParameterNotFoundExceptionWhenParameterDoesNotExist() {
     var parameterName = randomString();
     Executable action = () -> client.getParameter(createGetRequest(parameterName));
-    var exception=assertThrows(ParameterNotFoundException.class, action);
+    var exception = assertThrows(ParameterNotFoundException.class, action);
     assertThat(exception.getMessage()).contains(parameterName);
   }
-
 
   @Test
   void shouldReturnTheLatestVersionOfTheParameter() {
     var parameterName = randomString();
     var firstValue = randomString();
     var secondValue = randomString();
-    client.putParameter(createPutRequest(parameterName,firstValue));
+    client.putParameter(createPutRequest(parameterName, firstValue, null));
     var firstFetch = client.getParameter(createGetRequest(parameterName))
       .parameter().value();
     assertThat(firstFetch).isEqualTo(firstValue);
 
-    client.putParameter(createPutRequest(parameterName,secondValue));
+    client.putParameter(createPutRequest(parameterName, secondValue, true));
     var secondFetch = client.getParameter(createGetRequest(parameterName))
       .parameter().value();
     assertThat(secondFetch).isEqualTo(secondValue);
   }
 
-  private static PutParameterRequest createPutRequest(String parameterName, String parameterValue) {
+  @Test
+  void shouldThrowExceptionWhenTryingToOverwriteValueAndOverwriteOptionHasNotBeenSet() {
+    var parameterName = randomString();
+    var value = randomString();
+    var request = createPutRequest(parameterName, value, null);
+    client.putParameter(request);
+    assertThrows(ParameterAlreadyExistsException.class, () -> client.putParameter(request));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenTryingToOverwriteValueAndOverwriteOptionHasBeenDisabled() {
+    var parameterName = randomString();
+    var value = randomString();
+    var request = createPutRequest(parameterName, value, null);
+    client.putParameter(request);
+    assertThrows(ParameterAlreadyExistsException.class, () -> client.putParameter(request));
+  }
+
+  private static PutParameterRequest createPutRequest(String parameterName, String parameterValue,
+    Boolean ovewrite) {
     return PutParameterRequest.builder()
       .name(parameterName)
       .value(parameterValue)
       .dataType(TEXT_DATATYPE)
+      .overwrite(ovewrite)
       .build();
   }
 
