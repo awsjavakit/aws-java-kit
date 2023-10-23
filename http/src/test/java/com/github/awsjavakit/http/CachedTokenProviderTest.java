@@ -17,7 +17,6 @@ import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
