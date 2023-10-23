@@ -51,7 +51,7 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
   }
 
   private OAuthTokenEntry fetchTokenFromSsm() {
-    GetParameterRequest request = GetParameterRequest.builder()
+    var request = GetParameterRequest.builder()
       .name(parameterName)
       .build();
     return attempt(() -> ssmClient.getParameter(request))
