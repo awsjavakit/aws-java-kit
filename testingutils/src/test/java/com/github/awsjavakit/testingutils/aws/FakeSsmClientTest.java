@@ -76,8 +76,6 @@ class FakeSsmClientTest {
     assertThrows(ParameterAlreadyExistsException.class, () -> client.putParameter(request));
   }
 
-
-
   private static PutParameterRequest createPutRequest(String parameterName, String parameterValue,
     Boolean ovewrite) {
     return PutParameterRequest.builder()

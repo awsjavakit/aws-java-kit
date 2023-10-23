@@ -35,21 +35,6 @@ public class FakeSsmClient implements SsmClient {
       .build();
   }
 
-  private void persistParameter(PutParameterRequest putParameterRequest, Long lastVersion) {
-    var parameter = createParameter(putParameterRequest, lastVersion);
-    parameters.add(parameter);
-  }
-
-  private static void validateRequest(PutParameterRequest putParameterRequest, Long lastVersion) {
-    if(lastVersion !=ABSENT && overwriteNotEnabled(putParameterRequest)){
-        throw ParameterAlreadyExistsException.builder().message(putParameterRequest.name()).build();
-      }
-  }
-
-  private static boolean overwriteNotEnabled(PutParameterRequest putParameterRequest) {
-    return isNull(putParameterRequest.overwrite()) || !putParameterRequest.overwrite();
-  }
-
   @Override
   public GetParameterResponse getParameter(GetParameterRequest getParameterRequest) {
     return getLatestVersion(getParameterRequest.name());
@@ -67,6 +52,16 @@ public class FakeSsmClient implements SsmClient {
     //NO-OP
   }
 
+  private static void validateRequest(PutParameterRequest putParameterRequest, Long lastVersion) {
+    if (lastVersion != ABSENT && overwriteNotEnabled(putParameterRequest)) {
+      throw ParameterAlreadyExistsException.builder().message(putParameterRequest.name()).build();
+    }
+  }
+
+  private static boolean overwriteNotEnabled(PutParameterRequest putParameterRequest) {
+    return isNull(putParameterRequest.overwrite()) || !putParameterRequest.overwrite();
+  }
+
   private static Parameter createParameter(PutParameterRequest putParameterRequest,
     Long lastVersion) {
     return Parameter.builder()
@@ -79,6 +74,11 @@ public class FakeSsmClient implements SsmClient {
   private static ParameterNotFoundException notFoundException(String parameterName) {
     return ParameterNotFoundException.builder()
       .message("Parameter does not exist:" + parameterName).build();
+  }
+
+  private void persistParameter(PutParameterRequest putParameterRequest, Long lastVersion) {
+    var parameter = createParameter(putParameterRequest, lastVersion);
+    parameters.add(parameter);
   }
 
   private GetParameterResponse getLatestVersion(String parameterName) {
