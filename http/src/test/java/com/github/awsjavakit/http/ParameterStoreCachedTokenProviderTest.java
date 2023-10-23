@@ -40,6 +40,7 @@ class ParameterStoreCachedTokenProviderTest {
     .addModule(new Jdk8Module())
     .build();
   private static final Duration SOME_LARGE_DURATION = Duration.ofDays(1);
+  private static final int MISS_BOTH_TIMES = 2;
   private WireMockServer server;
   private String clientId;
   private String clientSecret;
@@ -47,6 +48,7 @@ class ParameterStoreCachedTokenProviderTest {
   private HttpClient httpClient;
   private SimpleCredentialsProvider authCredentialsProvider;
   private FakeSsmClientWithCounters ssmClient;
+  private String parameterName;
 
   @BeforeEach
   public void init() {
@@ -59,6 +61,7 @@ class ParameterStoreCachedTokenProviderTest {
       .addChild(AUTH_PATH)
       .getUri();
     this.ssmClient = new FakeSsmClientWithCounters();
+    this.parameterName = randomString();
 
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
@@ -69,11 +72,7 @@ class ParameterStoreCachedTokenProviderTest {
   @Test
   void shouldFetchNewTokenWhenCalledForTheFirstTime() {
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = new ParameterStoreCachedTokenProvider(
-      tokenRefresher,
-      ssmClient,
-      SOME_LARGE_DURATION,
-      JSON);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher, SOME_LARGE_DURATION);
 
     var actualToken = tokenProvider.fetchToken();
     assertThat(actualToken).isEqualTo(this.accessToken);
@@ -82,11 +81,7 @@ class ParameterStoreCachedTokenProviderTest {
   @Test
   void shouldReuseTokenStoredInSsmWhenTokenExistsInSsmAndIsValid() {
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = new ParameterStoreCachedTokenProvider(
-      tokenRefresher,
-      ssmClient,
-      SOME_LARGE_DURATION,
-      JSON);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher, SOME_LARGE_DURATION);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
 
@@ -99,18 +94,24 @@ class ParameterStoreCachedTokenProviderTest {
   @Test
   void shouldFetchTokenFromOAuthWhenTokenExistsButIsInvalid() {
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = new ParameterStoreCachedTokenProvider(
-      tokenRefresher,
-      ssmClient,
-      SOME_LARGE_DURATION,
-      JSON);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher, Duration.ZERO);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
 
-    server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
-    assertThat(ssmClient.getReadCounter().get()).isEqualTo(FIRST_TIME_FAILURE_SECOND_TIME_SUCCESS);
-    assertThat(ssmClient.getWriteCounter().get()).isEqualTo(WRITE_ON_FAILURE);
+    server.verify(exactly(MISS_BOTH_TIMES), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
+    assertThat(ssmClient.getReadCounter().get()).isEqualTo(MISS_BOTH_TIMES);
+    assertThat(ssmClient.getWriteCounter().get()).isEqualTo(MISS_BOTH_TIMES);
     assertThat(actualToken).isEqualTo(this.accessToken);
+  }
+
+  private ParameterStoreCachedTokenProvider createSsmTokenProvider(NewTokenProvider tokenRefresher,
+    Duration duration) {
+    return new ParameterStoreCachedTokenProvider(
+      tokenRefresher,
+      parameterName,
+      ssmClient,
+      duration,
+      JSON);
   }
 
   private void setupAuthResponse() {

@@ -59,10 +59,9 @@ public class FakeSsmClient implements SsmClient {
       .build();
   }
 
-  private static ParameterNotFoundException notFoundException(
-    String parmeterName) {
+  private static ParameterNotFoundException notFoundException(String parameterName) {
     return ParameterNotFoundException.builder()
-      .message("Parameter does not exist:" + parmeterName).build();
+      .message("Parameter does not exist:" + parameterName).build();
   }
 
   private GetParameterResponse getLatestVersion(String parameterName) {

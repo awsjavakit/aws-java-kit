@@ -15,15 +15,16 @@ import software.amazon.awssdk.services.ssm.model.PutParameterRequest;
 
 public class ParameterStoreCachedTokenProvider implements TokenProvider {
 
-  public static final String PARAMETER_NAME = "tokenparameter";
   public static final String DATATYPE = "text";
   public static final String TIER = "Standard";
-  private final NewTokenProvider newTokenProvider;
+  private final TokenProvider newTokenProvider;
   private final Duration maxTokenAge;
   private final SsmClient ssmClient;
   private final ObjectMapper objectMapper;
+  private final String parameterName;
 
-  public ParameterStoreCachedTokenProvider(NewTokenProvider newTokenProvider,
+  public ParameterStoreCachedTokenProvider(TokenProvider newTokenProvider,
+    String ssmParameterName,
     SsmClient ssmClient,
     Duration maxTokenAge,
     ObjectMapper objectMapper) {
@@ -31,6 +32,7 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
     this.newTokenProvider = newTokenProvider;
     this.maxTokenAge = maxTokenAge;
     this.objectMapper = objectMapper;
+    this.parameterName = ssmParameterName;
   }
 
   @Override
@@ -50,7 +52,7 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
 
   private OAuthTokenEntry fetchTokenFromSsm() {
     GetParameterRequest request = GetParameterRequest.builder()
-      .name(PARAMETER_NAME)
+      .name(parameterName)
       .build();
     return attempt(() -> ssmClient.getParameter(request))
       .map(GetParameterResponse::parameter)
@@ -67,7 +69,7 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
   private OAuthTokenEntry storeNewToken(String token) {
     var tokenEntry = new OAuthTokenEntry(token, Instant.now());
     ssmClient.putParameter(PutParameterRequest.builder()
-      .name(PARAMETER_NAME)
+      .name(parameterName)
       .dataType(DATATYPE)
       .tier(TIER)
       .value(toJson(tokenEntry))
