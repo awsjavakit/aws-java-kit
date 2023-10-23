@@ -17,7 +17,6 @@ import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import java.net.URI;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +50,7 @@ class CachedTokenProviderTest {
       new SimpleCredentialsProvider(clientId, clientSecret, authEndpoint);
     setupAuthResponse();
   }
+
 
   @Test
   void shouldFetchNewTokenWhenCalledForTheFirstTime() {
@@ -99,22 +99,5 @@ class CachedTokenProviderTest {
       .toJsonString(JSON);
   }
 
-  private record SimpleCredentialsProvider(String clientId, String clientSecret, URI authEndpoint)
-    implements OAuthCredentialsProvider {
 
-    @Override
-    public String getClientId() {
-      return clientId;
-    }
-
-    @Override
-    public String getClientSecret() {
-      return clientSecret;
-    }
-
-    @Override
-    public URI getAuthorizationEndpoint() {
-      return authEndpoint;
-    }
-  }
 }

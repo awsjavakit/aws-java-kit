@@ -38,6 +38,7 @@ aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', 
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
 
 
+
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
 jackson-datatype-jsr310 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
 jackson-datatype-jdk8 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', version.ref = 'jackson' }
@@ -66,6 +67,6 @@ lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' 
 
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit"]
-json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations',"jackson-datatype-jsr310"]
+json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 

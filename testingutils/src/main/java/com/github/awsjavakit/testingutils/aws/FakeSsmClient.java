@@ -35,11 +35,7 @@ public class FakeSsmClient implements SsmClient {
 
   @Override
   public GetParameterResponse getParameter(GetParameterRequest getParameterRequest) {
-    return parameters.stream()
-      .filter(parameter -> parameter.name().equals(getParameterRequest.name()))
-      .reduce(this::maxVersion)
-      .map(this::createResponse)
-      .orElseThrow(() -> notFoundException(getParameterRequest));
+    return getLatestVersion(getParameterRequest.name());
   }
 
   @Override
@@ -63,21 +59,24 @@ public class FakeSsmClient implements SsmClient {
       .build();
   }
 
-  private static ParameterNotFoundException notFoundException(
-    GetParameterRequest getParameterRequest) {
+  private static ParameterNotFoundException notFoundException(String parameterName) {
     return ParameterNotFoundException.builder()
-      .message("Parameter does not exist:" + getParameterRequest.name()).build();
+      .message("Parameter does not exist:" + parameterName).build();
+  }
+
+  private GetParameterResponse getLatestVersion(String parameterName) {
+    return parameters.stream()
+      .filter(parameter -> parameter.name().equals(parameterName))
+      .reduce(this::maxVersion)
+      .map(this::createResponse)
+      .orElseThrow(() -> notFoundException(parameterName));
   }
 
   private Long fetchLatestVersion(PutParameterRequest putParameterRequest) {
-    return attempt(() -> getParameter(createRequest(putParameterRequest.name())))
+    return attempt(() -> getLatestVersion(putParameterRequest.name()))
       .map(GetParameterResponse::parameter)
       .map(Parameter::version)
       .orElse(fail -> ZERO_VERSION);
-  }
-
-  private GetParameterRequest createRequest(String name) {
-    return GetParameterRequest.builder().name(name).build();
   }
 
   private GetParameterResponse createResponse(Parameter parameter) {

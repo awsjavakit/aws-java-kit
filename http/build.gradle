@@ -9,6 +9,7 @@ dependencies {
     implementation libs.bundles.json
     implementation libs.bundles.logging
     compileOnly libs.aws.secrets
+    compileOnly libs.aws.ssm
 
     compileOnly project(":secrets")
     implementation project(":attempt")
@@ -17,6 +18,7 @@ dependencies {
 
     testImplementation project(":testingutils")
     testImplementation project(":secrets")
+    testImplementation libs.aws.ssm
     testImplementation libs.bundles.testing
     testImplementation libs.aws.secrets
     testImplementation libs.wiremock
