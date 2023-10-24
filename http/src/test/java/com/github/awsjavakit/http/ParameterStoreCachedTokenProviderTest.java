@@ -32,15 +32,17 @@ import software.amazon.awssdk.services.ssm.model.PutParameterResponse;
 
 class ParameterStoreCachedTokenProviderTest {
 
-  public static final int FIRST_TIME_FAILURE_SECOND_TIME_SUCCESS = 2;
+  public static final int READ_TWICE_ON_FAILURE_ONCE_IN_SUCCESS = 3;
   public static final int WRITE_ON_FAILURE = 1;
+  public static final int TWO_MISSES = 2;
   private static final UnixPath AUTH_PATH = UnixPath.of("/oauth2/token");
   private static final ObjectMapper JSON = JsonMapper.builder()
     .addModule(new JavaTimeModule())
     .addModule(new Jdk8Module())
     .build();
   private static final Duration SOME_LARGE_DURATION = Duration.ofDays(1);
-  private static final int MISS_BOTH_TIMES = 2;
+  private static final int TWO_READ_ATTEMPTS_TIMES_TWO_MISSES = 4;
+  private static final int WRITE_ATTEMPTS_WHEN_MISSING_TWO_TIMES = 2;
   private WireMockServer server;
   private String clientId;
   private String clientSecret;
@@ -86,9 +88,20 @@ class ParameterStoreCachedTokenProviderTest {
     var actualToken = tokenProvider.fetchToken();
 
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
-    assertThat(ssmClient.getReadCounter().get()).isEqualTo(FIRST_TIME_FAILURE_SECOND_TIME_SUCCESS);
+    assertThat(ssmClient.getReadCounter().get()).isEqualTo(READ_TWICE_ON_FAILURE_ONCE_IN_SUCCESS);
     assertThat(ssmClient.getWriteCounter().get()).isEqualTo(WRITE_ON_FAILURE);
     assertThat(actualToken).isEqualTo(this.accessToken);
+  }
+
+  @Test
+  void shouldAssumeThatSomeoneElseIsTryingToGenerateTheTokenWhenTokenIsNotValid() {
+    var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher, Duration.ZERO);
+    tokenProvider.fetchToken();
+
+    assertThat(ssmClient.getReadCounter().get()).isEqualTo(TWO_MISSES);
+    server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
+
   }
 
   @Test
@@ -98,9 +111,9 @@ class ParameterStoreCachedTokenProviderTest {
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
 
-    server.verify(exactly(MISS_BOTH_TIMES), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
-    assertThat(ssmClient.getReadCounter().get()).isEqualTo(MISS_BOTH_TIMES);
-    assertThat(ssmClient.getWriteCounter().get()).isEqualTo(MISS_BOTH_TIMES);
+    server.verify(exactly(TWO_MISSES), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
+    assertThat(ssmClient.getReadCounter().get()).isEqualTo(TWO_READ_ATTEMPTS_TIMES_TWO_MISSES);
+    assertThat(ssmClient.getWriteCounter().get()).isEqualTo(WRITE_ATTEMPTS_WHEN_MISSING_TWO_TIMES);
     assertThat(actualToken).isEqualTo(this.accessToken);
   }
 
