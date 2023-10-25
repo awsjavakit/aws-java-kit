@@ -2,7 +2,6 @@ package com.github.awsjavakit.http;
 
 import static com.github.awsjavakit.http.JsonConfig.toJson;
 import static com.github.awsjavakit.http.TokenProvider.locallyCachedTokenProvider;
-import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -21,13 +20,11 @@ import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.net.http.HttpClient;
-import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class CachedTokenProviderTest {
 
-  public static final Duration SOME_LARGE_DURATION = Duration.ofDays(1);
   private static final UnixPath AUTH_PATH = UnixPath.of("/oauth2/token");
 
   private WireMockServer server;
@@ -50,14 +47,14 @@ class CachedTokenProviderTest {
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
       new SimpleCredentialsProvider(clientId, clientSecret, authEndpoint);
-    setupAuthResponse();
+
   }
 
   @Test
   void shouldFetchNewTokenWhenCalledForTheFirstTime() {
+    setupAuthResponse(600);
     var tokenProvider = locallyCachedTokenProvider(httpClient,
-      authCredentialsProvider,
-      SOME_LARGE_DURATION);
+      authCredentialsProvider);
 
     var actualToken = tokenProvider.fetchToken();
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
@@ -65,10 +62,10 @@ class CachedTokenProviderTest {
 
   @Test
   void shouldNotFetchNewTokenWhenCalledForTheSecondTimeAndThereIsValidCachedToken() {
+    setupAuthResponse(600);
     var tokenProvider =
       locallyCachedTokenProvider(httpClient,
-        authCredentialsProvider,
-        SOME_LARGE_DURATION);
+        authCredentialsProvider);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
@@ -77,26 +74,25 @@ class CachedTokenProviderTest {
 
   @Test
   void shouldFetchNewTokenWhenCachedTokenIsEstimatedToBeExpired() {
+    setupAuthResponse(0);
     var tokenProvider =
-      locallyCachedTokenProvider(httpClient,
-        authCredentialsProvider,
-        Duration.ZERO);
+      locallyCachedTokenProvider(httpClient, authCredentialsProvider);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
     server.verify(exactly(2), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
-  private void setupAuthResponse() {
+  private void setupAuthResponse(int tokenDurationInSeconds) {
     server.stubFor(post(urlPathEqualTo(AUTH_PATH.toString()))
       .withBasicAuth(clientId, clientSecret)
       .withFormParam("grant_type", equalTo("client_credentials"))
-      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createResponse())));
+      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createResponse(tokenDurationInSeconds))));
 
   }
 
-  private String createResponse() {
-    var response = new OAuthTokenResponse(accessToken, randomInteger());
+  private String createResponse( int tokenDurationInSeconds) {
+    var response = new OAuthTokenResponse(accessToken, tokenDurationInSeconds);
     return attempt(() -> toJson(response)).orElseThrow();
 
   }
