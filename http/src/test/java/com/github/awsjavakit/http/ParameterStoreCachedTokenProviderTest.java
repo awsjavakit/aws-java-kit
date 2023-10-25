@@ -1,5 +1,6 @@
 package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -8,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.aws.FakeSsmClient;
@@ -77,7 +80,7 @@ class ParameterStoreCachedTokenProviderTest {
     var tokenProvider = createSsmTokenProvider(tokenRefresher, SOME_LARGE_DURATION);
 
     var actualToken = tokenProvider.fetchToken();
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   @Test
@@ -90,15 +93,14 @@ class ParameterStoreCachedTokenProviderTest {
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
     assertThat(ssmClient.getReadCounter().get()).isEqualTo(READ_TWICE_ON_FAILURE_ONCE_IN_SUCCESS);
     assertThat(ssmClient.getWriteCounter().get()).isEqualTo(WRITE_ON_FAILURE);
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   @Test
-  void shouldAssumeThatSomeoneElseIsTryingToGenerateTheTokenWhenTokenIsNotValid() {
+  void shouldAssumeThatCollisionDuringUpdateIsLikelyToHappen() {
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
     var tokenProvider = createSsmTokenProvider(tokenRefresher, Duration.ZERO);
     tokenProvider.fetchToken();
-
     assertThat(ssmClient.getReadCounter().get()).isEqualTo(TWO_MISSES);
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
 
@@ -114,7 +116,7 @@ class ParameterStoreCachedTokenProviderTest {
     server.verify(exactly(TWO_MISSES), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
     assertThat(ssmClient.getReadCounter().get()).isEqualTo(TWO_READ_ATTEMPTS_TIMES_TWO_MISSES);
     assertThat(ssmClient.getWriteCounter().get()).isEqualTo(WRITE_ATTEMPTS_WHEN_MISSING_TWO_TIMES);
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   private ParameterStoreCachedTokenProvider createSsmTokenProvider(NewTokenProvider tokenRefresher,
@@ -136,8 +138,10 @@ class ParameterStoreCachedTokenProviderTest {
   }
 
   private String createResponse() {
-    return new OAuthResponse(accessToken, randomString(), randomString())
-      .toJsonString(JSON);
+    return attempt(() -> new OAuthTokenResponse(accessToken, randomInteger()))
+      .map(JSON::writeValueAsString)
+      .orElseThrow();
+
   }
 
   private static class FakeSsmClientWithCounters extends FakeSsmClient {

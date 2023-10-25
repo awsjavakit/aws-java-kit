@@ -1,6 +1,8 @@
 package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.http.JsonConfig.toJson;
 import static com.github.awsjavakit.http.OAuth2HttpClient.AUTHORIZATION_HEADER;
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -10,6 +12,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.aws.FakeSecretsManagerClient;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
@@ -75,11 +78,11 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
   }
 
   private void setupAuthAndServiceServer() {
-    var response = new OAuthResponse(accessToken, randomString(), randomString());
+    var response = new OAuthTokenResponse(accessToken, randomInteger());
     server.stubFor(post(urlPathEqualTo(OAUTH2_TOKEN_PATH))
       .withBasicAuth(clientId, clientSecret)
       .withFormParam("grant_type", new EqualToPattern("client_credentials"))
-      .willReturn(aResponse().withStatus(HTTP_OK).withBody(response.toJsonString(JSON))));
+      .willReturn(aResponse().withStatus(HTTP_OK).withBody(toJson(response))));
 
     server.stubFor(WireMock.get(urlPathEqualTo(SECURED_ENDPOINT_PATH))
       .withHeader(AUTHORIZATION_HEADER, new EqualToPattern("Bearer " + accessToken))

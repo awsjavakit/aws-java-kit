@@ -115,7 +115,7 @@ public class OAuth2HttpClient extends HttpClient {
   }
 
   private HttpRequest authorizeRequest(HttpRequest request) {
-    var bearerToken = tokenProvider.fetchToken();
+    var bearerToken = tokenProvider.fetchToken().value();
     return HttpRequest.newBuilder(request, filterOutAuthHeader())
       .setHeader(AUTHORIZATION_HEADER, "Bearer " + bearerToken)
       .build();

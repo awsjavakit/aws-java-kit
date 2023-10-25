@@ -41,14 +41,14 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
   }
 
   @Override
-  public String fetchToken() {
+  public OAuthTokenEntry fetchToken() {
     var now = now();
     var token = fetchTokenFromSsm();
     if (thereIsNoValidToken(token, now)) {
       var newValue = newTokenProvider.fetchToken();
       token = storeNewToken(newValue);
     }
-    return token.value();
+    return token;
   }
 
   private static void someOtherProcessMightBeGeneratingAToken() {
@@ -93,16 +93,15 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
     return attempt(() -> objectMapper.readValue(json, OAuthTokenEntry.class)).orElseThrow();
   }
 
-  private OAuthTokenEntry storeNewToken(String token) {
-    var tokenEntry = new OAuthTokenEntry(token, now());
+  private OAuthTokenEntry storeNewToken(OAuthTokenEntry token) {
     ssmClient.putParameter(PutParameterRequest.builder()
       .name(parameterName)
       .dataType(DATATYPE)
       .tier(TIER)
-      .value(toJson(tokenEntry))
+      .value(toJson(token))
       .overwrite(true)
       .build());
-    return tokenEntry;
+    return token;
   }
 
   private String toJson(OAuthTokenEntry tokenEntry) {

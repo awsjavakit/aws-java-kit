@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -20,6 +21,8 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.net.http.HttpResponse.PushPromiseHandler;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -31,6 +34,7 @@ import org.junit.jupiter.api.Test;
 class OAuth2HttpClientTest {
 
   public static final String PROTECTED_ENDPOINT_PATH = "/protected/endpoint";
+  public static final Duration SOME_LONG_DURATION = Duration.ofSeconds(600);
   private WireMockServer authServer;
   private URI serverUrl;
   private String authToken;
@@ -109,8 +113,9 @@ class OAuth2HttpClientTest {
   private record SimpleTokenProvider(String token) implements TokenProvider {
 
     @Override
-    public String fetchToken() {
-      return token;
+    public OAuthTokenEntry fetchToken() {
+      var now = Instant.now();
+      return new OAuthTokenEntry(token, now,now.plus(SOME_LONG_DURATION));
     }
   }
 }
