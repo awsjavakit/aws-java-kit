@@ -1,6 +1,8 @@
 package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.http.JsonConfig.toJson;
 import static com.github.awsjavakit.http.TokenProvider.locallyCachedTokenProvider;
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -9,10 +11,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
@@ -25,7 +28,6 @@ import org.junit.jupiter.api.Test;
 class CachedTokenProviderTest {
 
   public static final Duration SOME_LARGE_DURATION = Duration.ofDays(1);
-  private static final ObjectMapper JSON = new ObjectMapper();
   private static final UnixPath AUTH_PATH = UnixPath.of("/oauth2/token");
 
   private WireMockServer server;
@@ -51,7 +53,6 @@ class CachedTokenProviderTest {
     setupAuthResponse();
   }
 
-
   @Test
   void shouldFetchNewTokenWhenCalledForTheFirstTime() {
     var tokenProvider = locallyCachedTokenProvider(httpClient,
@@ -59,7 +60,7 @@ class CachedTokenProviderTest {
       SOME_LARGE_DURATION);
 
     var actualToken = tokenProvider.fetchToken();
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   @Test
@@ -71,7 +72,7 @@ class CachedTokenProviderTest {
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   @Test
@@ -83,7 +84,7 @@ class CachedTokenProviderTest {
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
     server.verify(exactly(2), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
-    assertThat(actualToken).isEqualTo(this.accessToken);
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
   private void setupAuthResponse() {
@@ -95,9 +96,9 @@ class CachedTokenProviderTest {
   }
 
   private String createResponse() {
-    return new OAuthResponse(accessToken, randomString(), randomString())
-      .toJsonString(JSON);
-  }
+    var response = new OAuthTokenResponse(accessToken, randomInteger());
+    return attempt(() -> toJson(response)).orElseThrow();
 
+  }
 
 }

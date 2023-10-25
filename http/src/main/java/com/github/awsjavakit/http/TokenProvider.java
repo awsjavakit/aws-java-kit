@@ -1,5 +1,7 @@
 package com.github.awsjavakit.http;
 
+import com.github.awsjavakit.http.token.OAuthTokenEntry;
+import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
@@ -28,5 +30,8 @@ public interface TokenProvider {
   }
 
 
-  String fetchToken();
+  OAuthTokenEntry fetchToken();
+
+
+
 }
