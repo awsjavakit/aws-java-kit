@@ -1,6 +1,7 @@
 package com.github.awsjavakit.testingutils.hamcrest;
 
 import static java.util.Objects.isNull;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.beans.IntrospectionException;

@@ -6,7 +6,6 @@ import static java.util.Objects.isNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
-import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;

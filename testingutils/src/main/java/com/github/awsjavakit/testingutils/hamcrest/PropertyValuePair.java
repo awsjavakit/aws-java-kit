@@ -2,6 +2,7 @@ package com.github.awsjavakit.testingutils.hamcrest;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;

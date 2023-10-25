@@ -1,6 +1,5 @@
 package com.github.awsjavakit.http.token;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -28,10 +27,4 @@ public record OAuthTokenEntry(
   public String type() {
     return TYPE;
   }
-
-  @JsonIgnore
-  public boolean hasExpired() {
-    return expiration().isBefore(Instant.now());
-  }
-
 }
