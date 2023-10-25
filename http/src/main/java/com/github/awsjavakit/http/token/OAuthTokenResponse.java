@@ -1,28 +1,27 @@
 package com.github.awsjavakit.http.token;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-
 public class OAuthTokenResponse {
 
   @JsonProperty("access_token")
-  private String accessToken;
+  private final String accessToken;
   @JsonProperty("expires_in")
-  private Long durationInSeconds;
-  private Instant timestamp;
+  private final Long validityPeriodInSeconds;
+  private final Instant timestamp;
 
-  public OAuthTokenResponse() {
+  @JsonCreator
+  public OAuthTokenResponse(
+    @JsonProperty(value = "access_token", required = true) String accessToken,
+    @JsonProperty(value = "expires_in", required = true) long durationInSeconds) {
     timestamp = Instant.now();
-  }
-
-  public OAuthTokenResponse(String accessToken, long durationInSeconds) {
-    this();
     this.accessToken = accessToken;
-    this.durationInSeconds = durationInSeconds;
+    this.validityPeriodInSeconds = durationInSeconds;
   }
 
   public Instant getTimestamp() {
@@ -33,20 +32,12 @@ public class OAuthTokenResponse {
     return accessToken;
   }
 
-  public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
-  }
-
-  public Long getDurationInSeconds() {
-    return durationInSeconds;
-  }
-
-  public void setDurationInSeconds(Long durationInSeconds) {
-    this.durationInSeconds = durationInSeconds;
+  public Long getValidityPeriodInSeconds() {
+    return validityPeriodInSeconds;
   }
 
   @JsonIgnore
   public Instant getExpirationTimestamp() {
-    return getTimestamp().plusSeconds(durationInSeconds);
+    return getTimestamp().plusSeconds(validityPeriodInSeconds);
   }
 }

@@ -27,4 +27,8 @@ public record OAuthTokenEntry(
   public String type() {
     return TYPE;
   }
+
+  public boolean hasExpired() {
+    return Instant.now().isAfter(expiration);
+  }
 }

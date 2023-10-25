@@ -1,6 +1,5 @@
 package com.github.awsjavakit.http;
 
-import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -24,7 +23,6 @@ import com.github.awsjavakit.testingutils.aws.FakeSsmClient;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import java.net.http.HttpClient;
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,12 +36,13 @@ class ParameterStoreCachedTokenProviderTest {
   public static final int READ_TWICE_ON_FAILURE_ONCE_IN_SUCCESS = 3;
   public static final int WRITE_ON_FAILURE = 1;
   public static final int TWO_MISSES = 2;
+  public static final int SOME_LONG_VALIDITY_PERIOD = 600;
+  public static final int EXPIRE_IMEDIATELY = 0;
   private static final UnixPath AUTH_PATH = UnixPath.of("/oauth2/token");
   private static final ObjectMapper JSON = JsonMapper.builder()
     .addModule(new JavaTimeModule())
     .addModule(new Jdk8Module())
     .build();
-  private static final Duration SOME_LARGE_DURATION = Duration.ofDays(1);
   private static final int TWO_READ_ATTEMPTS_TIMES_TWO_MISSES = 4;
   private static final int WRITE_ATTEMPTS_WHEN_MISSING_TWO_TIMES = 2;
   private WireMockServer server;
@@ -71,13 +70,14 @@ class ParameterStoreCachedTokenProviderTest {
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
       new SimpleCredentialsProvider(clientId, clientSecret, authEndpoint);
-    setupAuthResponse();
+
   }
 
   @Test
   void shouldFetchNewTokenWhenCalledForTheFirstTime() {
+    setupAuthResponse(SOME_LONG_VALIDITY_PERIOD);
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = createSsmTokenProvider(tokenRefresher, SOME_LARGE_DURATION);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher);
 
     var actualToken = tokenProvider.fetchToken();
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
@@ -85,8 +85,9 @@ class ParameterStoreCachedTokenProviderTest {
 
   @Test
   void shouldReuseTokenStoredInSsmWhenTokenExistsInSsmAndIsValid() {
+    setupAuthResponse(SOME_LONG_VALIDITY_PERIOD);
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = createSsmTokenProvider(tokenRefresher, SOME_LARGE_DURATION);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
 
@@ -98,8 +99,9 @@ class ParameterStoreCachedTokenProviderTest {
 
   @Test
   void shouldAssumeThatCollisionDuringUpdateIsLikelyToHappen() {
+    setupAuthResponse(SOME_LONG_VALIDITY_PERIOD);
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = createSsmTokenProvider(tokenRefresher, Duration.ZERO);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher);
     tokenProvider.fetchToken();
     assertThat(ssmClient.getReadCounter().get()).isEqualTo(TWO_MISSES);
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
@@ -108,8 +110,9 @@ class ParameterStoreCachedTokenProviderTest {
 
   @Test
   void shouldFetchTokenFromOAuthWhenTokenExistsButIsInvalid() {
+    setupAuthResponse(EXPIRE_IMEDIATELY);
     var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
-    var tokenProvider = createSsmTokenProvider(tokenRefresher, Duration.ZERO);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher);
     tokenProvider.fetchToken();
     var actualToken = tokenProvider.fetchToken();
 
@@ -119,26 +122,27 @@ class ParameterStoreCachedTokenProviderTest {
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
-  private ParameterStoreCachedTokenProvider createSsmTokenProvider(NewTokenProvider tokenRefresher,
-    Duration duration) {
-    return new ParameterStoreCachedTokenProvider(
-      tokenRefresher,
-      parameterName,
-      ssmClient,
-      duration,
-      JSON);
+  private ParameterStoreCachedTokenProvider createSsmTokenProvider(
+    NewTokenProvider tokenRefresher) {
+    return TokenProvider
+      .parameterStoreCachedProvider(
+        tokenRefresher,
+        parameterName,
+        ssmClient,
+        TokenProvider.defaultUpdateStrategy());
+
   }
 
-  private void setupAuthResponse() {
+  private void setupAuthResponse(int tokenValidityPeriod) {
     server.stubFor(post(urlPathEqualTo(AUTH_PATH.toString()))
       .withBasicAuth(clientId, clientSecret)
       .withFormParam("grant_type", equalTo("client_credentials"))
-      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createResponse())));
+      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createResponse(tokenValidityPeriod))));
 
   }
 
-  private String createResponse() {
-    return attempt(() -> new OAuthTokenResponse(accessToken, randomInteger()))
+  private String createResponse(int tokenValidityPeriod) {
+    return attempt(() -> new OAuthTokenResponse(accessToken, tokenValidityPeriod))
       .map(JSON::writeValueAsString)
       .orElseThrow();
 

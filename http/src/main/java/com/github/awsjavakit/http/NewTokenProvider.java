@@ -21,7 +21,6 @@ import java.util.Map;
  */
 public class NewTokenProvider implements TokenProvider {
 
-  public static final String JWT_TOKEN_FIELD = "access_token";
   private static final String DUMMY_HOST = "notimportant";
 
   private static final Map<String, String> GRANT_TYPE_CLIENT_CREDENTIALS = Map.of("grant_type",
