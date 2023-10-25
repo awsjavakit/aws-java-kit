@@ -22,11 +22,11 @@ public class DefaultTokenCacheUpdateStrategy implements TokenCacheUpdateStrategy
 
   @Override
   public OAuthTokenEntry fetchAndUpdate(
-    Supplier<OAuthTokenEntry> updateEntry,
-    Supplier<OAuthTokenEntry> fetchEntry) {
-    return fetchToken(fetchEntry)
-      .or(() -> someOtherProcessMightBeGeneratingAToken(fetchEntry))
-      .orElseGet(updateEntry);
+    Supplier<OAuthTokenEntry> fetchCachedEntry,
+    Supplier<OAuthTokenEntry> updateCache) {
+    return fetchToken(fetchCachedEntry)
+      .or(() -> someOtherProcessMightBeGeneratingAToken(fetchCachedEntry))
+      .orElseGet(updateCache);
 
   }
 

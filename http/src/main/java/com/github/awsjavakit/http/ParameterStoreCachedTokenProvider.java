@@ -33,17 +33,17 @@ public class ParameterStoreCachedTokenProvider implements TokenProvider {
 
   @Override
   public OAuthTokenEntry fetchToken() {
-    return updateStrategy.fetchAndUpdate(this::updateToken, this::fetchTokenFromSsm);
+    return updateStrategy.fetchAndUpdate(this::fetchCachedEntry, this::updateCacheEntry);
   }
 
-  private OAuthTokenEntry updateToken() {
+  private OAuthTokenEntry updateCacheEntry() {
     OAuthTokenEntry token;
     var newValue = newTokenProvider.fetchToken();
     token = storeNewToken(newValue);
     return token;
   }
 
-  private OAuthTokenEntry fetchTokenFromSsm() {
+  private OAuthTokenEntry fetchCachedEntry() {
     var request = creteRequest();
     return attemptToFetchToken(request);
   }
