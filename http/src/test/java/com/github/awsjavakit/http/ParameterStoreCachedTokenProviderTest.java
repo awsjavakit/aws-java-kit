@@ -1,5 +1,6 @@
 package com.github.awsjavakit.http;
 
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -81,6 +82,27 @@ class ParameterStoreCachedTokenProviderTest {
 
     var actualToken = tokenProvider.fetchToken();
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
+  }
+
+
+  @Test
+  void shouldTreatInvalidCachedTokenAsNonExistent(){
+    insertInvalidObject();
+    setupAuthResponse(SOME_LONG_VALIDITY_PERIOD);
+    var tokenRefresher = new NewTokenProvider(httpClient, authCredentialsProvider);
+    var tokenProvider = createSsmTokenProvider(tokenRefresher);
+
+    var actualToken = tokenProvider.fetchToken();
+    assertThat(actualToken.value()).isEqualTo(this.accessToken);
+  }
+
+  private void insertInvalidObject() {
+    var request = PutParameterRequest.builder()
+      .dataType("text")
+      .value(randomJson())
+      .name(parameterName)
+      .build();
+    ssmClient.putParameter(request);
   }
 
   @Test

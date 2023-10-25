@@ -4,7 +4,6 @@ import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.http.updatestrategies.DefaultTokenCacheUpdateStrategy;
 import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
 import java.net.http.HttpClient;
-import java.time.Duration;
 import software.amazon.awssdk.services.ssm.SsmClient;
 
 public interface TokenProvider {
@@ -25,11 +24,10 @@ public interface TokenProvider {
 
   static TokenProvider locallyCachedTokenProvider(
     HttpClient httpClient,
-    OAuthCredentialsProvider authCredentialsProvider,
-    Duration maxTokenAge) {
+    OAuthCredentialsProvider authCredentialsProvider) {
     var tokenRefresher =
       NewTokenProvider.create(httpClient, authCredentialsProvider);
-    return new CachedTokenProvider(tokenRefresher, maxTokenAge);
+    return new CachedTokenProvider(tokenRefresher);
   }
 
   static TokenCacheUpdateStrategy<OAuthTokenEntry> defaultUpdateStrategy() {
