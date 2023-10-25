@@ -1,8 +1,11 @@
 package com.github.awsjavakit.http;
 
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
+import com.github.awsjavakit.http.updatestrategies.DefaultTokenCacheUpdateStrategy;
+import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import software.amazon.awssdk.services.ssm.SsmClient;
 
 public interface TokenProvider {
 
@@ -27,6 +30,23 @@ public interface TokenProvider {
     var tokenRefresher =
       NewTokenProvider.create(httpClient, authCredentialsProvider);
     return new CachedTokenProvider(tokenRefresher, maxTokenAge);
+  }
+
+  static TokenCacheUpdateStrategy<OAuthTokenEntry> defaultUpdateStrategy() {
+    return new DefaultTokenCacheUpdateStrategy(
+      DefaultTokenCacheUpdateStrategy.MINIMUM_SLEEP_AMOUNT,
+      DefaultTokenCacheUpdateStrategy.MAX_SLEEP_AMOUNT);
+  }
+
+  static ParameterStoreCachedTokenProvider parameterStoreCachedProvider(
+    TokenProvider newTokenProvider,
+    String parameterName,
+    SsmClient ssmClient,
+    TokenCacheUpdateStrategy<OAuthTokenEntry> tokenCacheEntryUpdateStrategy) {
+    return new ParameterStoreCachedTokenProvider(newTokenProvider,
+      parameterName,
+      ssmClient,
+      tokenCacheEntryUpdateStrategy);
   }
 
   OAuthTokenEntry fetchToken();

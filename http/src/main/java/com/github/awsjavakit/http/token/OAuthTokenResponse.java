@@ -12,7 +12,7 @@ public class OAuthTokenResponse {
   @JsonProperty("access_token")
   private String accessToken;
   @JsonProperty("expires_in")
-  private Long durationInSeconds;
+  private Long validityPeriodInSeconds;
   private Instant timestamp;
 
   public OAuthTokenResponse() {
@@ -22,7 +22,7 @@ public class OAuthTokenResponse {
   public OAuthTokenResponse(String accessToken, long durationInSeconds) {
     this();
     this.accessToken = accessToken;
-    this.durationInSeconds = durationInSeconds;
+    this.validityPeriodInSeconds = durationInSeconds;
   }
 
   public Instant getTimestamp() {
@@ -37,16 +37,16 @@ public class OAuthTokenResponse {
     this.accessToken = accessToken;
   }
 
-  public Long getDurationInSeconds() {
-    return durationInSeconds;
+  public Long getValidityPeriodInSeconds() {
+    return validityPeriodInSeconds;
   }
 
-  public void setDurationInSeconds(Long durationInSeconds) {
-    this.durationInSeconds = durationInSeconds;
+  public void setValidityPeriodInSeconds(Long validityPeriodInSeconds) {
+    this.validityPeriodInSeconds = validityPeriodInSeconds;
   }
 
   @JsonIgnore
   public Instant getExpirationTimestamp() {
-    return getTimestamp().plusSeconds(durationInSeconds);
+    return getTimestamp().plusSeconds(validityPeriodInSeconds);
   }
 }
