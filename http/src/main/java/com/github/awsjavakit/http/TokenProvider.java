@@ -9,6 +9,7 @@ public interface TokenProvider {
   /**
    * Creates a TokenProvider that every time it fetches a Bearer token, it requests the generation o
    * of a new token
+   *
    * @param httpClient
    * @param authCredentialsProvider
    * @return
@@ -24,13 +25,9 @@ public interface TokenProvider {
     OAuthCredentialsProvider authCredentialsProvider,
     Duration maxTokenAge) {
     var tokenRefresher =
-      NewTokenProvider.create(httpClient,authCredentialsProvider);
-    return new CachedTokenProvider(tokenRefresher,maxTokenAge);
+      NewTokenProvider.create(httpClient, authCredentialsProvider);
+    return new CachedTokenProvider(tokenRefresher, maxTokenAge);
   }
 
-
   OAuthTokenEntry fetchToken();
-
-
-
 }
