@@ -89,6 +89,18 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     assertThat(token.value()).isEqualTo(accessToken);
   }
 
+  @Test
+  void shouldRefreshTokenWhenTokenExistsAndIsInvalid() {
+    setupAuthHandshake(0);
+    var tokenProvider = new SimpleDynamoCachedTokenProvider(
+      createNewTokenProvider(), dynamoClient, tableName);
+    tokenProvider.fetchToken();
+    var token = tokenProvider.fetchToken();
+
+    server.verify(exactly(2), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
+    assertThat(token.value()).isEqualTo(accessToken);
+  }
+
   private GetItemRequest createGetRequest(OAuthTokenEntry token) {
     var keyValue = AttributeValue.builder().s(token.type()).build();
     var key = Map.of(PARTITION_KEY, keyValue,
