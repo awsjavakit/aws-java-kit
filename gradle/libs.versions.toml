@@ -17,7 +17,7 @@ mockito = { strictly = '5.5.0' }
 awsLambdaEvents = { strictly = '3.11.3' }
 awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.30' }
-
+dynamoDbLocal = {strictly = '2.1.0'}
 
 [libraries]
 
@@ -34,6 +34,8 @@ aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.re
 aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }
 aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
 aws-ssm = { group = 'software.amazon.awssdk', name = 'ssm', version.ref = 'awsSdk2' }
+aws-dynamodb = { group = 'software.amazon.awssdk', name = 'dynamodb', version.ref = 'awsSdk2' }
+aws-dynamodb-enhanced = { group = 'software.amazon.awssdk', name = 'dynamodb-enhanced', version.ref = 'awsSdk2' }
 aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
 
@@ -64,9 +66,10 @@ wiremock = { group = 'org.wiremock', name = 'wiremock', version.ref = 'wiremock'
 mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mockito' }
 mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
 lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
+dynamoDbLocal = { group = 'com.amazonaws', name = 'DynamoDBLocal', version.ref = 'dynamoDbLocal' }
 
 [bundles]
-testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit"]
+testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit","dynamoDbLocal"]
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 
