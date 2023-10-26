@@ -9,7 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 final class JsonConfig {
 
-  private static final ObjectMapper JSON = JsonMapper.builder()
+  static final ObjectMapper JSON = JsonMapper.builder()
     .addModule(new Jdk8Module())
     .addModule(new JavaTimeModule())
     .build();

@@ -1,5 +1,6 @@
 plugins {
     id 'com.github.awsjavakit.java-library-conventions'
+    id 'com.github.awsjavakit.dynamodblocal-conventions'
     id 'com.github.awsjavakit.publishing'
 }
 
@@ -10,6 +11,8 @@ dependencies {
     implementation libs.bundles.logging
     compileOnly libs.aws.secrets
     compileOnly libs.aws.ssm
+    compileOnly libs.aws.dynamodb
+    compileOnly libs.aws.dynamodb.enhanced
 
     compileOnly project(":secrets")
     implementation project(":attempt")
@@ -23,6 +26,7 @@ dependencies {
     testImplementation libs.aws.secrets
     testImplementation libs.wiremock
     testImplementation libs.aws.secrets
+    testImplementation libs.aws.s3
 
 
 }
