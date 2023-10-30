@@ -47,7 +47,6 @@ public class DlqHandler implements RequestHandler<SQSEvent, Void> {
 
     @Override
     public Void handleRequest(SQSEvent input, Context context) {
-
         var failedEvents = extractFailedEventsFromDlqMessages(input);
         Lists.partition(failedEvents, NUMBER_OF_GROUPS).forEach(failedEventsHandlingService::handleFailedEvents);
         return null;
