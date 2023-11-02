@@ -6,10 +6,14 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -92,9 +96,65 @@ class PartitionedListTest {
     assertThat(reconstructed).isEqualTo(sample);
   }
 
-  private static List<List<String>> verifyAtCompileTimeThatIsListOfLists(
-    PartitionedList<String> partitioned) {
-    return partitioned.stream().toList();
+  @Test
+  void shouldReturnThatIsEmptyWhenEmpty() {
+    var emptySample = new PartitionedList<>(Collections.emptyList(), randomInteger());
+    assertThat(emptySample.isEmpty()).isEqualTo(true);
+
+    var nonEmpySample = new PartitionedList<>(sampleList(10), randomInteger(10));
+    assertThat(nonEmpySample.isEmpty()).isEqualTo(false);
+  }
+
+  @Test
+  void shouldReturnAnArrayOfLists() {
+    var sample = sampleList(randomInteger(1000));
+    var partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+
+    var array = partitioned.toArray();
+    var reconstructed = Arrays.stream(array)
+      .map(List.class::cast)
+      .flatMap(Collection::stream)
+      .toList();
+    assertThat(reconstructed).isEqualTo(sample);
+  }
+
+  @Test
+  void shouldPopulateGivenArray() {
+    var sample = sampleList(randomInteger(1000));
+    var partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+
+    var array = partitioned.toArray(List[]::new);
+    var reconstructed = Arrays.stream(array)
+      .map(List.class::cast)
+      .flatMap(Collection::stream)
+      .toList();
+    assertThat(reconstructed).isEqualTo(sample);
+  }
+
+  @Disabled
+  @Test
+  void shouldBeComparableToGuavasImplementation() {
+    var sample = sampleIntList(100_000_001);
+    var partitions = 20;
+
+    long guavaStart = System.currentTimeMillis();
+    var guava = Lists.partition(sample, partitions);
+    var totalSizeGuava = guava.stream().map(List::size).reduce(Integer::sum).orElseThrow();
+    long guavaEnd = System.currentTimeMillis();
+    var totalGuavaTime = guavaEnd - guavaStart;
+
+    long partitionedStart = System.currentTimeMillis();
+    var partitioned = Lists.partition(sample, partitions);
+    var totalSizeParitioned = partitioned.stream().map(List::size).reduce(Integer::sum)
+      .orElseThrow();
+    long partitionedEnd = System.currentTimeMillis();
+    var totalTimePartitioned = partitionedEnd - partitionedStart;
+
+    assertThat(totalTimePartitioned).isLessThanOrEqualTo(totalGuavaTime);
+    assertThat(totalSizeParitioned).isEqualTo(totalSizeGuava);
+
   }
 
   //TODO: one by one this methods will be implemented
@@ -103,11 +163,8 @@ class PartitionedListTest {
     var sample = sampleList(100);
     var partitioned = new PartitionedList<>(sample, 5);
 
-    assertThrows(UnsupportedOperationException.class, partitioned::isEmpty);
     assertThrows(UnsupportedOperationException.class,
       () -> partitioned.contains(randomList()));
-    assertThrows(UnsupportedOperationException.class, partitioned::toArray);
-    assertThrows(UnsupportedOperationException.class, () -> partitioned.toArray(new List[0]));
     assertThrows(UnsupportedOperationException.class,
       () -> partitioned.add(List.of(randomString())));
     assertThrows(UnsupportedOperationException.class,
@@ -143,8 +200,24 @@ class PartitionedListTest {
 
   }
 
+  private static List<Integer> sampleIntList(int size) {
+    return IntStream.range(0, size).boxed().toList();
+  }
+
+  private static List<List<String>> verifyAtCompileTimeThatIsListOfLists(
+    PartitionedList<String> partitioned) {
+    return partitioned.stream().toList();
+  }
+
   private static int calculateSampleIndex(int partitionIndex, int partitionSize, int elementIndex) {
     return partitionIndex * partitionSize + elementIndex;
+  }
+
+  private static List<String> sampleList(int sampleSize) {
+    return IntStream.range(0, sampleSize)
+      .mapToObj(ignored -> randomString())
+      .toList();
+
   }
 
   private List<String> randomList() {
@@ -153,13 +226,6 @@ class PartitionedListTest {
 
   private Collection<List<String>> listOfLists() {
     return List.of(List.of(randomString()));
-  }
-
-  private List<String> sampleList(int sampleSize) {
-    return IntStream.range(0, sampleSize)
-      .mapToObj(ignored -> randomString())
-      .toList();
-
   }
 
 }

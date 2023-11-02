@@ -24,7 +24,7 @@ public class PartitionedList<T> implements List<List<T>> {
 
   @Override
   public boolean isEmpty() {
-    throw new UnsupportedOperationException();
+    return contents.isEmpty();
   }
 
   @Override
@@ -39,12 +39,14 @@ public class PartitionedList<T> implements List<List<T>> {
 
   @Override
   public Object[] toArray() {
-    throw new UnsupportedOperationException();
+    var lists = this.stream().toList();
+    return lists.toArray();
   }
 
   @Override
   public <T> T[] toArray(T[] a) {
-    throw new UnsupportedOperationException();
+    var lists = this.stream().toList();
+    return lists.toArray(a);
   }
 
   @Override
