@@ -70,17 +70,26 @@ class PartitionedListTest {
   }
 
   @Test
+  void everyPartitionShouldHaveAtMostTheIndicatedSize() {
+    var sample = sampleList(randomInteger(1000));
+    int partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+    for (var partition : partitioned) {
+      assertThat(partition).hasSizeLessThanOrEqualTo(partitionSize);
+    }
+  }
+
+  @Test
   void shouldReturnIteratorOfPartitions() {
     var sample = sampleList(randomInteger(1000));
-    var partitionSize = randomInteger(sample.size());
+    int partitionSize = randomInteger(sample.size());
     var partitioned = new PartitionedList<>(sample, partitionSize);
-    var iterator = partitioned.iterator();
     var reconstructed = new ArrayList<String>();
-    while (iterator.hasNext()) {
-      var partition = iterator.next();
-      assertThat(partition.size() <= partitionSize);
+
+    for (var partition : partitioned) {
       reconstructed.addAll(partition);
     }
+
     assertThat(reconstructed).containsAll(sample);
   }
 
@@ -97,7 +106,7 @@ class PartitionedListTest {
   }
 
   @Test
-  void shouldReturnThatIsEmptyWhenEmpty() {
+  void shouldReturnThatIsEmptyOnlyWhenEmpty() {
     var emptySample = new PartitionedList<>(Collections.emptyList(), randomInteger());
     assertThat(emptySample.isEmpty()).isEqualTo(true);
 
