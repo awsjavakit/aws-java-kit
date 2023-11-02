@@ -4,12 +4,6 @@ import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.http.updatestrategies.DefaultTokenCacheUpdateStrategy;
 import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
 import java.net.http.HttpClient;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 import software.amazon.awssdk.services.ssm.SsmClient;
 
 public interface TokenProvider {
