@@ -1,7 +1,6 @@
 package com.github.awsjavakit.misc.lists;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -13,7 +12,7 @@ public class PartitionedList<T> implements List<List<T>> {
   private final int numberOfPartitions;
 
   public PartitionedList(List<T> contents, int partitionSize) {
-    this.contents = Collections.unmodifiableList(contents);
+    this.contents = contents;
     this.partitionSize = partitionSize;
     this.numberOfPartitions = calculateNumberOfPartitions(contents, partitionSize);
   }
