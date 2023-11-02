@@ -95,8 +95,8 @@ class S3DriverTest {
         s3Driver = new S3Driver(s3Client, "ignored");
         List<String> actualContent = s3Driver.getFiles(UnixPath.of(SOME_PATH));
 
-        assertThat(actualContent.size(), is(equalTo(2)));
         assertThat(actualContent, containsInAnyOrder(firstFileContent, secondFileContent));
+        assertThat(actualContent.size(), is(equalTo(2)));
     }
 
     @Test

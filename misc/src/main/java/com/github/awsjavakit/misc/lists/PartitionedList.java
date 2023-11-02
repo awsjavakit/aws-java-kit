@@ -9,15 +9,17 @@ public class PartitionedList<T> implements List<List<T>> {
 
   private final List<T> contents;
   private final int partitionSize;
+  private final int numberOfPartitions;
 
   public PartitionedList(List<T> contents, int partitionSize) {
     this.contents = contents;
     this.partitionSize = partitionSize;
+    this.numberOfPartitions = calculateNumberOfPartitions(contents, partitionSize);
   }
 
   @Override
   public int size() {
-    throw new UnsupportedOperationException();
+    return this.numberOfPartitions;
   }
 
   @Override
@@ -132,14 +134,28 @@ public class PartitionedList<T> implements List<List<T>> {
     throw new UnsupportedOperationException();
   }
 
+  private int calculateNumberOfPartitions(List<T> contents, int partitionSize) {
+    return (int) Math.ceil((double) contents.size() / (double) partitionSize);
+  }
 
   private int calculatePartitionEndExclusive(int index) {
     var candidate = partitionSize * (index + 1);
-    return Math.max(candidate, contents.size());
+    return Math.min(candidate, contents.size());
 
   }
 
   private int calculatePartitionStart(int partitionIndex) {
+    if (partitionIndex >= this.size()) {
+      throw indexOutOfBounds(partitionIndex);
+    }
     return partitionIndex * partitionSize;
+  }
+
+  private IndexOutOfBoundsException indexOutOfBounds(int partitionIndex) {
+    return new IndexOutOfBoundsException(formatMessage(partitionIndex));
+  }
+
+  private String formatMessage(int partitionIndex) {
+    return String.format("Index %d is out of bounds for length %d", partitionIndex, size());
   }
 }
