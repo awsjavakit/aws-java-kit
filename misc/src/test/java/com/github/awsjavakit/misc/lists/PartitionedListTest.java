@@ -1,13 +1,12 @@
 package com.github.awsjavakit.misc.lists;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
-
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -66,17 +65,47 @@ class PartitionedListTest {
     assertThat(partitioned.size()).isEqualTo(expectedSize);
   }
 
+  @Test
+  void shouldReturnIteratorOfPartitions() {
+    var sample = sampleList(randomInteger(1000));
+    var partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+    var iterator = partitioned.iterator();
+    var reconstructed = new ArrayList<String>();
+    while (iterator.hasNext()) {
+      var partition = iterator.next();
+      assertThat(partition.size() <= partitionSize);
+      reconstructed.addAll(partition);
+    }
+    assertThat(reconstructed).containsAll(sample);
+  }
+
+  @Test
+  void shouldReturnStreamOfPartitions() {
+    var sample = sampleList(randomInteger(1000));
+    var partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+    var listOfLists = verifyAtCompileTimeThatIsListOfLists(partitioned);
+    var reconstructed = listOfLists.stream()
+      .flatMap(Collection::stream)
+      .toList();
+    assertThat(reconstructed).isEqualTo(sample);
+  }
+
+  private static List<List<String>> verifyAtCompileTimeThatIsListOfLists(
+    PartitionedList<String> partitioned) {
+    return partitioned.stream().toList();
+  }
+
   //TODO: one by one this methods will be implemented
   @Test
   void shouldThrowUnsupportedOperationExceptionForAnyUnimplementedOperation() {
     var sample = sampleList(100);
     var partitioned = new PartitionedList<>(sample, 5);
 
-
     assertThrows(UnsupportedOperationException.class, partitioned::isEmpty);
     assertThrows(UnsupportedOperationException.class,
       () -> partitioned.contains(randomList()));
-    assertThrows(UnsupportedOperationException.class, partitioned::iterator);
     assertThrows(UnsupportedOperationException.class, partitioned::toArray);
     assertThrows(UnsupportedOperationException.class, () -> partitioned.toArray(new List[0]));
     assertThrows(UnsupportedOperationException.class,
