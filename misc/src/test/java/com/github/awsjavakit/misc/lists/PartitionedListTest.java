@@ -68,16 +68,24 @@ class PartitionedListTest {
   @Test
   void shouldReturnIteratorOfPartitions() {
     var sample = sampleList(randomInteger(1000));
-    var partitionSize = randomInteger(sample.size());
+    int partitionSize = randomInteger(sample.size());
     var partitioned = new PartitionedList<>(sample, partitionSize);
-    var iterator = partitioned.iterator();
     var reconstructed = new ArrayList<String>();
-    while (iterator.hasNext()) {
-      var partition = iterator.next();
-      assertThat(partition.size() <= partitionSize);
-      reconstructed.addAll(partition);
+    //on purpose explicit use of iterator
+    for(var iterator = partitioned.iterator(); iterator.hasNext();){
+      reconstructed.addAll(iterator.next());
     }
     assertThat(reconstructed).containsAll(sample);
+  }
+
+  @Test
+  void shouldReturnPartitionsNotLargerThanSpecifiedSize() {
+    var sample = sampleList(randomInteger(1000));
+    int partitionSize = randomInteger(sample.size());
+    var partitioned = new PartitionedList<>(sample, partitionSize);
+    for(var partition:partitioned){
+      assertThat(partition).hasSizeLessThanOrEqualTo(partitionSize);
+    }
   }
 
   @Test
