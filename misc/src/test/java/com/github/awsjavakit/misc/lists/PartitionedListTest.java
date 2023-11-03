@@ -6,14 +6,12 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -142,30 +140,6 @@ class PartitionedListTest {
     assertThat(reconstructed).isEqualTo(sample);
   }
 
-  @Disabled
-  @Test
-  void shouldBeComparableToGuavasImplementation() {
-    var sample = sampleIntList(100_000_001);
-    var partitions = 20;
-
-    long guavaStart = System.currentTimeMillis();
-    var guava = Lists.partition(sample, partitions);
-    var totalSizeGuava = guava.stream().map(List::size).reduce(Integer::sum).orElseThrow();
-    long guavaEnd = System.currentTimeMillis();
-    var totalGuavaTime = guavaEnd - guavaStart;
-
-    long partitionedStart = System.currentTimeMillis();
-    var partitioned = Lists.partition(sample, partitions);
-    var totalSizeParitioned = partitioned.stream().map(List::size).reduce(Integer::sum)
-      .orElseThrow();
-    long partitionedEnd = System.currentTimeMillis();
-    var totalTimePartitioned = partitionedEnd - partitionedStart;
-
-    assertThat(totalTimePartitioned).isLessThanOrEqualTo(totalGuavaTime);
-    assertThat(totalSizeParitioned).isEqualTo(totalSizeGuava);
-
-  }
-
   //TODO: one by one this methods will be implemented
   @Test
   void shouldThrowUnsupportedOperationExceptionForAnyUnimplementedOperation() {
@@ -207,10 +181,6 @@ class PartitionedListTest {
     assertThrows(UnsupportedOperationException.class,
       () -> partitioned.subList(0, 1));
 
-  }
-
-  private static List<Integer> sampleIntList(int size) {
-    return IntStream.range(0, size).boxed().toList();
   }
 
   private static List<List<String>> verifyAtCompileTimeThatIsListOfLists(
