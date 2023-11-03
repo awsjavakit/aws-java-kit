@@ -6,12 +6,17 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
+
+import org.assertj.core.data.Percentage;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -74,7 +79,7 @@ class PartitionedListTest {
     var partitioned = new PartitionedList<>(sample, partitionSize);
     var reconstructed = new ArrayList<String>();
     //on purpose explicit use of iterator
-    for(var iterator = partitioned.iterator(); iterator.hasNext();){
+    for (var iterator = partitioned.iterator(); iterator.hasNext(); ) {
       reconstructed.addAll(iterator.next());
     }
 
@@ -86,7 +91,7 @@ class PartitionedListTest {
     var sample = sampleList(randomInteger(1000));
     int partitionSize = randomInteger(sample.size());
     var partitioned = new PartitionedList<>(sample, partitionSize);
-    for(var partition:partitioned){
+    for (var partition : partitioned) {
       assertThat(partition).hasSizeLessThanOrEqualTo(partitionSize);
     }
   }
@@ -138,6 +143,28 @@ class PartitionedListTest {
       .flatMap(Collection::stream)
       .toList();
     assertThat(reconstructed).isEqualTo(sample);
+  }
+
+  @Disabled
+  @RepeatedTest(10)
+  void shouldBeComparableToGuavasImplementation() {
+    var sample = sampleIntList(10_020_974);
+    var partitionSize = 23;
+
+    warmup(sample, partitionSize);
+
+    var partitionedResult = new Benchmark<>(sample, partitionSize, PartitionedList::new)
+      .run();
+    var guavaBenchmark = new Benchmark<>(sample, partitionSize, Lists::partition)
+      .run();
+
+    assertThat(partitionedResult).satisfiesAnyOf(
+      result -> assertThat(result.averageProcessingTime()).isLessThan(
+        guavaBenchmark.averageProcessingTime()),
+      result -> assertThat(result.averageProcessingTime()).isCloseTo(
+        guavaBenchmark.averageProcessingTime(),
+        Percentage.withPercentage(10))
+    );
   }
 
   //TODO: one by one this methods will be implemented
@@ -197,6 +224,15 @@ class PartitionedListTest {
       .mapToObj(ignored -> randomString())
       .toList();
 
+  }
+
+  private List<Integer> sampleIntList(int size) {
+    return IntStream.range(0, size).boxed().toList();
+  }
+
+  private void warmup(List<Integer> sample, int partitionSize) {
+    new Benchmark<>(sample, partitionSize, PartitionedList::new).run();
+    new Benchmark<>(sample, partitionSize, Lists::partition).run();
   }
 
   private List<String> randomList() {
