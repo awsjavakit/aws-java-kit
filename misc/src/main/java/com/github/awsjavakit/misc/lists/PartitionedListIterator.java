@@ -22,7 +22,5 @@ public class PartitionedListIterator<T> implements Iterator<List<T>> {
     var output = contents.get(currentIndex);
     currentIndex++;
     return output;
-
   }
-
 }
