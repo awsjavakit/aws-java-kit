@@ -34,7 +34,7 @@ public class PartitionedList<T> implements List<List<T>> {
 
   @Override
   public Iterator<List<T>> iterator() {
-    throw new UnsupportedOperationException();
+    return new PartitionedListIterator<>(this);
   }
 
   @Override
@@ -158,4 +158,5 @@ public class PartitionedList<T> implements List<List<T>> {
   private String formatMessage(int partitionIndex) {
     return String.format("Index %d is out of bounds for length %d", partitionIndex, size());
   }
+
 }
