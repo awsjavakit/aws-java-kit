@@ -13,7 +13,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.IntStream;
+import org.assertj.core.data.Percentage;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -143,27 +145,25 @@ class PartitionedListTest {
   }
 
   @Disabled
-  @Test
+  @RepeatedTest(10)
   void shouldBeComparableToGuavasImplementation() {
-    var sample = sampleIntList(100_000_001);
-    var partitions = 20;
+    var sample = sampleIntList(10_020_974);
+    var partitionSize = 23;
 
-    long guavaStart = System.currentTimeMillis();
-    var guava = Lists.partition(sample, partitions);
-    var totalSizeGuava = guava.stream().map(List::size).reduce(Integer::sum).orElseThrow();
-    long guavaEnd = System.currentTimeMillis();
-    var totalGuavaTime = guavaEnd - guavaStart;
+    warmup(sample, partitionSize);
 
-    long partitionedStart = System.currentTimeMillis();
-    var partitioned = Lists.partition(sample, partitions);
-    var totalSizeParitioned = partitioned.stream().map(List::size).reduce(Integer::sum)
-      .orElseThrow();
-    long partitionedEnd = System.currentTimeMillis();
-    var totalTimePartitioned = partitionedEnd - partitionedStart;
+    var partitionedResult = new Benchmark<>(sample, partitionSize, PartitionedList::new)
+      .run();
+    var guavaBenchmark = new Benchmark<>(sample, partitionSize, Lists::partition)
+      .run();
 
-    assertThat(totalTimePartitioned).isLessThanOrEqualTo(totalGuavaTime);
-    assertThat(totalSizeParitioned).isEqualTo(totalSizeGuava);
-
+    assertThat(partitionedResult).satisfiesAnyOf(
+      result -> assertThat(result.averageProcessingTime()).isLessThan(
+        guavaBenchmark.averageProcessingTime()),
+      result -> assertThat(result.averageProcessingTime()).isCloseTo(
+        guavaBenchmark.averageProcessingTime(),
+        Percentage.withPercentage(10))
+    );
   }
 
   //TODO: one by one this methods will be implemented
@@ -227,6 +227,11 @@ class PartitionedListTest {
       .mapToObj(ignored -> randomString())
       .toList();
 
+  }
+
+  private void warmup(List<Integer> sample, int partitionSize) {
+    new Benchmark<>(sample, partitionSize, PartitionedList::new).run();
+    new Benchmark<>(sample, partitionSize, Lists::partition).run();
   }
 
   private List<String> randomList() {
