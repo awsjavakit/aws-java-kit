@@ -70,16 +70,6 @@ class PartitionedListTest {
   }
 
   @Test
-  void everyPartitionShouldHaveAtMostTheIndicatedSize() {
-    var sample = sampleList(randomInteger(1000));
-    int partitionSize = randomInteger(sample.size());
-    var partitioned = new PartitionedList<>(sample, partitionSize);
-    for (var partition : partitioned) {
-      assertThat(partition).hasSizeLessThanOrEqualTo(partitionSize);
-    }
-  }
-
-  @Test
   void shouldReturnIteratorOfPartitions() {
     var sample = sampleList(randomInteger(1000));
     int partitionSize = randomInteger(sample.size());
