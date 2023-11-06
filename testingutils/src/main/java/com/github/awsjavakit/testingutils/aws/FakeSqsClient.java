@@ -32,7 +32,6 @@ public class FakeSqsClient implements SqsClient {
   @Override
   public SendMessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
     validateMessageRequest(sendMessageRequest);
-
     sentMessages.add(sendMessageRequest);
     return SendMessageResponse.builder().build();
   }
@@ -41,7 +40,7 @@ public class FakeSqsClient implements SqsClient {
   public SendMessageBatchResponse sendMessageBatch(SendMessageBatchRequest sendMessageBatchRequest) {
     sendMessageBatchRequest.entries().stream()
       .map(entry -> toSendMessageRequest(entry, sendMessageBatchRequest))
-      .forEach(sentMessages::add);
+      .forEach(this::sendMessage);
     return SendMessageBatchResponse.builder().build();
   }
 

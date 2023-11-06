@@ -30,9 +30,15 @@ class FakeSqsClientTest {
   }
 
   @Test
-  void shouldThrowExceptionWhenSqsUriIsNotIncluded() {
+  void shouldThrowExceptionWhenSendingSingleMessageAndUriIsNotIncluded() {
     var message = invalidMessage();
     assertThrows(Exception.class, () -> client.sendMessage(message));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenSendingMessageBatchAndUriIsNotIncluded() {
+    var message = invalidMessageBatch();
+    assertThrows(Exception.class, () -> client.sendMessageBatch(message));
   }
 
   @Test
@@ -59,6 +65,12 @@ class FakeSqsClientTest {
     return SendMessageRequest.builder()
       .queueUrl(randomUri().toString())
       .messageBody(randomString())
+      .build();
+  }
+
+  private SendMessageBatchRequest invalidMessageBatch() {
+    return SendMessageBatchRequest.builder()
+      .entries(List.of(randomEntry()))
       .build();
   }
 
