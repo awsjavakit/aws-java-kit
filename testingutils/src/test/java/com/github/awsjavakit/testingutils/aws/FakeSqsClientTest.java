@@ -26,7 +26,7 @@ class FakeSqsClientTest {
   void shouldReturnSendRequestsThatWereSent() {
     var message = validMessage();
     client.sendMessage(message);
-    assertThat(client.getSentMessages()).containsExactly(message);
+    assertThat(client.getMessages()).containsExactly(message);
   }
 
   @Test
@@ -46,7 +46,7 @@ class FakeSqsClientTest {
     var request = sampleBatchRequest();
     client.sendMessageBatch(request);
     var expectedMessages = convertBatchEntriesToSingleRequests(request);
-    var actualMessages = client.getSentMessages();
+    var actualMessages = client.getMessages();
     assertThat(actualMessages)
       .containsExactlyInAnyOrder(expectedMessages.toArray(SendMessageRequest[]::new));
   }

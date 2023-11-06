@@ -13,10 +13,10 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 public class FakeSqsClient implements SqsClient {
 
-  private final List<SendMessageRequest> sentMessages;
+  private final List<SendMessageRequest> messages;
 
   public FakeSqsClient() {
-    this.sentMessages = new ArrayList<>();
+    this.messages = new ArrayList<>();
   }
 
   @Override
@@ -32,7 +32,7 @@ public class FakeSqsClient implements SqsClient {
   @Override
   public SendMessageResponse sendMessage(SendMessageRequest sendMessageRequest) {
     validateMessageRequest(sendMessageRequest);
-    sentMessages.add(sendMessageRequest);
+    messages.add(sendMessageRequest);
     return SendMessageResponse.builder().build();
   }
 
@@ -44,8 +44,8 @@ public class FakeSqsClient implements SqsClient {
     return SendMessageBatchResponse.builder().build();
   }
 
-  public List<SendMessageRequest> getSentMessages() {
-    return sentMessages;
+  public List<SendMessageRequest> getMessages() {
+    return messages;
   }
 
   private SendMessageRequest toSendMessageRequest(SendMessageBatchRequestEntry entry,
