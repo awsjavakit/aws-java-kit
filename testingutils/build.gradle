@@ -15,6 +15,7 @@ dependencies {
     implementation libs.aws.apigateway
     implementation libs.aws.ssm
     implementation libs.aws.s3
+    implementation libs.aws.sqs
     implementation libs.aws.eventbridge
     implementation libs.aws.secrets
     implementation libs.aws.firehose

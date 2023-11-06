@@ -32,6 +32,7 @@ aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', versi
 aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2' }
 aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.ref = 'awsSdk2' }
 aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }
+aws-sqs = { group = 'software.amazon.awssdk', name = 'sqs', version.ref = 'awsSdk2' }
 aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
 aws-ssm = { group = 'software.amazon.awssdk', name = 'ssm', version.ref = 'awsSdk2' }
 aws-dynamodb = { group = 'software.amazon.awssdk', name = 'dynamodb', version.ref = 'awsSdk2' }
