@@ -10,7 +10,7 @@ dependencies {
     implementation project (":attempt")
     implementation project (":misc")
 
-
+    implementation libs.aws.lambda.events
     implementation libs.aws.lambda.core
     implementation libs.aws.apigateway
     implementation libs.aws.ssm

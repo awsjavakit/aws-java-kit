@@ -19,6 +19,7 @@ awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.30' }
 dynamoDbLocal = {strictly = '2.1.0'}
 
+
 [libraries]
 
 
@@ -39,7 +40,6 @@ aws-dynamodb = { group = 'software.amazon.awssdk', name = 'dynamodb', version.re
 aws-dynamodb-enhanced = { group = 'software.amazon.awssdk', name = 'dynamodb-enhanced', version.ref = 'awsSdk2' }
 aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
-
 
 
 jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
