@@ -6,9 +6,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.amazonaws.services.lambda.runtime.events.SQSEvent.MessageAttribute;
+import com.github.awsjavakit.misc.SingletonCollector;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -52,6 +58,22 @@ class FakeSqsClientTest {
   }
 
   @Test
+  void shouldProvideSentMessagesAsSqsEventForSqsHandlers() {
+    var sendRequest = validMessage();
+    client.sendMessage(sendRequest);
+    var event = client.createEvent();
+
+    var messageAsInputToHandler = event.getRecords().stream().collect(SingletonCollector.collect());
+    assertThat(messageAsInputToHandler.getBody()).isEqualTo(sendRequest.messageBody());
+
+    for (var expectedAttribute : sendRequest.messageAttributes().entrySet()) {
+      var actualAttributes = messageAsInputToHandler.getMessageAttributes();
+      assertThat(actualAttributes).hasEntrySatisfying(
+        expectedAttribute.getKey(), assertThatAttributeValuesAreEquivalent(expectedAttribute));
+    }
+  }
+
+  @Test
   void shouldReturnSomeServiceName() {
     assertThat(client.serviceName()).isNotNull();
   }
@@ -61,16 +83,41 @@ class FakeSqsClientTest {
     assertDoesNotThrow(() -> client.close());
   }
 
+  private static Consumer<MessageAttribute> assertThatAttributeValuesAreEquivalent(
+    Entry<String, MessageAttributeValue> expectedAttribute) {
+    return messageAttribute -> assertThat(messageAttribute.getStringValue()).isEqualTo(
+      expectedAttribute.getValue().stringValue());
+  }
+
   private static SendMessageRequest validMessage() {
     return SendMessageRequest.builder()
       .queueUrl(randomUri().toString())
       .messageBody(randomString())
+      .messageAttributes(randomMessageAttributes())
       .build();
   }
 
-  private SendMessageBatchRequest invalidMessageBatch() {
+  private static Map<String, MessageAttributeValue> randomMessageAttributes() {
+    return Map.of(randomString(), randomMessageAttributeValue());
+  }
+
+  private static MessageAttributeValue randomMessageAttributeValue() {
+    return MessageAttributeValue.builder()
+      .dataType(randomString())
+      .stringValue(randomString())
+      .build();
+  }
+
+  private static SendMessageBatchRequest invalidMessageBatch() {
     return SendMessageBatchRequest.builder()
       .entries(List.of(randomEntry()))
+      .build();
+  }
+
+  private static SendMessageBatchRequestEntry randomEntry() {
+    return SendMessageBatchRequestEntry.builder()
+      .id(randomString())
+      .messageBody(randomString())
       .build();
   }
 
@@ -92,13 +139,6 @@ class FakeSqsClientTest {
     return SendMessageRequest.builder()
       .queueUrl(batchRequest.queueUrl())
       .messageBody(entry.messageBody())
-      .build();
-  }
-
-  private SendMessageBatchRequestEntry randomEntry() {
-    return SendMessageBatchRequestEntry.builder()
-      .id(randomString())
-      .messageBody(randomString())
       .build();
   }
 
