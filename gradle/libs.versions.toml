@@ -1,24 +1,24 @@
 [versions]
-awsSdk2 = { strictly = '2.21.2' }
-junit = { strictly = '5.10.0' }
-assertj = { strictly = '3.24.2' }
-log4j = { strictly = '2.21.0' }
+awsSdk2 = { strictly = '2.22.13' }
+junit = { strictly = '5.10.1' }
+assertj = { strictly = '3.25.1' }
+log4j = { strictly = '2.22.1' }
 #wiremock has some old slf4j dependecies
-slf4j = { require = '2.0.9' }
-lambda-log4j2 = { strictly = '1.5.1' }
-jackson = { strictly = '2.15.3' }
-guava = { strictly = '32.1.3-jre' }
-apacheCommons = { strictly = '3.13.0' }
-datafaker = { strictly = '2.0.2' }
+slf4j = { require = '2.0.11' }
+lambda-log4j2 = { strictly = '1.6.0' }
+jackson = { strictly = '2.16.1' }
+guava = { strictly = '33.0.0-jre' }
+apacheCommons = { strictly = '3.14.0' }
+datafaker = { strictly = '2.1.0' }
 hamcrest = { strictly = '2.2' }
 hamcrestOptional = { strictly = '2.0.0' }
 hamcrestJackson = { strictly = '1.3.2' }
-wiremock = { strictly = '3.2.0' }
-mockito = { strictly = '5.5.0' }
-awsLambdaEvents = { strictly = '3.11.3' }
+wiremock = { strictly = '3.3.1' }
+mockito = { strictly = '5.8.0' }
+awsLambdaEvents = { strictly = '3.11.4' }
 awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.30' }
-dynamoDbLocal = { strictly = '2.1.0' }
+dynamoDbLocal = { strictly = '2.2.1' }
 
 
 [libraries]
