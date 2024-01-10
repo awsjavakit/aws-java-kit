@@ -19,8 +19,8 @@ class ApiGatewayRequestBuilderTest {
   public static final String PATH_FIELD = "path";
   public static final String QUERY_PARAMETERS_FIELD = "queryParameters";
   public static final String HEADERS_FIELD = "headers";
-  public static final String MULTI_VALUE_HEADER_FIELD = "multiValueHeader";
-  public static final String METHOD_FIELD = "method";
+  public static final String MULTI_VALUE_HEADER_FIELD = "multiValueHeaders";
+  public static final String METHOD_FIELD = "httpMethod";
   private static final ObjectMapper JSON = new ObjectMapper();
 
   @Test
