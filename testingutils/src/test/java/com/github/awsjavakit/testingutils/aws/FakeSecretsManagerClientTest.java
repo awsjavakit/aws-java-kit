@@ -1,19 +1,33 @@
 package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
+import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.spotify.hamcrest.jackson.JsonMatchers.jsonObject;
+import static com.spotify.hamcrest.jackson.JsonMatchers.jsonText;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.githhub.awsjavakit.secrets.SecretsReader;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.PutSecretValueRequest;
 
 class FakeSecretsManagerClientTest {
 
   private static final ObjectMapper JSON = new ObjectMapper();
+  private FakeSecretsManagerClient secretsClient;
+
+  @BeforeEach
+  public void init() {
+    this.secretsClient = new FakeSecretsManagerClient(JSON);
+  }
 
   @Test
   void shouldBeUsableWithSecretsReader() {
@@ -23,10 +37,9 @@ class FakeSecretsManagerClientTest {
     var secretKey2 = randomString();
     var secretValue2 = randomString();
 
-    var secretsClient =
-      new FakeSecretsManagerClient(JSON)
-        .putSecret(secretName, secretKey1, secretValue1)
-        .putSecret(secretName, secretKey2, secretValue2);
+    secretsClient.putSecretValue(createRequest(secretName, secretKey1, secretValue1));
+    secretsClient.putSecretValue(createRequest(secretName, secretKey2, secretValue2));
+
     var secretsReader = new SecretsReader(secretsClient, JSON);
     assertThat(secretsReader.fetchSecret(secretName, secretKey1), is(equalTo(secretValue1)));
     assertThat(secretsReader.fetchSecret(secretName, secretKey2), is(equalTo(secretValue2)));
@@ -37,42 +50,72 @@ class FakeSecretsManagerClientTest {
     var plainTextSecretName = randomString();
     var plainTextSecretValue = randomString();
 
-    var secretsClient =
-      new FakeSecretsManagerClient(JSON).putPlainTextSecret(plainTextSecretName,
-        plainTextSecretValue);
+    secretsClient.putSecretValue(createRequest(plainTextSecretName, plainTextSecretValue));
+
     var secretsReader = new SecretsReader(secretsClient, JSON);
 
-    String secretValue = secretsReader.fetchPlainTextSecret(plainTextSecretName);
+    var secretValue = secretsReader.fetchPlainTextSecret(plainTextSecretName);
     assertThat(secretValue, is(equalTo(plainTextSecretValue)));
   }
 
   @Test
-  void shouldThrowExceptionWhenTryingToAddPlainTextSecretWithSameNameAsExistingKeyValueSecret() {
+  void shouldReplaceWholeSecretWhenReplacingAJsonLikeSecretWithPlainTextSecret() {
     var secretName = randomString();
     var secretKey = randomString();
     var secretValue = randomString();
 
-    try (var secretsClient = new FakeSecretsManagerClient(JSON)) {
-      secretsClient.putSecret(secretName, secretKey, secretValue);
+    secretsClient.putSecretValue(createRequest(secretName, secretKey, secretValue));
+    var plainTextValue = randomString();
+    secretsClient.putSecretValue(createRequest(secretName, plainTextValue));
+    var actualValue = fetchSecret(secretName, secretsClient);
+    assertThat(actualValue, is(equalTo(plainTextValue)));
 
-      Executable action = () -> secretsClient.putPlainTextSecret(secretName, secretValue);
-      assertThrows(IllegalArgumentException.class, action);
-    }
   }
 
   @Test
-  void shouldThrowExceptionWhenTryingToAddKeyValueSecretWithSameNameAsExistingPlainTextSecret() {
+  void shouldReplaceSecretWhenAddingAJsonSecretInThePlainTextSecret()
+    throws JsonProcessingException {
     var secretName = randomString();
     var secretKey = randomString();
     var secretValue = randomString();
+    var plainTextValue = randomString();
 
-    try (var secretsClient = new FakeSecretsManagerClient(JSON)) {
-      secretsClient.putPlainTextSecret(secretName, secretValue);
+    secretsClient.putSecretValue(createRequest(secretName, plainTextValue));
+    secretsClient.putSecretValue(createRequest(secretName, secretKey, secretValue));
+    var actualValue = fetchSecret(secretName, secretsClient);
+    var node = (ObjectNode) JSON.readTree(actualValue);
+    assertThat(node, is(jsonObject().where(secretKey, is(jsonText(secretValue)))));
 
-      Executable action = () -> secretsClient.putSecret(secretName, secretKey, secretValue);
-      assertThrows(IllegalArgumentException.class, action);
-    }
+  }
+
+  private static String fetchSecret(String secretName, FakeSecretsManagerClient secretsClient) {
+    var request = GetSecretValueRequest.builder()
+      .secretId(secretName)
+      .build();
+    return secretsClient.getSecretValue(request).secretString();
+  }
+
+  private PutSecretValueRequest createRequest(String secretName, String secretKey1,
+    String secretValue1) {
+    return PutSecretValueRequest.builder()
+      .secretId(secretName)
+      .secretString(toJson(Map.of(secretKey1, secretValue1)))
+      .build();
+  }
+
+  private <T> String toJson(T object) {
+    return attempt(() -> JSON.writeValueAsString(object)).orElseThrow();
+  }
+
+  private PutSecretValueRequest createRequest(String plainTextSecretName,
+    String plainTextSecretValue) {
+    return PutSecretValueRequest.builder()
+      .secretId(plainTextSecretName)
+      .secretString(plainTextSecretValue)
+      .build();
   }
 }
+
+
 
 

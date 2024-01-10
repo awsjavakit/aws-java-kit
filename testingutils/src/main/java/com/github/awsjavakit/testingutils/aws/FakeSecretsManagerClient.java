@@ -8,7 +8,10 @@ import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.util.Map;
 import java.util.Objects;
@@ -17,40 +20,50 @@ import java.util.concurrent.ConcurrentHashMap;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.PutSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.PutSecretValueResponse;
 
 public class FakeSecretsManagerClient implements SecretsManagerClient {
 
-  private final Map<SecretName, Map<SecretKey, String>> secrets = new ConcurrentHashMap<>();
-  private final Map<SecretName, String> plainTextSecrets = new ConcurrentHashMap<>();
+  private final Map<SecretName, String> secrets = new ConcurrentHashMap<>();
   private final ObjectMapper json;
 
   public FakeSecretsManagerClient(ObjectMapper json) {
     this.json = json;
   }
 
+  /**
+   * Deprecated: use putSercetValue instead.
+   *
+   * @param name  the secretId
+   * @param key   the secretKey
+   * @param value the value.
+   * @return the client for adding more secrets
+   */
+  //TODO: make private
+  @Deprecated(since = "2024-01-10")
   public FakeSecretsManagerClient putSecret(String name, String key, String value) {
     var secretName = new SecretName(name);
-    if (plainTextSecrets.containsKey(secretName)) {
-      throw new IllegalArgumentException(
-        String.format("Secret already present as a plain text secret: %s", name));
-    }
-
     if (secrets.containsKey(secretName)) {
-      addSecretValueToExistingSecret(key, value, secretName);
+      addSecretValueToExistingSecret(new SecretKey(key), value, secretName);
     } else {
       createNewSecret(key, value, secretName);
     }
     return this;
   }
 
+  /**
+   * Deprecated: use putSercetValue instead.
+   *
+   * @param name  the secretId
+   * @param value the value.
+   * @return the client for adding more secrets
+   */
+  @Deprecated(since = "2024-01-10")
+  //TODO: make private
   public FakeSecretsManagerClient putPlainTextSecret(String name, String value) {
     var secretName = new SecretName(name);
-    if (secrets.containsKey(secretName)) {
-      throw new IllegalArgumentException(
-        String.format("Secret already present as a key/value secret: %s", name));
-    }
-
-    plainTextSecrets.put(secretName, value);
+    secrets.put(secretName, value);
     return this;
   }
 
@@ -61,6 +74,13 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
       .flatMap(this::resolveSecret)
       .map(secretContents -> addSecretContents(secretContents, getSecretValueRequest))
       .orElseThrow();
+  }
+
+  @Override
+  public PutSecretValueResponse putSecretValue(PutSecretValueRequest putSecretValueRequest) {
+    attempt(() -> putSecretAsJsonObject(putSecretValueRequest))
+      .orElse(fail -> putPlainTextSecret(putSecretValueRequest.secretId(), putSecretValueRequest.secretString()));
+    return PutSecretValueResponse.builder().name(putSecretValueRequest.secretId()).build();
   }
 
   @JacocoGenerated
@@ -83,28 +103,46 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
       .build();
   }
 
-  private String serializeSecretContents(Map<SecretKey, String> secretContents) {
-    return attempt(() -> json.writeValueAsString(secretContents)).orElseThrow();
+  private FakeSecretsManagerClient putSecretAsJsonObject(PutSecretValueRequest putSecretValueRequest)
+    throws JsonProcessingException {
+    final var secretName = putSecretValueRequest.secretId();
+    var objectNode = (ObjectNode) json.readTree(putSecretValueRequest.secretString());
+    var keys = objectNode.fieldNames();
+    while (keys.hasNext()) {
+      var key = keys.next();
+      putSecret(secretName, key, asString(objectNode.get(key)));
+    }
+
+    //TODO: return Void when public deprecated methods have become private
+    return this;
+  }
+
+  private String asString(JsonNode jsonNode) {
+    return jsonNode.isTextual() ? jsonNode.textValue() : toJson(jsonNode);
   }
 
   private Optional<String> resolveSecret(SecretName secretName) {
-    if (secrets.containsKey(secretName)) {
-      return Optional.of(serializeSecretContents(secrets.get(secretName)));
-    } else if (plainTextSecrets.containsKey(secretName)) {
-      return Optional.of(plainTextSecrets.get(secretName));
-    } else {
-      return Optional.empty();
-    }
+    return Optional.ofNullable(secrets.get(secretName));
   }
 
   private void createNewSecret(String key, String value, SecretName secretName) {
-    ConcurrentHashMap<SecretKey, String> secretContents = new ConcurrentHashMap<>();
+
+    var secretContents = new ConcurrentHashMap<SecretKey, String>();
+
     secretContents.put(new SecretKey(key), value);
-    secrets.put(secretName, secretContents);
+    secrets.put(secretName, toJson(secretContents));
   }
 
-  private void addSecretValueToExistingSecret(String key, String value, SecretName secretName) {
-    secrets.get(secretName).put(new SecretKey(key), value);
+  private <T> String toJson(T object) {
+    return attempt(() -> json.writeValueAsString(object)).orElseThrow();
+  }
+
+  private void addSecretValueToExistingSecret(SecretKey key, String value, SecretName secretName) {
+    var jsonString = secrets.get(secretName);
+    var object = (ObjectNode) attempt(() -> json.readTree(jsonString))
+      .orElse(fail -> json.createObjectNode());
+    object.put(key.getValue(), value);
+    secrets.put(secretName, toJson(object));
   }
 
   private static final class SecretName {
