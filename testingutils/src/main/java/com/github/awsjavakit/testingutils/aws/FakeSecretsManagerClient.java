@@ -6,15 +6,12 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -145,76 +142,4 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
     secrets.put(secretName, toJson(object));
   }
 
-  private static final class SecretName {
-
-    private final String value;
-
-    @JsonCreator
-    private SecretName(String value) {
-      this.value = value;
-    }
-
-    @JacocoGenerated
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @JacocoGenerated
-    @Override
-    public int hashCode() {
-      return value == null ? 0 : value.hashCode();
-    }
-
-    @JacocoGenerated
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof SecretName)) {
-        return false;
-      }
-
-      SecretName that = (SecretName) o;
-
-      return Objects.equals(value, that.value);
-    }
-  }
-
-  private static final class SecretKey {
-
-    private final String value;
-
-    @JsonCreator
-    public SecretKey(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @JacocoGenerated
-    @Override
-    public int hashCode() {
-      return value == null ? 0 : value.hashCode();
-    }
-
-    @JacocoGenerated
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (!(o instanceof SecretKey)) {
-        return false;
-      }
-
-      SecretKey secretKey = (SecretKey) o;
-
-      return Objects.equals(value, secretKey.value);
-    }
-  }
 }

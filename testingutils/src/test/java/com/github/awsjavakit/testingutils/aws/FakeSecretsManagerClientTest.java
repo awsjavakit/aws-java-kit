@@ -88,6 +88,16 @@ class FakeSecretsManagerClientTest {
 
   }
 
+  //TODO: addressing a weird Exception where Jackson complains that these values are not implemtning Comparable
+  //     The issue appears only in client code.
+  @Test
+  void shouldUseHelpingClassedThatImplementComparable(){
+    var secrteKey = new SecretKey(randomString());
+    var secretValue = new SecretName(randomString());
+    assertThat(secrteKey.compareTo(secrteKey),is(equalTo(0)));
+    assertThat(secretValue.compareTo(secretValue),is(equalTo(0)));
+  }
+
   private static String fetchSecret(String secretName, FakeSecretsManagerClient secretsClient) {
     var request = GetSecretValueRequest.builder()
       .secretId(secretName)
