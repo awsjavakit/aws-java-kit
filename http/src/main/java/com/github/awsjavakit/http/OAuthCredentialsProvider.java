@@ -1,5 +1,7 @@
 package com.github.awsjavakit.http;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import java.net.URI;
 import java.util.Base64;
 
@@ -15,6 +17,7 @@ public interface OAuthCredentialsProvider {
 
   URI getAuthorizationEndpoint();
 
+  @JsonProperty(value = "authorizationHeader",access = Access.READ_ONLY)
   default String getAuthorizationHeader(){
     return "Basic " + Base64.getEncoder().encodeToString(formatCredentialsForBasicAuth());
   }
