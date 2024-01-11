@@ -32,7 +32,7 @@ class CachedTokenProviderTest {
   private String clientSecret;
   private String accessToken;
   private HttpClient httpClient;
-  private SimpleCredentialsProvider authCredentialsProvider;
+  private Oauth2Credentials authCredentialsProvider;
 
   @BeforeEach
   public void init() {
@@ -46,7 +46,7 @@ class CachedTokenProviderTest {
       .getUri();
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
-      new SimpleCredentialsProvider(clientId, clientSecret, authEndpoint);
+      new Oauth2Credentials(authEndpoint,clientId, clientSecret);
 
   }
 
