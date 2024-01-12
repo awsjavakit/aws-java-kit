@@ -13,14 +13,15 @@ import java.time.Instant;
 public record OAuthTokenEntry(
   @JsonProperty("value") String value,
   @JsonProperty("timestamp") Instant timestamp,
-  @JsonProperty("expiration") Instant expiration
+  @JsonProperty("expiration") Instant expiration,
+  @JsonProperty("tag") String tag
 ) {
 
   public static final String TYPE = "OAuthToken";
 
-  public static OAuthTokenEntry fromResponse(OAuthTokenResponse token) {
+  public static OAuthTokenEntry fromResponse(OAuthTokenResponse token,String tag) {
     return new
-      OAuthTokenEntry(token.getAccessToken(), token.getTimestamp(), token.getExpirationTimestamp());
+      OAuthTokenEntry(token.getAccessToken(), token.getTimestamp(), token.getExpirationTimestamp(),tag);
   }
 
   @JsonProperty(value = "type", access = Access.READ_ONLY)

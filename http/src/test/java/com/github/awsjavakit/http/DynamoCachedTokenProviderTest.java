@@ -53,14 +53,16 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     this.httpClient = WiremockHttpClient.create().build();
     this.authUri = UriWrapper.fromUri(serverUri).addChild(AUTH_PATH).getUri();
     this.tableName = randomString();
+
     this.initDatabase(tableName);
   }
 
   @Test
   void shouldFetchTokenWhenTokenDoesNotExist() {
     setupAuthHandshake(600);
-    var tokenProvider = new SimpleDynamoCachedTokenProvider(createNewTokenProvider(), dynamoClient,
-      tableName);
+    var tokenProvider =
+      new SimpleDynamoCachedTokenProvider(createNewTokenProvider(), dynamoClient,
+        tableName);
     var token = tokenProvider.fetchToken();
     assertThat(token.value()).isEqualTo(accessToken);
   }
@@ -82,11 +84,25 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     setupAuthHandshake(600);
     var tokenProvider = new SimpleDynamoCachedTokenProvider(
       createNewTokenProvider(), dynamoClient, tableName);
-     tokenProvider.fetchToken();
+    tokenProvider.fetchToken();
     var token = tokenProvider.fetchToken();
 
     server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
     assertThat(token.value()).isEqualTo(accessToken);
+  }
+
+  @Test
+  void shouldTagTokenWithSameTagAsTheClientCredentials() {
+    setupAuthHandshake(600);
+    var credentials = newCredentials();
+    var tokenProvider = new SimpleDynamoCachedTokenProvider(
+      createNewTokenProvider(credentials), dynamoClient, tableName);
+    tokenProvider.fetchToken();
+     tokenProvider.fetchToken();
+    var token = tokenProvider.fetchToken();
+
+    server.verify(exactly(1), postRequestedFor(urlPathEqualTo(AUTH_PATH.toString())));
+    assertThat(token.tag()).isEqualTo(credentials.getTag());
   }
 
   @Test
@@ -101,6 +117,10 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     assertThat(token.value()).isEqualTo(accessToken);
   }
 
+  private Oauth2Credentials newCredentials() {
+    return new Oauth2Credentials(authUri, clientId, clientSecret, randomString());
+  }
+
   private GetItemRequest createGetRequest(OAuthTokenEntry token) {
     var keyValue = AttributeValue.builder().s(token.type()).build();
     var key = Map.of(PARTITION_KEY, keyValue,
@@ -111,9 +131,13 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
       .build();
   }
 
+  private TokenProvider createNewTokenProvider(OAuthCredentialsProvider credentials) {
+    return TokenProvider.defaultProvider(httpClient, credentials);
+
+  }
+
   private TokenProvider createNewTokenProvider() {
-    return TokenProvider.defaultProvider(httpClient,
-      new SimpleCredentialsProvider(clientId, clientSecret, authUri));
+    return createNewTokenProvider(newCredentials());
   }
 
   private void setupAuthHandshake(int validityPeriod) {
@@ -131,7 +155,7 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     return toJson(response);
   }
 
-  private class SimpleDynamoCachedTokenProvider extends DynamoCachedTokenProvider {
+  private static class SimpleDynamoCachedTokenProvider extends DynamoCachedTokenProvider {
 
     public SimpleDynamoCachedTokenProvider(
       TokenProvider newTokenProvider, DynamoDbClient dynamoClient, String tableName) {
@@ -142,7 +166,7 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     protected Optional<OAuthTokenEntry> fromGetResponse(GetItemResponse response) {
       return Optional.of(response)
         .map(GetItemResponse::item)
-        .filter(map->map.containsKey(BODY_FIELD))
+        .filter(map -> map.containsKey(BODY_FIELD))
         .map(OAuthTokenEntryConverter::fromItem);
     }
 

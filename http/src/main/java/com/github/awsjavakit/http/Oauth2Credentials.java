@@ -23,7 +23,8 @@ import java.net.URI;
 public record Oauth2Credentials(
   @JsonAlias("serverUri") @JsonProperty("authEndpointUri") URI authEndpointUri,
   @JsonProperty("clientId") String clientId,
-  @JsonProperty("clientSecret") String clientSecret)
+  @JsonProperty("clientSecret") String clientSecret,
+  @JsonProperty("tag") String tag)
   implements OAuthCredentialsProvider {
 
   public static Oauth2Credentials fromJson(String secretName, ObjectMapper json) {
@@ -50,5 +51,10 @@ public record Oauth2Credentials(
   @JsonIgnore
   public URI getAuthorizationEndpoint() {
     return authEndpointUri();
+  }
+
+  @Override
+  public String getTag(){
+    return tag();
   }
 }

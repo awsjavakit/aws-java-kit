@@ -38,4 +38,5 @@ public interface TokenProvider {
 
 
   OAuthTokenEntry fetchToken();
+
 }

@@ -73,7 +73,7 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
 
   private void persistSecretsInSecretsManager() {
     var authEndpoint = UriWrapper.fromUri(serverUri).addChild(OAUTH2_TOKEN_PATH).getUri();
-    var oauthCredentials = new Oauth2Credentials(authEndpoint, clientId, clientSecret);
+    var oauthCredentials = new Oauth2Credentials(authEndpoint, clientId, clientSecret,randomString());
     secretsClient.putPlainTextSecret(SECRET_NAME, oauthCredentials.toJsonString(JSON));
   }
 

@@ -43,7 +43,7 @@ public class NewTokenProvider implements TokenProvider {
 
   @Override
   public OAuthTokenEntry fetchToken() {
-    return OAuthTokenEntry.fromResponse(authenticate());
+    return OAuthTokenEntry.fromResponse(authenticate(),credentialsProvider.getTag());
   }
 
   private static String formatPostParametersAsXWwwFormUrlEncodedBody() {

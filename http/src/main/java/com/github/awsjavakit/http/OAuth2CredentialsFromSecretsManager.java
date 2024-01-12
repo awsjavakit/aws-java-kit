@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
  */
 public class OAuth2CredentialsFromSecretsManager implements OAuthCredentialsProvider {
 
-  private final Oauth2Credentials credentials;
+  private final OAuthCredentialsProvider credentials;
 
   public OAuth2CredentialsFromSecretsManager(SecretsManagerClient secretsManagerClient,
     String secretName, ObjectMapper json) {
@@ -24,18 +24,22 @@ public class OAuth2CredentialsFromSecretsManager implements OAuthCredentialsProv
 
   @Override
   public String getClientId() {
-    return credentials.clientId();
+    return credentials.getClientId();
   }
 
   @Override
   public String getClientSecret() {
-    return credentials.clientSecret();
+    return credentials.getClientSecret();
   }
 
   @Override
   public URI getAuthorizationEndpoint() {
-    return credentials.authEndpointUri();
+    return credentials.getAuthorizationEndpoint();
   }
 
+  @Override
+  public String getTag() {
+    return credentials.getTag();
+  }
 
 }
