@@ -46,7 +46,7 @@ class CachedTokenProviderTest {
       .getUri();
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
-      new Oauth2Credentials(authEndpoint,clientId, clientSecret);
+      new Oauth2Credentials(authEndpoint,clientId, clientSecret,randomString());
 
   }
 

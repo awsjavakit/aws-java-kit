@@ -22,6 +22,8 @@ public interface OAuthCredentialsProvider {
     return "Basic " + Base64.getEncoder().encodeToString(formatCredentialsForBasicAuth());
   }
 
+  String getTag();
+
   private byte[] formatCredentialsForBasicAuth() {
     return String.format("%s:%s", getClientId(), getClientSecret()).getBytes();
   }
