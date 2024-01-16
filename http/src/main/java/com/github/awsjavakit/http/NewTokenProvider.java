@@ -47,7 +47,7 @@ public class NewTokenProvider implements TokenProvider {
   }
 
   @Override
-  public String tag() {
+  public String getTag() {
     return credentialsProvider.getTag();
   }
 

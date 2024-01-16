@@ -39,8 +39,8 @@ public abstract class DynamoCachedTokenProvider implements TokenProvider {
   }
 
   @Override
-  public final String tag() {
-    return newTokenProvider.tag();
+  public final String getTag() {
+    return newTokenProvider.getTag();
   }
 
   protected abstract Optional<OAuthTokenEntry> fromGetResponse(GetItemResponse response);

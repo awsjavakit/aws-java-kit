@@ -119,7 +119,7 @@ class OAuth2HttpClientTest {
     }
 
     @Override
-    public String tag() {
+    public String getTag() {
       return randomString();
     }
   }

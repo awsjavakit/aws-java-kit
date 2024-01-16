@@ -111,8 +111,8 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
     var tokenProvider = new SimpleDynamoCachedTokenProvider(createNewTokenProvider(credentials),
       dynamoClient, tableName);
     var token = tokenProvider.fetchToken();
-    assertThat(tokenProvider.tag()).isEqualTo(token.tag());
-    assertThat(tokenProvider.tag()).isEqualTo(credentials.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(token.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(credentials.tag());
   }
 
   @Test

@@ -88,8 +88,8 @@ class CachedTokenProviderTest {
     setupAuthResponse(600);
     var tokenProvider = locallyCachedTokenProvider(httpClient, authCredentialsProvider);
     var token = tokenProvider.fetchToken();
-    assertThat(tokenProvider.tag()).isEqualTo(token.tag());
-    assertThat(tokenProvider.tag()).isEqualTo(authCredentialsProvider.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(token.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(authCredentialsProvider.tag());
   }
 
   private void setupAuthResponse(int tokenDurationInSeconds) {
