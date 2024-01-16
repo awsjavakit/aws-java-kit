@@ -46,7 +46,7 @@ class CachedTokenProviderTest {
       .getUri();
     this.httpClient = WiremockHttpClient.create().build();
     this.authCredentialsProvider =
-      new Oauth2Credentials(authEndpoint,clientId, clientSecret,randomString());
+      new Oauth2Credentials(authEndpoint, clientId, clientSecret, randomString());
 
   }
 
@@ -83,15 +83,25 @@ class CachedTokenProviderTest {
     assertThat(actualToken.value()).isEqualTo(this.accessToken);
   }
 
+  @Test
+  void shouldReturnTheTypeOfTokenItFetches() {
+    setupAuthResponse(600);
+    var tokenProvider = locallyCachedTokenProvider(httpClient, authCredentialsProvider);
+    var token = tokenProvider.fetchToken();
+    assertThat(tokenProvider.getTag()).isEqualTo(token.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(authCredentialsProvider.tag());
+  }
+
   private void setupAuthResponse(int tokenDurationInSeconds) {
     server.stubFor(post(urlPathEqualTo(AUTH_PATH.toString()))
       .withBasicAuth(clientId, clientSecret)
       .withFormParam("grant_type", equalTo("client_credentials"))
-      .willReturn(aResponse().withStatus(HTTP_OK).withBody(createResponse(tokenDurationInSeconds))));
+      .willReturn(
+        aResponse().withStatus(HTTP_OK).withBody(createResponse(tokenDurationInSeconds))));
 
   }
 
-  private String createResponse( int tokenDurationInSeconds) {
+  private String createResponse(int tokenDurationInSeconds) {
     var response = new OAuthTokenResponse(accessToken, tokenDurationInSeconds);
     return attempt(() -> toJson(response)).orElseThrow();
 

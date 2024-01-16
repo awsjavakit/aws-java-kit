@@ -22,6 +22,11 @@ public class CachedTokenProvider implements TokenProvider {
     return token;
   }
 
+  @Override
+  public String getTag() {
+    return tokenProvider.getTag();
+  }
+
   private OAuthTokenEntry renewToken() {
     return tokenProvider.fetchToken();
   }

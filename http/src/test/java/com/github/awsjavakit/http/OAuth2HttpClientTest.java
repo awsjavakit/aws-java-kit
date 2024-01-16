@@ -115,7 +115,12 @@ class OAuth2HttpClientTest {
     @Override
     public OAuthTokenEntry fetchToken() {
       var now = Instant.now();
-      return new OAuthTokenEntry(token, now,now.plus(SOME_LONG_DURATION),randomString());
+      return new OAuthTokenEntry(token, now, now.plus(SOME_LONG_DURATION), randomString());
+    }
+
+    @Override
+    public String getTag() {
+      return randomString();
     }
   }
 }

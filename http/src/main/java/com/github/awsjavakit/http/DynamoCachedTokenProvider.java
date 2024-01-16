@@ -38,6 +38,11 @@ public abstract class DynamoCachedTokenProvider implements TokenProvider {
     return strategy.fetchAndUpdate(this::fetchCachedEntry, this::updateCache);
   }
 
+  @Override
+  public final String getTag() {
+    return newTokenProvider.getTag();
+  }
+
   protected abstract Optional<OAuthTokenEntry> fromGetResponse(GetItemResponse response);
 
   protected abstract Map<String, AttributeValue> createSearchKey();
