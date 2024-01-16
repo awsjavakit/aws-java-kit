@@ -46,6 +46,11 @@ public class NewTokenProvider implements TokenProvider {
     return OAuthTokenEntry.fromResponse(authenticate(),credentialsProvider.getTag());
   }
 
+  @Override
+  public String tag() {
+    return credentialsProvider.getTag();
+  }
+
   private static String formatPostParametersAsXWwwFormUrlEncodedBody() {
     return UriWrapper.fromHost(DUMMY_HOST)
       .addQueryParameters(GRANT_TYPE_CLIENT_CREDENTIALS).getUri().getRawQuery();

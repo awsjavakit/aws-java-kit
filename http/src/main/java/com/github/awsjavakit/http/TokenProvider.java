@@ -38,5 +38,6 @@ public interface TokenProvider {
 
 
   OAuthTokenEntry fetchToken();
+  String tag();
 
 }

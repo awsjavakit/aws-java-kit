@@ -105,6 +105,17 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
   }
 
   @Test
+  void shouldReturnTheTypeOfTokenItFetches() {
+    setupAuthHandshake(600);
+    var credentials = newCredentials();
+    var tokenProvider = new SimpleDynamoCachedTokenProvider(createNewTokenProvider(credentials),
+      dynamoClient, tableName);
+    var token = tokenProvider.fetchToken();
+    assertThat(tokenProvider.tag()).isEqualTo(token.tag());
+    assertThat(tokenProvider.tag()).isEqualTo(credentials.tag());
+  }
+
+  @Test
   void shouldRefreshTokenWhenTokenExistsAndIsInvalid() {
     setupAuthHandshake(0);
     var tokenProvider = new SimpleDynamoCachedTokenProvider(createNewTokenProvider(), dynamoClient,
@@ -128,7 +139,6 @@ class DynamoCachedTokenProviderTest extends DynamoTest {
 
   private TokenProvider createNewTokenProvider(OAuthCredentialsProvider credentials) {
     return TokenProvider.defaultProvider(httpClient, credentials);
-
   }
 
   private TokenProvider createNewTokenProvider() {
