@@ -22,7 +22,7 @@ import javax.net.ssl.SSLParameters;
  * A wrapper of HttpClient that performs an OAuth2 authentication of "grant_type"
  * "client_credentials" before each query.
  */
-public class OAuth2HttpClient extends HttpClient {
+public class OAuth2HttpClient extends HttpClient implements Tagged {
 
   public static final String AUTHORIZATION_HEADER = "Authorization";
   private final HttpClient httpClient;
@@ -112,6 +112,11 @@ public class OAuth2HttpClient extends HttpClient {
   @Override
   public Optional<Executor> executor() {
     return httpClient.executor();
+  }
+
+  @Override
+  public String getTag() {
+    return tokenProvider.getTag();
   }
 
   private HttpRequest authorizeRequest(HttpRequest request) {

@@ -40,6 +40,7 @@ class OAuth2HttpClientTest {
   private String authToken;
   private String expectedResponseBody;
   private OAuth2HttpClient client;
+  private SimpleTokenProvider tokenProvider;
 
   @BeforeEach
   public void init() {
@@ -48,7 +49,7 @@ class OAuth2HttpClientTest {
     this.serverUrl = URI.create(authServer.baseUrl());
     this.expectedResponseBody = randomString();
     this.authToken = randomString();
-    var tokenProvider = new SimpleTokenProvider(authToken);
+    this.tokenProvider = new SimpleTokenProvider(authToken);
     var httpClient = WiremockHttpClient.create().build();
     this.client =
       OAuth2HttpClient.create(httpClient, tokenProvider);
@@ -93,6 +94,11 @@ class OAuth2HttpClientTest {
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
   }
 
+  @Test
+  void shouldReturnTheSameTagAsTheTokenProvider() {
+    assertThat(client.getTag()).isEqualTo(tokenProvider.getTag());
+  }
+
   private static PushPromiseHandler<String> dummyPushPromiseHandler() {
     Function<HttpRequest, BodyHandler<String>> dummyHandler = httpRequest -> BodyHandlers.ofString();
     ConcurrentMap<HttpRequest, CompletableFuture<HttpResponse<String>>> map = new ConcurrentHashMap<>();
@@ -110,7 +116,15 @@ class OAuth2HttpClientTest {
 
   }
 
-  private record SimpleTokenProvider(String token) implements TokenProvider {
+  private static final class SimpleTokenProvider implements TokenProvider {
+
+    private final String token;
+    private final String tag;
+
+    private SimpleTokenProvider(String token) {
+      this.token = token;
+      this.tag = randomString();
+    }
 
     @Override
     public OAuthTokenEntry fetchToken() {
@@ -120,7 +134,12 @@ class OAuth2HttpClientTest {
 
     @Override
     public String getTag() {
-      return randomString();
+      return tag;
     }
+
+    public String getToken() {
+      return token;
+    }
+
   }
 }

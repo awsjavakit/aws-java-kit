@@ -6,10 +6,10 @@ import java.net.URI;
 import java.util.Base64;
 
 /**
- * This interface is used by {@link OAuth2HttpClient}. It provides the basic information for
- * a successful OAuth2 authentication handshake for the "grant_type" "client_credentials".
+ * This interface is used by {@link OAuth2HttpClient}. It provides the basic information for a
+ * successful OAuth2 authentication handshake for the "grant_type" "client_credentials".
  */
-public interface OAuthCredentialsProvider {
+public interface OAuthCredentialsProvider extends Tagged {
 
   String getClientId();
 
@@ -17,12 +17,10 @@ public interface OAuthCredentialsProvider {
 
   URI getAuthorizationEndpoint();
 
-  @JsonProperty(value = "authorizationHeader",access = Access.READ_ONLY)
-  default String getAuthorizationHeader(){
+  @JsonProperty(value = "authorizationHeader", access = Access.READ_ONLY)
+  default String getAuthorizationHeader() {
     return "Basic " + Base64.getEncoder().encodeToString(formatCredentialsForBasicAuth());
   }
-
-  String getTag();
 
   private byte[] formatCredentialsForBasicAuth() {
     return String.format("%s:%s", getClientId(), getClientSecret()).getBytes();

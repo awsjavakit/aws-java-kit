@@ -5,7 +5,7 @@ import com.github.awsjavakit.http.updatestrategies.DefaultTokenCacheUpdateStrate
 import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
 import java.net.http.HttpClient;
 
-public interface TokenProvider {
+public interface TokenProvider extends Tagged {
 
   /**
    * Creates a TokenProvider that every time it fetches a Bearer token, it requests the generation o
@@ -35,9 +35,6 @@ public interface TokenProvider {
       DefaultTokenCacheUpdateStrategy.MAX_SLEEP_AMOUNT);
   }
 
-
-
   OAuthTokenEntry fetchToken();
-  String getTag();
 
 }
