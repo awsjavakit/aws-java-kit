@@ -55,7 +55,7 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
     setupAuthAndServiceServer();
     var httpClient = WiremockHttpClient.create().build();
     var tokenProvider = TokenProvider.defaultProvider(httpClient,
-      new OAuth2CredentialsFromSecretsManager(secretsClient,SECRET_NAME,JSON));
+      new OAuth2CredentialsFromSecretsManager(secretsClient, SECRET_NAME, JSON));
     this.authorizedClient =
       new OAuth2HttpClient(WiremockHttpClient.create().build(), tokenProvider);
   }
@@ -70,10 +70,10 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
     assertThat(response.body()).isEqualTo(expectedResponseBody);
   }
 
-
   private void persistSecretsInSecretsManager() {
     var authEndpoint = UriWrapper.fromUri(serverUri).addChild(OAUTH2_TOKEN_PATH).getUri();
-    var oauthCredentials = new Oauth2Credentials(authEndpoint, clientId, clientSecret,randomString());
+    var oauthCredentials = new Oauth2Credentials(authEndpoint, clientId, clientSecret,
+      randomString());
     secretsClient.putPlainTextSecret(SECRET_NAME, oauthCredentials.toJsonString(JSON));
   }
 

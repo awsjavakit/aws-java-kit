@@ -54,7 +54,7 @@ public record Oauth2Credentials(
   }
 
   @Override
-  public String getTag(){
+  public String getTag() {
     return tag();
   }
 }

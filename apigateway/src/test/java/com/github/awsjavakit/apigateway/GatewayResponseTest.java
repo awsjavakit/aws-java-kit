@@ -56,7 +56,7 @@ class GatewayResponseTest {
 
   private static GatewayResponse createResponse(int statusCode, String body,
     Map<String, String> headers) {
-    return GatewayResponse.create(body,statusCode,headers,new ObjectMapper());
+    return GatewayResponse.create(body, statusCode, headers, new ObjectMapper());
   }
 
   private Map<String, String> newMap(Map<String, String> headers) {

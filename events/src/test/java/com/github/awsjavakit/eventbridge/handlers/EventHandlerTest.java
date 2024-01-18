@@ -112,7 +112,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
     }
 
     protected EventHandlerTestClass() {
-      super(SampleEventDetail.class,JSON);
+      super(SampleEventDetail.class, JSON);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
   private static class EventHandlerThrowingException extends EventHandler<SampleEventDetail, Void> {
 
     protected EventHandlerThrowingException() {
-      super(SampleEventDetail.class,JSON);
+      super(SampleEventDetail.class, JSON);
     }
 
     @Override

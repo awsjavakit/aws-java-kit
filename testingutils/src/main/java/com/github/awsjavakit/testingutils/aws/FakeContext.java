@@ -10,7 +10,6 @@ public class FakeContext implements Context {
 
   private final String awsRequestId = UUID.randomUUID().toString();
 
-
   @Override
   public String getAwsRequestId() {
     return awsRequestId;

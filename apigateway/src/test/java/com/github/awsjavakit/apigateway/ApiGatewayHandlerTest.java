@@ -76,7 +76,8 @@ public class ApiGatewayHandlerTest {
     var sampleInput = randomString();
     var expectedException = new NotFoundException();
     this.handler =
-      new EchoHandler<>(String.class, objectMapper, InputObserver.throwException(expectedException));
+      new EchoHandler<>(String.class, objectMapper,
+        InputObserver.throwException(expectedException));
     handler.handleRequest(createRequest(sampleInput), outputStream, EMPTY_CONTEXT);
     var response = GatewayResponse.fromOutputStream(outputStream, objectMapper);
     assertThat(response.getStatusCode()).isEqualTo(expectedException.getStatusCode());

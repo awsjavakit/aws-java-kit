@@ -19,9 +19,10 @@ public record OAuthTokenEntry(
 
   public static final String TYPE = "OAuthToken";
 
-  public static OAuthTokenEntry fromResponse(OAuthTokenResponse token,String tag) {
+  public static OAuthTokenEntry fromResponse(OAuthTokenResponse token, String tag) {
     return new
-      OAuthTokenEntry(token.getAccessToken(), token.getTimestamp(), token.getExpirationTimestamp(),tag);
+      OAuthTokenEntry(token.getAccessToken(), token.getTimestamp(), token.getExpirationTimestamp(),
+      tag);
   }
 
   @JsonProperty(value = "type", access = Access.READ_ONLY)
