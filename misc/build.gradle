@@ -17,6 +17,6 @@ dependencies {
 
 }
 
-test{
+test {
     environment "EXISTING_NON_EMPTY_VARIABLE", "some_value"
 }

@@ -114,9 +114,10 @@ public final class RandomDataGenerator {
 
   /**
    * Returns a random element out of the specified elements.
+   *
    * @param elements the elements that we are going to pick from.
+   * @param <T>      the elements' type.
    * @return one of the specified elements.
-   * @param <T> the elements' type.
    */
   public static <T> T randomElement(T... elements) {
     return elements[RANDOM.nextInt(elements.length)];
@@ -124,9 +125,10 @@ public final class RandomDataGenerator {
 
   /**
    * Returns a random element out of the specified elements.
+   *
    * @param elements the elements that we are going to pick from.
+   * @param <T>      the elements' type.
    * @return one of the specified elements.
-   * @param <T> the elements' type.
    */
   @SuppressWarnings({"unchecked"})
   public static <T> T randomElement(Collection<T> elements) {

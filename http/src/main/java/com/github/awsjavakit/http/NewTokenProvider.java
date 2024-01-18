@@ -30,6 +30,7 @@ public class NewTokenProvider implements TokenProvider {
 
   private final HttpClient httpClient;
   private final OAuthCredentialsProvider credentialsProvider;
+
   protected NewTokenProvider(HttpClient httpClient,
     OAuthCredentialsProvider credentialsProvider) {
     this.httpClient = httpClient;
@@ -43,7 +44,7 @@ public class NewTokenProvider implements TokenProvider {
 
   @Override
   public OAuthTokenEntry fetchToken() {
-    return OAuthTokenEntry.fromResponse(authenticate(),credentialsProvider.getTag());
+    return OAuthTokenEntry.fromResponse(authenticate(), credentialsProvider.getTag());
   }
 
   @Override
@@ -77,7 +78,7 @@ public class NewTokenProvider implements TokenProvider {
     return attempt(
       () -> this.httpClient.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8)))
       .map(HttpResponse::body)
-      .map(body->fromJson(body, OAuthTokenResponse.class))
+      .map(body -> fromJson(body, OAuthTokenResponse.class))
       .orElseThrow();
   }
 }

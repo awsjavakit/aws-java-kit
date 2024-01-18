@@ -15,51 +15,51 @@ import software.amazon.awssdk.services.eventbridge.model.PutEventsResponse;
 
 public class FakeEventBridgeClient implements EventBridgeClient {
 
-    private final List<PutEventsRequestEntry> requestEntries = new ArrayList<>();
-    private final List<String> eventBusNames;
-    private final Integer mockFailedEntryCount;
+  private final List<PutEventsRequestEntry> requestEntries = new ArrayList<>();
+  private final List<String> eventBusNames;
+  private final Integer mockFailedEntryCount;
 
-    @JacocoGenerated
-    public FakeEventBridgeClient(String... eventBusNames) {
-        this.eventBusNames = Arrays.asList(eventBusNames);
-        this.mockFailedEntryCount = 0;
-    }
+  @JacocoGenerated
+  public FakeEventBridgeClient(String... eventBusNames) {
+    this.eventBusNames = Arrays.asList(eventBusNames);
+    this.mockFailedEntryCount = 0;
+  }
 
-    @JacocoGenerated
-    public FakeEventBridgeClient(int failCount, String... eventBusNames) {
-        this.eventBusNames = Arrays.asList(eventBusNames);
-        this.mockFailedEntryCount = failCount;
-    }
+  @JacocoGenerated
+  public FakeEventBridgeClient(int failCount, String... eventBusNames) {
+    this.eventBusNames = Arrays.asList(eventBusNames);
+    this.mockFailedEntryCount = failCount;
+  }
 
-    @JacocoGenerated
-    public List<PutEventsRequestEntry> getRequestEntries() {
-        return requestEntries;
-    }
+  @JacocoGenerated
+  public List<PutEventsRequestEntry> getRequestEntries() {
+    return requestEntries;
+  }
 
-    @Override
-    public ListEventBusesResponse listEventBuses(ListEventBusesRequest listEventBusesRequest) {
-        var buses = eventBusNames.stream()
-                        .map(busName -> EventBus.builder().name(busName).build())
-                        .collect(Collectors.toList());
-        return ListEventBusesResponse.builder().eventBuses(buses).build();
-    }
+  @Override
+  public ListEventBusesResponse listEventBuses(ListEventBusesRequest listEventBusesRequest) {
+    var buses = eventBusNames.stream()
+      .map(busName -> EventBus.builder().name(busName).build())
+      .collect(Collectors.toList());
+    return ListEventBusesResponse.builder().eventBuses(buses).build();
+  }
 
-    @JacocoGenerated
-    @Override
-    public PutEventsResponse putEvents(PutEventsRequest putEventsRequest) {
-        requestEntries.addAll(putEventsRequest.entries());
-        return PutEventsResponse.builder().failedEntryCount(mockFailedEntryCount).build();
-    }
+  @JacocoGenerated
+  @Override
+  public PutEventsResponse putEvents(PutEventsRequest putEventsRequest) {
+    requestEntries.addAll(putEventsRequest.entries());
+    return PutEventsResponse.builder().failedEntryCount(mockFailedEntryCount).build();
+  }
 
-    @JacocoGenerated
-    @Override
-    public String serviceName() {
-        return "FakeEventBridgeClient";
-    }
+  @JacocoGenerated
+  @Override
+  public String serviceName() {
+    return "FakeEventBridgeClient";
+  }
 
-    @JacocoGenerated
-    @Override
-    public void close() {
-        //NO-OP;
-    }
+  @JacocoGenerated
+  @Override
+  public void close() {
+    //NO-OP;
+  }
 }

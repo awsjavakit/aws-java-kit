@@ -6,5 +6,4 @@ public abstract class ApiGatewayException extends Exception implements ResponseP
 
   public abstract String message();
 
-
 }

@@ -76,7 +76,8 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
   @Override
   public PutSecretValueResponse putSecretValue(PutSecretValueRequest putSecretValueRequest) {
     attempt(() -> putSecretAsJsonObject(putSecretValueRequest))
-      .orElse(fail -> putPlainTextSecret(putSecretValueRequest.secretId(), putSecretValueRequest.secretString()));
+      .orElse(fail -> putPlainTextSecret(putSecretValueRequest.secretId(),
+        putSecretValueRequest.secretString()));
     return PutSecretValueResponse.builder().name(putSecretValueRequest.secretId()).build();
   }
 
@@ -100,7 +101,8 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
       .build();
   }
 
-  private FakeSecretsManagerClient putSecretAsJsonObject(PutSecretValueRequest putSecretValueRequest)
+  private FakeSecretsManagerClient putSecretAsJsonObject(
+    PutSecretValueRequest putSecretValueRequest)
     throws JsonProcessingException {
     final var secretName = putSecretValueRequest.secretId();
     var objectNode = (ObjectNode) json.readTree(putSecretValueRequest.secretString());

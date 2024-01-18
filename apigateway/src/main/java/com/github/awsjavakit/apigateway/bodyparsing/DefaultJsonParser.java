@@ -21,7 +21,7 @@ public class DefaultJsonParser<I> implements BodyParser<I> {
   }
 
   private I parseNonNullBody(String body) {
-    if (expectedInputIsString()){
+    if (expectedInputIsString()) {
       return iClass.cast(body);
     }
     return parseJsonString(body);

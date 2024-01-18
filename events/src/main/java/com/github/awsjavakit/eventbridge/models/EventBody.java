@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public interface EventBody {
 
-    String TOPIC = "topic";
+  String TOPIC = "topic";
 
-    @JsonProperty(TOPIC)
-    String getTopic();
+  @JsonProperty(TOPIC)
+  String getTopic();
 }

@@ -12,7 +12,7 @@ public final class Headers {
   public static final String CONTENT_TYPE = "Content-Type";
 
   public static final Map<String, String> CONTENT_TYPE_APPLICATION_JSON =
-    Map.of(CONTENT_TYPE,APPLICATION_JSON);
+    Map.of(CONTENT_TYPE, APPLICATION_JSON);
 
   private Headers() {
 

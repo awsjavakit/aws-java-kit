@@ -16,11 +16,12 @@ import software.amazon.awssdk.services.firehose.model.PutRecordResponse;
 import software.amazon.awssdk.services.firehose.model.Record;
 
 /**
-  * A Kinesis Firehose collects the records that are pushed to it and stores them in an S3 bucket. The important feature
-  * is that it collects multiple records in ZIP files and organizes the ZIP files by timestamp:
-  * s3://some-bucket/some-folder/2023/05/08/18/some-prefix-2023-05-08-18-01-17-lfksdjflskd-srdfsdef-sefsdf-sdfsd
-  * -sgdfsdfsdfs.gz
-  */
+ * A Kinesis Firehose collects the records that are pushed to it and stores them in an S3 bucket.
+ * The important feature is that it collects multiple records in ZIP files and organizes the ZIP
+ * files by timestamp:
+ * s3://some-bucket/some-folder/2023/05/08/18/some-prefix-2023-05-08-18-01-17-lfksdjflskd-srdfsdef-sefsdf-sdfsd
+ * -sgdfsdfsdfs.gz
+ */
 public class FakeFirehoseClient implements FirehoseClient {
 
   public static final String EMPTY_RECORDS_MESSAGE_TEMPLATE =
@@ -70,6 +71,7 @@ public class FakeFirehoseClient implements FirehoseClient {
   }
 
   private AwsServiceException emptyBatchException() {
-    return FirehoseException.builder().message(String.format(EMPTY_RECORDS_MESSAGE_TEMPLATE, records)).build();
+    return FirehoseException.builder()
+      .message(String.format(EMPTY_RECORDS_MESSAGE_TEMPLATE, records)).build();
   }
 }
