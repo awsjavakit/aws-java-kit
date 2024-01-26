@@ -27,7 +27,8 @@ public final class EventBridgeEventBuilder {
   }
 
   @JacocoGenerated
-  public static <T> InputStream sampleLambdaDestinationsEvent(T eventBody, ObjectMapper objectMapper) {
+  public static <T> InputStream sampleLambdaDestinationsEvent(T eventBody,
+    ObjectMapper objectMapper) {
     var detail = createDestinationsEventDetailBody(eventBody);
     var event = sampleEventObject(detail);
     return Try.of(event)

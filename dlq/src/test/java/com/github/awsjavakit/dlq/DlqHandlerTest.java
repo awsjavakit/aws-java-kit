@@ -26,6 +26,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.services.firehose.FirehoseClient;
 
 class DlqHandlerTest {
+
   public static final String DLQ_IS_SOURCE = "aws:sqs";
   public static final Context EMPTY_CONTEXT = null;
   public static final String SOME_FIREHOSE = "someFirehose";

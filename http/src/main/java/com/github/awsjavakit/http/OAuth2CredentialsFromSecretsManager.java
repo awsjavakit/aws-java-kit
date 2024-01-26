@@ -6,9 +6,8 @@ import java.net.URI;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 
 /**
- * Class that fetches the OAuthCredentials from SecretsManager.
- * Storing credentials in AWS SecretsManager is a quite common pattern,
- * and this is a sample implementation.
+ * Class that fetches the OAuthCredentials from SecretsManager. Storing credentials in AWS
+ * SecretsManager is a quite common pattern, and this is a sample implementation.
  */
 public class OAuth2CredentialsFromSecretsManager implements OAuthCredentialsProvider {
 

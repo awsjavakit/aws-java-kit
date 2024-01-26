@@ -7,8 +7,8 @@ plugins {
 dependencies {
     compileOnly project(":apigateway")
     implementation project(":events")
-    implementation project (":attempt")
-    implementation project (":misc")
+    implementation project(":attempt")
+    implementation project(":misc")
 
     implementation libs.aws.lambda.events
     implementation libs.aws.lambda.core
@@ -22,8 +22,8 @@ dependencies {
     implementation libs.bundles.json
     implementation libs.bundles.testing
 
-    testImplementation project (":apigateway")
-    testImplementation project (":secrets")
+    testImplementation project(":apigateway")
+    testImplementation project(":secrets")
     testImplementation libs.wiremock
 
 }

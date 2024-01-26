@@ -19,6 +19,6 @@ nexusPublishing {
         }
     }
 
-  clientTimeout = Duration.ofSeconds(600)
-  connectTimeout = Duration.ofSeconds(60)
+    clientTimeout = Duration.ofSeconds(600)
+    connectTimeout = Duration.ofSeconds(60)
 }

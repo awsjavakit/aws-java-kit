@@ -4,5 +4,5 @@ import java.util.Collection;
 
 public interface FailedEventHandlingService {
 
-    void handleFailedEvents(Collection<String> failedEvents);
+  void handleFailedEvents(Collection<String> failedEvents);
 }

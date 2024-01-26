@@ -142,8 +142,8 @@ Resources:
               - !GetAtt Dlq.Arn
           - Effect: Allow
             Action:
-             - firehose:PutRecord
-             - firehose:PutRecordBatch
+              - firehose:PutRecord
+              - firehose:PutRecordBatch
             Resource:
               - !GetAtt DlqFirehose.Arn
 

@@ -74,7 +74,7 @@ dynamoDbLocal = { group = 'com.amazonaws', name = 'DynamoDBLocal', version.ref =
 #json-unit = {group= 'net.javacrumbs.json-unit',name='json-unit', version.ref= 'jsonUnit'}
 
 [bundles]
-testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal",'hamcrest-jackson']
+testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal", 'hamcrest-jackson']
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
 

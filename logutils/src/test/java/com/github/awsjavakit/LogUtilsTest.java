@@ -11,31 +11,31 @@ import org.junit.jupiter.api.Test;
 
 class LogUtilsTest {
 
-    @Test
-    public void shouldReturnAnAppenderWithTheLoggedMessages() {
-        TestAppender appender = LogUtils.getTestingAppender(DummyClassForLogTesting.class);
+  @Test
+  public void shouldReturnAnAppenderWithTheLoggedMessages() {
+    TestAppender appender = LogUtils.getTestingAppender(DummyClassForLogTesting.class);
 
-        assertThatAppenderCapturesLogMessagesFromCustomClass(appender);
-    }
+    assertThatAppenderCapturesLogMessagesFromCustomClass(appender);
+  }
 
-    @Test
-    public void shouldReturnTheNameOfTheClass() {
-        String loggerName = LogUtils.toLoggerName(SamplePojo.class);
-        assertThat(loggerName, is(equalTo(SamplePojo.class.getCanonicalName())));
-    }
+  @Test
+  public void shouldReturnTheNameOfTheClass() {
+    String loggerName = LogUtils.toLoggerName(SamplePojo.class);
+    assertThat(loggerName, is(equalTo(SamplePojo.class.getCanonicalName())));
+  }
 
-    @Test
-    public void shouldIncludeLogsOfClassOfInterestAsWellWhenListingLogsOfRootLogger() {
-        TestAppender appender = LogUtils.getTestingAppenderForRootLogger();
-        assertThatAppenderCapturesLogMessagesFromCustomClass(appender);
-    }
+  @Test
+  public void shouldIncludeLogsOfClassOfInterestAsWellWhenListingLogsOfRootLogger() {
+    TestAppender appender = LogUtils.getTestingAppenderForRootLogger();
+    assertThatAppenderCapturesLogMessagesFromCustomClass(appender);
+  }
 
-    private void assertThatAppenderCapturesLogMessagesFromCustomClass(TestAppender appender) {
-        DummyClassForLogTesting loggingObject = new DummyClassForLogTesting();
-        String someMessage = "Some message";
+  private void assertThatAppenderCapturesLogMessagesFromCustomClass(TestAppender appender) {
+    DummyClassForLogTesting loggingObject = new DummyClassForLogTesting();
+    String someMessage = "Some message";
 
-        loggingObject.logMessage(someMessage);
-        String actual = appender.getMessages();
-        assertThat(actual, containsString(someMessage));
-    }
+    loggingObject.logMessage(someMessage);
+    String actual = appender.getMessages();
+    assertThat(actual, containsString(someMessage));
+  }
 }

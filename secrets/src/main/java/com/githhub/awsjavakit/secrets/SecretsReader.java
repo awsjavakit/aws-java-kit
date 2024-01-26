@@ -33,10 +33,8 @@ public class SecretsReader {
 
     return attempt(() -> fetchSecretFromAws(secretName))
       .map(fetchResult -> extractKey(fetchResult, secretKey, secretName))
-      .orElseThrow(fail->errorReadingSecret(fail,secretName,secretKey));
+      .orElseThrow(fail -> errorReadingSecret(fail, secretName, secretKey));
   }
-
-
 
   /**
    * Fetches a plain-text secret from AWS Secrets Manager.
@@ -49,7 +47,7 @@ public class SecretsReader {
 
     return attempt(() -> fetchSecretFromAws(secretName))
       .map(GetSecretValueResponse::secretString)
-      .orElseThrow(fail->errorReadingSecret(fail,secretName));
+      .orElseThrow(fail -> errorReadingSecret(fail, secretName));
   }
 
   /**

@@ -12,7 +12,8 @@ public final class ExceptionUtils {
   }
 
   /**
-   * Returns the stacktrace in one line. It replaces all whitespaces with space and removes multiple whitespaces.
+   * Returns the stacktrace in one line. It replaces all whitespaces with space and removes multiple
+   * whitespaces.
    *
    * @param e the Exception
    * @return the Stacktrace String.

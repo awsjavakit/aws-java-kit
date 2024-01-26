@@ -55,7 +55,6 @@ public final class ApiGatewayRequestBuilder {
     return this;
   }
 
-
   /**
    * Add the query path.
    *

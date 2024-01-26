@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Objects;
 import software.amazon.awssdk.regions.Region;
 
-public class AwsEventBridgeEvent<I>  {
+public class AwsEventBridgeEvent<I> {
 
   @JsonProperty("version")
   private String version;

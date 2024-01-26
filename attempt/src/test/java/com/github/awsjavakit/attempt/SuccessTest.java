@@ -124,7 +124,7 @@ public class SuccessTest {
 
   @Test
   public void shouldReturnVoidSuccessWhenConsumingTheContainedValueSuccessfully() {
-    Try<Void> result = Try.of(SAMPLE).forEach(value->consume());
+    Try<Void> result = Try.of(SAMPLE).forEach(value -> consume());
     assertTrue(result.isSuccess());
   }
 
