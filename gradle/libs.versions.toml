@@ -19,6 +19,7 @@ awsLambdaEvents = { strictly = '3.11.4' }
 awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.30' }
 dynamoDbLocal = { strictly = '2.2.1' }
+jsonUnit = {strictly= '3.2.2'}
 
 
 [libraries]
@@ -70,6 +71,7 @@ mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mo
 mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
 lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
 dynamoDbLocal = { group = 'com.amazonaws', name = 'DynamoDBLocal', version.ref = 'dynamoDbLocal' }
+#json-unit = {group= 'net.javacrumbs.json-unit',name='json-unit', version.ref= 'jsonUnit'}
 
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal",'hamcrest-jackson']
