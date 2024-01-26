@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.githhub.awsjavakit.secrets.SecretsReader;
 import java.util.Map;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
@@ -91,11 +90,11 @@ class FakeSecretsManagerClientTest {
   //TODO: addressing a weird Exception where Jackson complains that these values are not implemtning Comparable
   //     The issue appears only in client code.
   @Test
-  void shouldUseHelpingClassedThatImplementComparable(){
+  void shouldUseHelpingClassedThatImplementComparable() {
     var secrteKey = new SecretKey(randomString());
     var secretValue = new SecretName(randomString());
-    assertThat(secrteKey.compareTo(secrteKey),is(equalTo(0)));
-    assertThat(secretValue.compareTo(secretValue),is(equalTo(0)));
+    assertThat(secrteKey.compareTo(secrteKey), is(equalTo(0)));
+    assertThat(secretValue.compareTo(secretValue), is(equalTo(0)));
   }
 
   private static String fetchSecret(String secretName, FakeSecretsManagerClient secretsClient) {

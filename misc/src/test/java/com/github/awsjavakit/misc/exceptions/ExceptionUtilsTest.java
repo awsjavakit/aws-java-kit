@@ -37,8 +37,8 @@ class ExceptionUtilsTest {
   }
 
   private void verifyOriginalMessageContainsNewLine(ArithmeticException exception) {
-   assertThat(originalMessage(exception), is(not(Matchers.nullValue())));
-   assertThat(originalMessage(exception), Matchers.containsString(NEW_LINE));
+    assertThat(originalMessage(exception), is(not(Matchers.nullValue())));
+    assertThat(originalMessage(exception), Matchers.containsString(NEW_LINE));
   }
 
   private int throwsException() {

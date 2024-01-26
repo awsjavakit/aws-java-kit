@@ -107,7 +107,7 @@ class DoesNotHaveEmptyValuesTest {
       new ClassWithChildrenWithMultipleFields(SAMPLE_STRING, objectMissingStringField(),
         SAMPLE_INT);
     AssertionError error = assertThrows(AssertionError.class,
-      () -> assertThat(testObject,doesNotHaveEmptyValues()));
+      () -> assertThat(testObject, doesNotHaveEmptyValues()));
     assertThat(error.getMessage(),
       containsString(OBJECT_FIELD + FIELD_PATH_DELIMITER + STRING_FIELD));
   }
@@ -376,7 +376,6 @@ class DoesNotHaveEmptyValuesTest {
       List<WithBaseTypes> listWithIncompleteEntries) {
       this.listWithIncompleteEntries = listWithIncompleteEntries;
     }
-
 
     @Override
     public boolean equals(Object obj) {

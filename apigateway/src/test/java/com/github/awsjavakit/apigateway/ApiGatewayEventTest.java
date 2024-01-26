@@ -29,6 +29,7 @@ class ApiGatewayEventTest {
 
   @Test
   void shouldBeAbleToHandleNullValues() {
-    assertDoesNotThrow(()->JSON.readValue(APIGATEWAY_EVENT_WITH_NULL_VALUES, ApiGatewayEvent.class));
+    assertDoesNotThrow(
+      () -> JSON.readValue(APIGATEWAY_EVENT_WITH_NULL_VALUES, ApiGatewayEvent.class));
   }
 }
