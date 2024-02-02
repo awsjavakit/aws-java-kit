@@ -8,6 +8,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -61,6 +62,16 @@ class NewTokenProviderTest {
     var tokenProvider = TokenProvider.defaultProvider(httpClient, authCredentials);
     var token = tokenProvider.fetchToken();
     assertThat(token.tag()).isEqualTo(authCredentials.getTag());
+  }
+
+  @Test
+  void shouldReportTagWhenErrorOccurs() {
+    setupAuthHandshake();
+    var wrongCredentials = new Oauth2Credentials(authCredentials.authEndpointUri(), randomString(),
+      randomString(), authCredentials.tag());
+    var tokenProvider = TokenProvider.defaultProvider(httpClient, wrongCredentials);
+    var exception = assertThrows(Exception.class, tokenProvider::fetchToken);
+    assertThat(exception.getMessage()).contains(wrongCredentials.getTag());
   }
 
   private void setupAuthHandshake() {

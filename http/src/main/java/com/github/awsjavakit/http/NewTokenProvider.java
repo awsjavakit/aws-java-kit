@@ -45,6 +45,7 @@ public class NewTokenProvider implements TokenProvider {
   @Override
   public OAuthTokenEntry fetchToken() {
     return OAuthTokenEntry.fromResponse(authenticate(), credentialsProvider.getTag());
+
   }
 
   @Override
@@ -79,6 +80,10 @@ public class NewTokenProvider implements TokenProvider {
       () -> this.httpClient.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8)))
       .map(HttpResponse::body)
       .map(body -> fromJson(body, OAuthTokenResponse.class))
-      .orElseThrow();
+      .orElseThrow(fail->newAuthenticationException(getTag()));
+  }
+
+  private RuntimeException newAuthenticationException(String tag) {
+    return new AuthenticationException("Could not authenticate for credentials:"+tag);
   }
 }
