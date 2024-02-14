@@ -10,6 +10,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.github.awsjavakit.misc.SingletonCollector;
@@ -45,7 +52,7 @@ class StepFunctionHandlerTest {
   @MethodSource("polymorphicProvider")
   void shouldAllowParsingOfPolymorphicTypes(BaseType input) throws IOException {
     var handler = new GenericHandler<>(BaseType.class, JSON);
-    var event = createEvent(input,JSON);
+    var event = createEvent(input, JSON);
     handler.handleRequest(event, outputStream, EMPTY_CONTEXT);
     var output = fromJson(outputStream.toString(), BaseType.class);
     assertThat(output).isEqualTo(input);
@@ -158,5 +165,42 @@ class StepFunctionHandlerTest {
     return attempt(() -> objectMapper.writeValueAsString(input)).orElseThrow();
   }
 
+  @JsonSubTypes(value = {
+    @JsonSubTypes.Type(value = SubTypeA.class, name = SubTypeA.TYPE),
+    @JsonSubTypes.Type(value = SubTypeB.class, name = SubTypeB.TYPE)
+  })
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  public interface BaseType {
+
+    @JsonProperty(value = "type", access = Access.READ_ONLY)
+    String getType();
+
+  }
+
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  @JsonTypeName(SubTypeA.TYPE)
+  public record SubTypeA() implements BaseType {
+
+    public static final String TYPE = "SubTypeA";
+
+    @Override
+    public String getType() {
+      return TYPE;
+    }
+
+  }
+
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  @JsonTypeName(SubTypeA.TYPE)
+  public record SubTypeB() implements BaseType {
+
+    public static final String TYPE = "SubTypeB";
+
+    @Override
+    public String getType() {
+      return TYPE;
+    }
+
+  }
 }
 
