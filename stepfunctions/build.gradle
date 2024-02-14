@@ -9,10 +9,9 @@ dependencies {
     implementation libs.bundles.json
     implementation libs.bundles.logging
     implementation project(":attempt")
-    testImplementation project(":misc")
+    implementation project(":misc")
     testImplementation project(":testingutils")
 
     testImplementation libs.bundles.testing
-    testImplementation project(":misc")
 
 }
