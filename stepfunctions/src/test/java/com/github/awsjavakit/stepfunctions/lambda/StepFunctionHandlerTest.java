@@ -4,6 +4,8 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteg
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +61,47 @@ class StepFunctionHandlerTest {
     var actualOutput = fromJson(outputStream.toString(), SomeOutputClass.class);
     var expectedOutput = input.transform();
     assertThat(actualOutput).isEqualTo(expectedOutput);
+  }
+
+  @Test
+  void shouldNotAllowTheTransformationMethodToThrowAnyCheckedExceptions() {
+    var transformationMethod =
+      Arrays.stream(StepFunctionHandler.class.getDeclaredMethods())
+        .filter(method -> "processInput".equals(method.getName()))
+        .collect(SingletonCollector.collect());
+    var checkedExceptions = transformationMethod.getExceptionTypes();
+    assertThat(checkedExceptions).isEmpty();
+  }
+
+  @Test
+  void shouldNotFailOnParsingEmptyInputWhenEmptyInputIsAcceptable() {
+    var handler = new StepFunctionHandler<Void, Void>(Void.class, JSON) {
+      @Override
+      public Void processInput(Void input, Context context) {
+        return null;
+      }
+    };
+    assertDoesNotThrow(
+      () -> handler.handleRequest(InputStream.nullInputStream(), outputStream, EMPTY_CONTEXT));
+
+  }
+
+  @Test
+  void shouldThrowRuntimeExceptionThrownByTransformationMethodAsIs() {
+    var expectedMessage = randomString();
+    var expectedException = new RuntimeException(expectedMessage);
+    var handler = new StepFunctionHandler<Void, Void>(Void.class, JSON) {
+      @Override
+      public Void processInput(Void input, Context context) {
+        throw expectedException;
+      }
+    };
+
+    var actualException = assertThrows(RuntimeException.class,
+      () -> handler.handleRequest(InputStream.nullInputStream(), outputStream, EMPTY_CONTEXT));
+
+    assertThat(actualException).isSameAs(expectedException);
+
   }
 
   private <I> I fromJson(String json, Class<I> inputClass) {
