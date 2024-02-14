@@ -1,5 +1,5 @@
 package com.github.awsjavakit.stepfunctions.lambda;
 
-public record SomeInputClass(String someField, Integer someOtherField) {
+public record SomeInputClass(String someString, Integer someNumber) {
 
 }
