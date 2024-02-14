@@ -10,6 +10,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.github.awsjavakit.misc.SingletonCollector;
@@ -19,8 +26,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class StepFunctionHandlerTest {
 
@@ -29,9 +39,24 @@ class StepFunctionHandlerTest {
   public static final String MISSING_FIELD_NAME = "someString";
   private ByteArrayOutputStream outputStream;
 
+  public static Stream<BaseType> polymorphicProvider() {
+    return Stream.of(new SubTypeA(), new SubTypeB());
+  }
+
   @BeforeEach
   public void init() {
     this.outputStream = new ByteArrayOutputStream();
+  }
+
+  @ParameterizedTest
+  @MethodSource("polymorphicProvider")
+  void shouldAllowParsingOfPolymorphicTypes(BaseType input) throws IOException {
+    var handler = new GenericHandler<>(BaseType.class, JSON);
+    var event = createEvent(input, JSON);
+    handler.handleRequest(event, outputStream, EMPTY_CONTEXT);
+    var output = fromJson(outputStream.toString(), BaseType.class);
+    assertThat(output).isEqualTo(input);
+
   }
 
   @Test
@@ -105,6 +130,7 @@ class StepFunctionHandlerTest {
     var actualException = assertThrows(RuntimeException.class,
       () -> handler.handleRequest(InputStream.nullInputStream(), outputStream, EMPTY_CONTEXT));
     assertThat(actualException).isSameAs(expectedException);
+
   }
 
   @SuppressWarnings("resource")
@@ -131,13 +157,50 @@ class StepFunctionHandlerTest {
     return attempt(() -> JSON.readValue(json, inputClass)).orElseThrow();
   }
 
-  private InputStream createEvent(SomeInputClass input, ObjectMapper mapper) {
+  private <I> InputStream createEvent(I input, ObjectMapper mapper) {
     return IoUtils.stringToStream(toJson(input, mapper));
   }
 
-  private String toJson(SomeInputClass input, ObjectMapper objectMapper) {
+  private <I> String toJson(I input, ObjectMapper objectMapper) {
     return attempt(() -> objectMapper.writeValueAsString(input)).orElseThrow();
   }
 
+  @JsonSubTypes(value = {
+    @JsonSubTypes.Type(value = SubTypeA.class, name = SubTypeA.TYPE),
+    @JsonSubTypes.Type(value = SubTypeB.class, name = SubTypeB.TYPE)
+  })
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  public interface BaseType {
+
+    @JsonProperty(value = "type", access = Access.READ_ONLY)
+    String getType();
+
+  }
+
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  @JsonTypeName(SubTypeA.TYPE)
+  public record SubTypeA() implements BaseType {
+
+    public static final String TYPE = "SubTypeA";
+
+    @Override
+    public String getType() {
+      return TYPE;
+    }
+
+  }
+
+  @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
+  @JsonTypeName(SubTypeA.TYPE)
+  public record SubTypeB() implements BaseType {
+
+    public static final String TYPE = "SubTypeB";
+
+    @Override
+    public String getType() {
+      return TYPE;
+    }
+
+  }
 }
 
