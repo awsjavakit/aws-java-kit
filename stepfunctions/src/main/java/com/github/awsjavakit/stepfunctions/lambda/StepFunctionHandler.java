@@ -29,7 +29,7 @@ public abstract class StepFunctionHandler<I, O> implements RequestStreamHandler 
     writeOutput(output, outputStream);
   }
 
-  public abstract O processInput(I input, Context context);
+  protected abstract O processInput(I input, Context context);
 
   private void writeOutput(O output, OutputStream outputStream) throws IOException {
     try (var writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {

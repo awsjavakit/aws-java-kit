@@ -10,7 +10,7 @@ public class EchoHandler extends StepFunctionHandler<SomeInputClass,SomeInputCla
   }
 
   @Override
-  public SomeInputClass processInput(SomeInputClass input, Context context) {
+  protected SomeInputClass processInput(SomeInputClass input, Context context) {
     return input;
   }
 }

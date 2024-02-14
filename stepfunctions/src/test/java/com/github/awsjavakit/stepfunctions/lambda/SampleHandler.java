@@ -10,7 +10,7 @@ public class SampleHandler extends StepFunctionHandler<SomeInputClass, SomeOutpu
   }
 
   @Override
-  public SomeOutputClass processInput(SomeInputClass input, Context context) {
+  protected SomeOutputClass processInput(SomeInputClass input, Context context) {
     return input.transform();
   }
 }
