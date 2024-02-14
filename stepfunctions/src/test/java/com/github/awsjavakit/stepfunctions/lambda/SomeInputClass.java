@@ -1,11 +1,14 @@
 package com.github.awsjavakit.stepfunctions.lambda;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Locale;
 
-public record SomeInputClass(String someString, Integer someNumber) {
+public record SomeInputClass(
+  @JsonProperty(value = "someString", required = true) String someString,
+  @JsonProperty(value = "someNumber", required = true) Integer someNumber) {
 
   public SomeOutputClass transform() {
-    int someOtherNumber = someNumber * 2;
+    var someOtherNumber = someNumber * 2;
     return new SomeOutputClass(someStringTransformation(), someOtherNumber, this);
   }
 
