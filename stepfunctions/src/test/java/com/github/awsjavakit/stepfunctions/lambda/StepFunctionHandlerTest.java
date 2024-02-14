@@ -107,7 +107,7 @@ class StepFunctionHandlerTest {
   void shouldNotFailOnParsingEmptyInputWhenEmptyInputIsAcceptable() {
     var handler = new StepFunctionHandler<Void, Void>(Void.class, JSON) {
       @Override
-      public Void processInput(Void input, Context context) {
+      protected Void processInput(Void input, Context context) {
         return null;
       }
     };
@@ -122,7 +122,7 @@ class StepFunctionHandlerTest {
     var expectedException = new RuntimeException(expectedMessage);
     var handler = new StepFunctionHandler<Void, Void>(Void.class, JSON) {
       @Override
-      public Void processInput(Void input, Context context) {
+      protected Void processInput(Void input, Context context) {
         throw expectedException;
       }
     };

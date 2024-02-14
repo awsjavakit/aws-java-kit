@@ -10,7 +10,7 @@ public class GenericHandler<T> extends StepFunctionHandler<T, T> {
   }
 
   @Override
-  public T processInput(T input, Context context) {
+  protected T processInput(T input, Context context) {
     return input;
   }
 }
