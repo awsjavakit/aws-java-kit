@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-public abstract class StepFunctionHandler<I,O> implements RequestStreamHandler {
+public abstract class StepFunctionHandler<I, O> implements RequestStreamHandler {
 
   private final Class<I> inputClass;
   private final ObjectMapper objectMapper;
@@ -22,18 +22,18 @@ public abstract class StepFunctionHandler<I,O> implements RequestStreamHandler {
   }
 
   @Override
-  public void handleRequest(InputStream inputStream, OutputStream output, Context context)
+  public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
     throws IOException {
     var input = attempt(() -> objectMapper.readValue(inputStream, inputClass)).orElseThrow();
-    writeOutput(input, output);
-
+    var output = processInput(input, context);
+    writeOutput(output, outputStream);
   }
 
   public abstract O processInput(I input, Context context);
 
-  private void writeOutput(I input, OutputStream output) throws IOException {
-    try (var writer = new BufferedWriter(new OutputStreamWriter(output))) {
-      var json = attempt(() -> objectMapper.writeValueAsString(input)).orElseThrow();
+  private void writeOutput(O output, OutputStream outputStream) throws IOException {
+    try (var writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
+      var json = attempt(() -> objectMapper.writeValueAsString(output)).orElseThrow();
       writer.write(json);
       writer.flush();
     }
