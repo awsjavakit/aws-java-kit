@@ -49,7 +49,6 @@ class StepFunctionHandlerTest {
     assertThat(isAbstract)
       .withFailMessage(() -> "Expecting abstract transformation method with name 'processInput'")
       .isEqualTo(true);
-
   }
 
   private <I> I fromJson(String json, Class<I> inputClass) {
