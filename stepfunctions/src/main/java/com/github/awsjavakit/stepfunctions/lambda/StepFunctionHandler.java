@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-public class StepFunctionHandler<I> implements RequestStreamHandler {
+public abstract class StepFunctionHandler<I,O> implements RequestStreamHandler {
 
   private final Class<I> inputClass;
   private final ObjectMapper objectMapper;
@@ -28,6 +28,8 @@ public class StepFunctionHandler<I> implements RequestStreamHandler {
     writeOutput(input, output);
 
   }
+
+  public abstract O processInput(I input, Context context);
 
   private void writeOutput(I input, OutputStream output) throws IOException {
     try (var writer = new BufferedWriter(new OutputStreamWriter(output))) {
