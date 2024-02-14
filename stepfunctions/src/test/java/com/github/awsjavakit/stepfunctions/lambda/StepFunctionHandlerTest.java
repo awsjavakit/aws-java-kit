@@ -16,8 +16,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class StepFunctionHandlerTest {
 
@@ -25,9 +28,24 @@ class StepFunctionHandlerTest {
   public static final Context EMPTY_CONTEXT = null;
   private ByteArrayOutputStream outputStream;
 
+  public static Stream<BaseType> polymorphicProvider() {
+    return Stream.of(new SubTypeA(), new SubTypeB());
+  }
+
   @BeforeEach
   public void init() {
     this.outputStream = new ByteArrayOutputStream();
+  }
+
+  @ParameterizedTest
+  @MethodSource("polymorphicProvider")
+  void shouldAllowParsingOfPolymorphicTypes(BaseType input) throws IOException {
+    var handler = new GenericHandler<>(BaseType.class, JSON);
+    var event = createEvent(input);
+    handler.handleRequest(event, outputStream, EMPTY_CONTEXT);
+    var output = fromJson(outputStream.toString(), BaseType.class);
+    assertThat(output).isEqualTo(input);
+
   }
 
   @Test
@@ -99,20 +117,18 @@ class StepFunctionHandlerTest {
 
     var actualException = assertThrows(RuntimeException.class,
       () -> handler.handleRequest(InputStream.nullInputStream(), outputStream, EMPTY_CONTEXT));
-
     assertThat(actualException).isSameAs(expectedException);
-
   }
 
   private <I> I fromJson(String json, Class<I> inputClass) {
     return attempt(() -> JSON.readValue(json, inputClass)).orElseThrow();
   }
 
-  private InputStream createEvent(SomeInputClass input) {
+  private <T> InputStream createEvent(T input) {
     return IoUtils.stringToStream(toJson(input));
   }
 
-  private String toJson(SomeInputClass input) {
+  private <T> String toJson(T input) {
     return attempt(() -> JSON.writeValueAsString(input)).orElseThrow();
   }
 
