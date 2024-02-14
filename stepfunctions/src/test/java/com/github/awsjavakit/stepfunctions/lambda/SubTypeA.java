@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
 @JsonTypeName(SubTypeA.TYPE)
-public class SubTypeA implements BaseType {
+public record SubTypeA() implements BaseType {
 
   public static final String TYPE = "SubTypeA";
 
@@ -16,13 +16,4 @@ public class SubTypeA implements BaseType {
     return TYPE;
   }
 
-  @Override
-  public int hashCode() {
-    return TYPE.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return obj instanceof SubTypeA;
-  }
 }
