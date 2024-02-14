@@ -29,7 +29,7 @@ class StepFunctionHandlerTest {
   }
 
   @Test
-  void shouldAcceptInputSpecifiedByGenerics() throws IOException {
+  void shouldAcceptSpecifiedInputType() throws IOException {
     var handler = new EchoHandler(JSON);
     var input = new SomeInputClass(randomString(), randomInteger());
     var inputStream = createEvent(input);
