@@ -54,7 +54,7 @@ class StepFunctionHandlerTest {
   }
 
   @Test
-  void shouldApplyAbstractTransformationMethodToReturnTheProducedOutput() throws IOException {
+  void shouldApplyTransformationMethodToReturnTheProducedOutput() throws IOException {
     var handler = new SampleHandler(JSON);
     var input = new SomeInputClass(randomString(), randomInteger());
     handler.handleRequest(createEvent(input), outputStream, EMPTY_CONTEXT);
