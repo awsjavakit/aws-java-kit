@@ -13,7 +13,6 @@ dependencies {
     testImplementation project(":testingutils")
 
     testImplementation libs.bundles.testing
-    testImplementation libs.guava
     testImplementation project(":misc")
 
 }
