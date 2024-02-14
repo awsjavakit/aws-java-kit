@@ -51,6 +51,16 @@ class StepFunctionHandlerTest {
       .isEqualTo(true);
   }
 
+  @Test
+  void shouldApplyAbstractTransformationMethodToReturnTheProducedOutput() throws IOException {
+    var handler = new SampleHandler(JSON);
+    var input = new SomeInputClass(randomString(), randomInteger());
+    handler.handleRequest(createEvent(input), outputStream, EMPTY_CONTEXT);
+    var actualOutput = fromJson(outputStream.toString(), SomeOutputClass.class);
+    var expectedOutput = input.transform();
+    assertThat(actualOutput).isEqualTo(expectedOutput);
+  }
+
   private <I> I fromJson(String json, Class<I> inputClass) {
     return attempt(() -> JSON.readValue(json, inputClass)).orElseThrow();
   }
