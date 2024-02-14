@@ -35,10 +35,9 @@ public abstract class StepFunctionHandler<I, O> implements RequestStreamHandler 
 
   private I parseInput(InputStream inputStream) {
     var inputString = IoUtils.streamToString(inputStream);
-    if (StringUtils.isNotBlank(inputString)) {
-      return attempt(() -> objectMapper.readValue(inputString, inputClass)).orElseThrow();
-    }
-    return null;
+    return StringUtils.isNotBlank(inputString)
+      ? attempt(() -> objectMapper.readValue(inputString, inputClass)).orElseThrow()
+      : null;
   }
 
   private void writeOutput(O output, OutputStream outputStream) throws IOException {
