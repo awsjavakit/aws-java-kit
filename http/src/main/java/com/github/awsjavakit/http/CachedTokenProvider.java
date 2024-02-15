@@ -1,7 +1,11 @@
 package com.github.awsjavakit.http;
 
+import static java.util.function.Predicate.not;
+
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 public class CachedTokenProvider implements TokenProvider {
 
@@ -14,6 +18,10 @@ public class CachedTokenProvider implements TokenProvider {
     this.tokenProvider = newTokenProvider;
     this.updateStrategy = updateStrategy;
 
+  }
+
+  public static TokenCacheUpdateStrategy defaultStrategy() {
+    return new LocalCacheUpdateStrategy();
   }
 
   @Override
@@ -33,5 +41,16 @@ public class CachedTokenProvider implements TokenProvider {
   private OAuthTokenEntry updateCache() {
     token = tokenProvider.fetchToken();
     return token;
+  }
+
+  public static class LocalCacheUpdateStrategy implements TokenCacheUpdateStrategy {
+
+    @Override
+    public OAuthTokenEntry fetchAndUpdate(Supplier<OAuthTokenEntry> fetchCachedEntry,
+      Supplier<OAuthTokenEntry> updateCache) {
+      return Optional.ofNullable(fetchCachedEntry.get())
+        .filter(not(OAuthTokenEntry::hasExpired))
+        .orElseGet(updateCache);
+    }
   }
 }

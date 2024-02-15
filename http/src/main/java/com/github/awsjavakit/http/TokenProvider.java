@@ -26,7 +26,7 @@ public interface TokenProvider extends Tagged {
     OAuthCredentialsProvider authCredentialsProvider) {
     var tokenRefresher =
       NewTokenProvider.create(httpClient, authCredentialsProvider);
-    return new CachedTokenProvider(tokenRefresher,TokenCacheUpdateStrategy.defaultStrategy());
+    return new CachedTokenProvider(tokenRefresher,CachedTokenProvider.defaultStrategy());
   }
 
   static TokenCacheUpdateStrategy defaultUpdateStrategy() {
