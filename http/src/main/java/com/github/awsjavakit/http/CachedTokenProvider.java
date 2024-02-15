@@ -1,25 +1,24 @@
 package com.github.awsjavakit.http;
 
-import static java.util.Objects.isNull;
-
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
+import com.github.awsjavakit.http.updatestrategies.TokenCacheUpdateStrategy;
 
 public class CachedTokenProvider implements TokenProvider {
 
   private final TokenProvider tokenProvider;
+  private final TokenCacheUpdateStrategy updateStrategy;
   private OAuthTokenEntry token;
 
-  public CachedTokenProvider(TokenProvider newTokenProvider) {
+  public CachedTokenProvider(TokenProvider newTokenProvider,
+    TokenCacheUpdateStrategy updateStrategy) {
     this.tokenProvider = newTokenProvider;
+    this.updateStrategy = updateStrategy;
 
   }
 
   @Override
   public OAuthTokenEntry fetchToken() {
-    if (shouldRenewToken()) {
-      token = renewToken();
-    }
-    return token;
+    return updateStrategy.fetchAndUpdate(() -> token, this::updateCache);
   }
 
   @Override
@@ -27,11 +26,8 @@ public class CachedTokenProvider implements TokenProvider {
     return tokenProvider.getTag();
   }
 
-  private OAuthTokenEntry renewToken() {
-    return tokenProvider.fetchToken();
-  }
-
-  private boolean shouldRenewToken() {
-    return isNull(token) || token.hasExpired();
+  private OAuthTokenEntry updateCache() {
+    token = tokenProvider.fetchToken();
+    return token;
   }
 }
