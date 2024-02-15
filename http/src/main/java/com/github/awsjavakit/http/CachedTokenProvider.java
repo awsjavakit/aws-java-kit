@@ -18,12 +18,16 @@ public class CachedTokenProvider implements TokenProvider {
 
   @Override
   public OAuthTokenEntry fetchToken() {
-    return updateStrategy.fetchAndUpdate(() -> token, this::updateCache);
+    return updateStrategy.fetchAndUpdate(this::fetchCachedEntry, this::updateCache);
   }
 
   @Override
   public String getTag() {
     return tokenProvider.getTag();
+  }
+
+  private OAuthTokenEntry fetchCachedEntry() {
+    return token;
   }
 
   private OAuthTokenEntry updateCache() {
