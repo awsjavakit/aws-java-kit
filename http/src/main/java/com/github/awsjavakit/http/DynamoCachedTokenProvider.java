@@ -15,12 +15,12 @@ public abstract class DynamoCachedTokenProvider implements TokenProvider {
   private final TokenProvider newTokenProvider;
   private final DynamoDbClient dynamoClient;
   private final String tableName;
-  private final TokenCacheUpdateStrategy<OAuthTokenEntry> strategy;
+  private final TokenCacheUpdateStrategy strategy;
 
   public DynamoCachedTokenProvider(TokenProvider newTokenProvider,
     DynamoDbClient dynamoClient,
     String tableName,
-    TokenCacheUpdateStrategy<OAuthTokenEntry> strategy) {
+    TokenCacheUpdateStrategy strategy) {
     this.newTokenProvider = newTokenProvider;
     this.dynamoClient = dynamoClient;
     this.tableName = tableName;
