@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
 
-public class DefaultTokenCacheUpdateStrategy implements TokenCacheUpdateStrategy<OAuthTokenEntry> {
+public class DefaultTokenCacheUpdateStrategy implements TokenCacheUpdateStrategy {
 
   public static final int MINIMUM_SLEEP_AMOUNT = 100;
   public static final int MAX_SLEEP_AMOUNT = 400;

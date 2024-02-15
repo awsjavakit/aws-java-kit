@@ -11,9 +11,9 @@ public interface TokenProvider extends Tagged {
    * Creates a TokenProvider that every time it fetches a Bearer token, it requests the generation o
    * of a new token
    *
-   * @param httpClient
-   * @param authCredentialsProvider
-   * @return
+   * @param httpClient a simple HttpClient.
+   * @param authCredentialsProvider an OAuthCredentials provider supplying the credentials for generating new tokens
+   * @return a TokenProvider
    */
   static TokenProvider defaultProvider(
     HttpClient httpClient,
@@ -29,7 +29,7 @@ public interface TokenProvider extends Tagged {
     return new CachedTokenProvider(tokenRefresher);
   }
 
-  static TokenCacheUpdateStrategy<OAuthTokenEntry> defaultUpdateStrategy() {
+  static TokenCacheUpdateStrategy defaultUpdateStrategy() {
     return new DefaultTokenCacheUpdateStrategy(
       DefaultTokenCacheUpdateStrategy.MINIMUM_SLEEP_AMOUNT,
       DefaultTokenCacheUpdateStrategy.MAX_SLEEP_AMOUNT);
