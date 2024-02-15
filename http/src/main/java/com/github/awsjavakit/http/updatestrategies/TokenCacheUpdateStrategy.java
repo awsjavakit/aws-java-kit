@@ -14,8 +14,8 @@ import java.util.function.Supplier;
  *  public OAuthTokenEntry fetchAndUpdate(
  *    Supplier<OAuthTokenEntry> fetchCachedEntry,
  *    Supplier<OAuthTokenEntry> updateCache) {
- *    return Optional.ofNullable(()-> fetchCachedEntry.get())
- *       orEleGet(()-> updateCache.get())
+ *    return Optional.ofNullable(() -> fetchCachedEntry.get())
+ *       orEleGet(() -> updateCache.get())
  *  }
  * }</pre>
  * </li>
