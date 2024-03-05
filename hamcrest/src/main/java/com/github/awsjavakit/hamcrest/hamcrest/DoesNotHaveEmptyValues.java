@@ -5,6 +5,7 @@ import static java.util.Objects.isNull;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.net.URI;
 import java.net.URL;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -164,7 +165,8 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
   private Set<Class<?>> classesWithNoPojoStructure() {
     return Set.of(
       URI.class,
-      URL.class
+      URL.class,
+      Clock.class
     );
   }
 

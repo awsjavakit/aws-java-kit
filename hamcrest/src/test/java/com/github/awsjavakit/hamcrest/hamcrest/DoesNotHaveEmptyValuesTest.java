@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -167,6 +168,13 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
+  void shouldStopRecursionForClock() {
+    var entry = new ClassWithCustomObject<>(Clock.systemDefaultZone());
+    assertThat(entry, doesNotHaveEmptyValues());
+
+  }
+
+  @Test
   public void matchesDoesNotCheckFieldInAdditionalCustomIgnoreClass() {
     WithBaseTypes ignoredObjectWithEmptyProperties =
       new WithBaseTypes(null, null, null, null, null);
@@ -223,6 +231,8 @@ class DoesNotHaveEmptyValuesTest {
       doesNotHaveEmptyValuesIgnoringFieldsAndClasses(
         Set.of(WithBaseTypes.class), Set.of("someStringField")));
   }
+
+
 
   private static JsonNode nonEmptyJsonNode() {
     ObjectNode node = new ObjectMapper().createObjectNode();
@@ -398,6 +408,24 @@ class DoesNotHaveEmptyValuesTest {
     public String toString() {
       return "ClassWithList[" +
         "listWithIncompleteEntries=" + listWithIncompleteEntries + ']';
+    }
+
+  }
+
+  private static final class ClassWithCustomObject<T> {
+
+    private T customObject;
+
+    private ClassWithCustomObject(T customObject) {
+      this.customObject = customObject;
+    }
+
+    public T getCustomObject() {
+      return customObject;
+    }
+
+    public void setCustomObject(T customObject) {
+      this.customObject = customObject;
     }
 
   }
