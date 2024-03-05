@@ -10,6 +10,7 @@ import static com.github.awsjavakit.hamcrest.hamcrest.PropertyValuePair.RIGHT_BR
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.hamcrest.core.IsNot;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -171,7 +173,8 @@ class DoesNotHaveEmptyValuesTest {
   void shouldStopRecursionForClock() {
     var entry = new ClassWithCustomObject<>(Clock.systemDefaultZone());
     assertThat(entry, doesNotHaveEmptyValues());
-
+    var emptyEntry = new ClassWithCustomObject<Clock>(null);
+    assertThat(emptyEntry, not(doesNotHaveEmptyValues()));
   }
 
   @Test
