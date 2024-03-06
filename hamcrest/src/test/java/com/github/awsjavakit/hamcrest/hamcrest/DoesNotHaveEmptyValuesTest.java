@@ -10,6 +10,7 @@ import static com.github.awsjavakit.hamcrest.hamcrest.PropertyValuePair.RIGHT_BR
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.AllOf.allOf;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -19,6 +20,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.Clock;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -167,6 +169,14 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
+  void shouldStopRecursionForClock() {
+    var entry = new ClassWithCustomObject<>(Clock.systemDefaultZone());
+    assertThat(entry, doesNotHaveEmptyValues());
+    var emptyEntry = new ClassWithCustomObject<Clock>(null);
+    assertThat(emptyEntry, not(doesNotHaveEmptyValues()));
+  }
+
+  @Test
   public void matchesDoesNotCheckFieldInAdditionalCustomIgnoreClass() {
     WithBaseTypes ignoredObjectWithEmptyProperties =
       new WithBaseTypes(null, null, null, null, null);
@@ -223,6 +233,8 @@ class DoesNotHaveEmptyValuesTest {
       doesNotHaveEmptyValuesIgnoringFieldsAndClasses(
         Set.of(WithBaseTypes.class), Set.of("someStringField")));
   }
+
+
 
   private static JsonNode nonEmptyJsonNode() {
     ObjectNode node = new ObjectMapper().createObjectNode();
@@ -398,6 +410,24 @@ class DoesNotHaveEmptyValuesTest {
     public String toString() {
       return "ClassWithList[" +
         "listWithIncompleteEntries=" + listWithIncompleteEntries + ']';
+    }
+
+  }
+
+  private static final class ClassWithCustomObject<T> {
+
+    private T customObject;
+
+    private ClassWithCustomObject(T customObject) {
+      this.customObject = customObject;
+    }
+
+    public T getCustomObject() {
+      return customObject;
+    }
+
+    public void setCustomObject(T customObject) {
+      this.customObject = customObject;
     }
 
   }
