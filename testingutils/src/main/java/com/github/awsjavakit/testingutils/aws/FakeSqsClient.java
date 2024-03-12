@@ -20,6 +20,9 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 public class FakeSqsClient implements SqsClient {
 
+  public static final int AWS_HARD_LIMIT_ON_BATCH_SIZE = 10;
+  public static final String BATCH_SIZE_ERROR = "Batch size should not be greater than "+
+    AWS_HARD_LIMIT_ON_BATCH_SIZE;
   private final List<SendMessageRequest> messages;
 
   public FakeSqsClient() {
@@ -46,6 +49,7 @@ public class FakeSqsClient implements SqsClient {
   @Override
   public SendMessageBatchResponse sendMessageBatch(
     SendMessageBatchRequest sendMessageBatchRequest) {
+    validateBatch(sendMessageBatchRequest);
     sendMessageBatchRequest.entries().stream()
       .map(entry -> toSendMessageRequest(entry, sendMessageBatchRequest))
       .forEach(this::sendMessage);
@@ -60,6 +64,16 @@ public class FakeSqsClient implements SqsClient {
     var event = new SQSEvent();
     event.setRecords(convertMessagesToRecords());
     return event;
+  }
+
+  private static void validateBatch(SendMessageBatchRequest sendMessageBatchRequest) {
+    if (isFollowingAwsQuota(sendMessageBatchRequest)) {
+      throw new IllegalArgumentException(BATCH_SIZE_ERROR);
+    }
+  }
+
+  private static boolean isFollowingAwsQuota(SendMessageBatchRequest sendMessageBatchRequest) {
+    return sendMessageBatchRequest.entries().size() > AWS_HARD_LIMIT_ON_BATCH_SIZE;
   }
 
   private List<SQSMessage> convertMessagesToRecords() {
