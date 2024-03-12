@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
@@ -83,6 +84,12 @@ class FakeSqsClientTest {
     assertDoesNotThrow(() -> client.close());
   }
 
+  @Test
+  void shouldThrowErrorWhenSendingBatchWithSizeGreaterThanTen(){
+    var request = sampleBatchRequest(20);
+    assertThrows(IllegalArgumentException.class,()->client.sendMessageBatch(request));
+  }
+
   private static Consumer<MessageAttribute> assertThatAttributeValuesAreEquivalent(
     Entry<String, MessageAttributeValue> expectedAttribute) {
     return messageAttribute -> assertThat(messageAttribute.getStringValue()).isEqualTo(
@@ -125,6 +132,20 @@ class FakeSqsClientTest {
     SendMessageBatchRequest request) {
     return request.entries().stream()
       .map(entry -> toSendMessageRequest(entry, request)).toList();
+  }
+
+  private SendMessageBatchRequest sampleBatchRequest(int batchSize) {
+    var batch = createBatch(batchSize);
+    return SendMessageBatchRequest.builder()
+      .queueUrl(randomUri().toString())
+      .entries(batch)
+      .build();
+  }
+
+  private List<SendMessageBatchRequestEntry> createBatch(int batchSize) {
+    return IntStream.range(0,batchSize)
+      .boxed().map(ignored->randomEntry())
+      .toList();
   }
 
   private SendMessageBatchRequest sampleBatchRequest() {
