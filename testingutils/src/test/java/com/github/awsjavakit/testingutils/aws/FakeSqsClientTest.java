@@ -2,6 +2,8 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomUri;
+import static com.github.awsjavakit.testingutils.aws.FakeSqsClient.AWS_HARD_LIMIT_ON_BATCH_SIZE;
+import static com.github.awsjavakit.testingutils.aws.FakeSqsClient.BATCH_SIZE_ERROR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -85,9 +87,11 @@ class FakeSqsClientTest {
   }
 
   @Test
-  void shouldThrowErrorWhenSendingBatchWithSizeGreaterThanTen(){
-    var request = sampleBatchRequest(20);
-    assertThrows(IllegalArgumentException.class,()->client.sendMessageBatch(request));
+  void shouldThrowErrorWhenSendingBatchWithSizeGreaterThanAllowedQuota() {
+    var request = sampleBatchRequest(AWS_HARD_LIMIT_ON_BATCH_SIZE + 1);
+    var exception =
+      assertThrows(IllegalArgumentException.class, () -> client.sendMessageBatch(request));
+    assertThat(exception.getMessage()).contains(BATCH_SIZE_ERROR);
   }
 
   private static Consumer<MessageAttribute> assertThatAttributeValuesAreEquivalent(
@@ -143,8 +147,8 @@ class FakeSqsClientTest {
   }
 
   private List<SendMessageBatchRequestEntry> createBatch(int batchSize) {
-    return IntStream.range(0,batchSize)
-      .boxed().map(ignored->randomEntry())
+    return IntStream.range(0, batchSize)
+      .boxed().map(ignored -> randomEntry())
       .toList();
   }
 

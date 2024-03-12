@@ -21,6 +21,8 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 public class FakeSqsClient implements SqsClient {
 
   public static final int AWS_HARD_LIMIT_ON_BATCH_SIZE = 10;
+  public static final String BATCH_SIZE_ERROR = "Batch size should not be greater than "+
+    AWS_HARD_LIMIT_ON_BATCH_SIZE;
   private final List<SendMessageRequest> messages;
 
   public FakeSqsClient() {
@@ -66,7 +68,7 @@ public class FakeSqsClient implements SqsClient {
 
   private static void validateBatch(SendMessageBatchRequest sendMessageBatchRequest) {
     if (isFollowingAwsQuota(sendMessageBatchRequest)) {
-      throw new IllegalArgumentException("Batch size should not be greater than 10");
+      throw new IllegalArgumentException(BATCH_SIZE_ERROR);
     }
   }
 
