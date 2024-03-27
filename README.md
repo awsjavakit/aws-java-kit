@@ -41,9 +41,6 @@ All implemented functionality is described in the associated test class.
 
 
 
-### API Gateway module (apigateway):
-
-
 
 
 
