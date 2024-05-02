@@ -1,5 +1,5 @@
 [versions]
-awsSdk2 = { strictly = '2.25.6' }
+awsSdk2 = { strictly = '2.25.42' }
 junit = { strictly = '5.10.2' }
 assertj = { strictly = '3.25.3' }
 log4j = { strictly = '2.23.1' }
