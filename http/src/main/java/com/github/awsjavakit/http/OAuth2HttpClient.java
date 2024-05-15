@@ -1,7 +1,6 @@
 package com.github.awsjavakit.http;
 
 import com.github.awsjavakit.misc.JacocoGenerated;
-import java.io.IOException;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
@@ -27,29 +26,38 @@ public class OAuth2HttpClient extends HttpClient implements Tagged {
   public static final String AUTHORIZATION_HEADER = "Authorization";
   private final HttpClient httpClient;
   private final TokenProvider tokenProvider;
+  private final RetryStrategy retryStrategy;
 
-  protected OAuth2HttpClient(HttpClient httpClient, TokenProvider tokenProvider) {
+  protected OAuth2HttpClient(HttpClient httpClient, TokenProvider tokenProvider,
+    RetryStrategy retryStrategy) {
     super();
     this.httpClient = httpClient;
     this.tokenProvider = tokenProvider;
+    this.retryStrategy = retryStrategy;
   }
 
   public static OAuth2HttpClient create(HttpClient httpClient, TokenProvider tokenProvider) {
-    return new OAuth2HttpClient(httpClient, tokenProvider);
+    return create(httpClient, tokenProvider, RetryStrategy.defaultStrategy());
+  }
+
+  public static OAuth2HttpClient create(HttpClient httpClient, TokenProvider tokenProvider,
+    RetryStrategy retryStrategy) {
+    return new OAuth2HttpClient(httpClient, tokenProvider, retryStrategy);
   }
 
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
-
-    throws IOException, InterruptedException {
+  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
     var authorizedRequest = authorizeRequest(request);
-    return httpClient.send(authorizedRequest, responseBodyHandler);
+
+    return retryStrategy.apply(() -> httpClient.send(authorizedRequest, responseBodyHandler));
+
   }
 
   @Override
   public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
     BodyHandler<T> responseBodyHandler) {
     var authorizedRequest = authorizeRequest(request);
+
     return httpClient.sendAsync(authorizedRequest, responseBodyHandler);
   }
 

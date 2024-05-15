@@ -57,7 +57,7 @@ class RenewTokenWithCredentialsStoredInSecretsManagerTest {
     var tokenProvider = TokenProvider.defaultProvider(httpClient,
       new OAuth2CredentialsFromSecretsManager(secretsClient, SECRET_NAME, JSON));
     this.authorizedClient =
-      new OAuth2HttpClient(WiremockHttpClient.create().build(), tokenProvider);
+       OAuth2HttpClient.create(WiremockHttpClient.create().build(), tokenProvider);
   }
 
   @Test

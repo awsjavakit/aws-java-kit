@@ -85,7 +85,7 @@ public class Success<T> extends Try<T> {
 
   @Override
   @SuppressWarnings("PMD.ShortMethodName")
-  public Try<T> or(Callable<T> action) {
+  public  Try<T> or(Callable<T> action) {
     return this;
   }
 
