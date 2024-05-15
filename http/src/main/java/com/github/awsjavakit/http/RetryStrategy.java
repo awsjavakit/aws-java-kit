@@ -2,16 +2,18 @@ package com.github.awsjavakit.http;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
-import com.gtihub.awsjavakit.attempt.SupplierWithException;
+import java.util.concurrent.Callable;
 
 @FunctionalInterface
 public interface RetryStrategy {
 
+  int DEFAULT_WAITING_TIME = 1000;
+
   static RetryStrategy defaultStrategy() {
-    return new DefaultRetryStrategy(500);
+    return new DefaultRetryStrategy(DEFAULT_WAITING_TIME);
   }
 
-  <T> T apply(SupplierWithException<T, Exception> trial);
+  <T> T apply(Callable<T> trial);
 
   class DefaultRetryStrategy implements RetryStrategy {
 
@@ -22,11 +24,11 @@ public interface RetryStrategy {
     }
 
     @Override
-    public <T> T apply(SupplierWithException<T, Exception> trial) {
+    public <T> T apply(Callable<T> trial) {
       return attempt(trial).orElse(fail -> retry(trial));
     }
 
-    private <T> T retry(SupplierWithException<T, Exception> trial) {
+    private <T> T retry(Callable<T> trial) {
       pause();
       return attempt(trial).orElseThrow();
     }
@@ -38,6 +40,5 @@ public interface RetryStrategy {
         throw new RuntimeException(e);
       }
     }
-
   }
 }

@@ -12,6 +12,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.github.awsjavakit.http.RetryStrategy.DefaultRetryStrategy;
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.networking.WiremockHttpClient;
@@ -58,8 +59,7 @@ class OAuth2HttpClientTest {
     this.authToken = randomString();
     this.tokenProvider = new SimpleTokenProvider(authToken);
     var httpClient = WiremockHttpClient.create().build();
-    this.client =
-      OAuth2HttpClient.create(httpClient, tokenProvider);
+    this.client = OAuth2HttpClient.create(httpClient, tokenProvider);
     setupCredentialsResponse();
   }
 
@@ -111,7 +111,7 @@ class OAuth2HttpClientTest {
     var unauthorizedClient = WiremockHttpClient.create().build();
     setupServerToFirstFailThenSucceed();
 
-    var client = OAuth2HttpClient.create(unauthorizedClient, tokenProvider);
+    var client = OAuth2HttpClient.create(unauthorizedClient, tokenProvider,new DefaultRetryStrategy(1));
     var requestUri = UriWrapper.fromUri(serverUrl)
       .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
     var request = HttpRequest.newBuilder(requestUri).GET().build();
