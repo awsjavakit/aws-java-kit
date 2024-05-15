@@ -28,7 +28,7 @@ public abstract class Try<T> {
    * @param <S>    the resulting object
    * @return a new {@link Try} instance
    */
-  public static <S> Try<S> attempt(Callable<S> action) {
+  public static <S,E extends Exception> Try<S> attempt(SupplierWithException<S,E> action) {
     try {
       return new Success<S>(action.call());
     } catch (Exception e) {
@@ -95,5 +95,5 @@ public abstract class Try<T> {
   public abstract Optional<T> toOptional();
 
   @SuppressWarnings("PMD.ShortMethodName")
-  public abstract Try<T> or(Callable<T> action);
+  public abstract <E extends Exception> Try<T> or(SupplierWithException<T,E> action);
 }

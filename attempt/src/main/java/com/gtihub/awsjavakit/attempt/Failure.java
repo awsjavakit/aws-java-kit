@@ -3,7 +3,6 @@ package com.gtihub.awsjavakit.attempt;
 import static java.util.Objects.isNull;
 
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -91,7 +90,7 @@ public class Failure<T> extends Try<T> {
 
   @Override
   @SuppressWarnings("PMD.ShortMethodName")
-  public Try<T> or(Callable<T> action) {
+  public <E extends Exception> Try<T> or(SupplierWithException<T,E> action) {
     return attempt(action);
   }
 }
