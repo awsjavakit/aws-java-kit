@@ -88,7 +88,7 @@ public final class RetryingHttpClient extends HttpClient {
 
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
-    return retryStrategy.apply(() -> httpClient.send(request, responseBodyHandler));
+    return retryStrategy.apply(req -> httpClient.send(req, responseBodyHandler),request);
   }
 
   @Override

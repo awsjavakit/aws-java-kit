@@ -2,12 +2,12 @@ package com.github.awsjavakit.http;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
-import java.util.concurrent.Callable;
+import com.gtihub.awsjavakit.attempt.FunctionWithException;
 
 @FunctionalInterface
 public interface RetryStrategy {
 
-  <T> T apply(Callable<T> trial);
+  <I, O, E extends Exception> O apply(FunctionWithException<I, O, E> trial, I input);
 
   class DefaultRetryStrategy implements RetryStrategy {
 
@@ -18,13 +18,13 @@ public interface RetryStrategy {
     }
 
     @Override
-    public <T> T apply(Callable<T> trial) {
-      return attempt(trial).orElse(fail -> retry(trial));
+    public <I, O, E extends Exception> O apply(FunctionWithException<I, O, E> function, I input) {
+      return attempt(() -> function.apply(input)).orElse(fail->retry(function,input));
     }
 
-    private <T> T retry(Callable<T> trial) {
+    private <I, O, E extends Exception> O retry(FunctionWithException<I, O, E> function, I input) {
       pause();
-      return attempt(trial).orElseThrow();
+      return attempt(() -> function.apply(input)).orElseThrow();
     }
 
     private void pause() {

@@ -2,7 +2,9 @@ package com.github.awsjavakit.http;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.function.Executable;
 class RetryingHttpClientTest {
 
   public static final String RANDOMLY_FAILING_ENDPOINT = "/first-fail/then-succeed";
+  public static final String ANOTHER_RANDOMLY_FAILING_ENDPOINT = "/some-other-fail/then-succeed";
 
   private WireMockServer server;
   private URI serverUri;
@@ -44,7 +47,7 @@ class RetryingHttpClientTest {
   void shouldRetrySyncRequestsBasedOnTheRetryPolicy() {
     setupServerToFirstFailThenSucceed();
 
-    var client =  RetryingHttpClient.create(WiremockHttpClient.create().build(),
+    var client = RetryingHttpClient.create(WiremockHttpClient.create().build(),
       new DefaultRetryStrategy(1));
     var requestUri = UriWrapper.fromUri(serverUri)
       .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
@@ -52,13 +55,40 @@ class RetryingHttpClientTest {
     var response = client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
     assertThat(response.statusCode()).isEqualTo(HTTP_OK);
     assertThat(response.body()).isEqualTo(expectedResponseBody);
+  }
+
+  @Test
+  void shouldNotRepeatRequestIfThereIsNoError() {
+    setupServerToAlwaysSucceed();
+
+    var client = RetryingHttpClient.create(WiremockHttpClient.create().build(),
+      new DefaultRetryStrategy(1));
+    var requestUri = UriWrapper.fromUri(serverUri)
+      .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
+    var request = HttpRequest.newBuilder(requestUri).GET().build();
+    var response = client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
+    assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+    assertThat(response.body()).isEqualTo(expectedResponseBody);
+    server.verify(1, getRequestedFor(anyUrl()));
+  }
+
+  @Test
+  void shouldFailEventually() {
+    setupServerToAlwaysFail();
+    var client = RetryingHttpClient.create(WiremockHttpClient.create().build(),
+      new DefaultRetryStrategy(1));
+    var requestUri = UriWrapper.fromUri(serverUri)
+      .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
+    var request = HttpRequest.newBuilder(requestUri).GET().build();
+    assertThrows(RuntimeException.class,
+      () -> client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8)));
 
   }
 
   @Test
   void canNotRetryAsyncRequestsBasedOnTheRetryPolicy() {
     setupServerToFirstFailThenSucceed();
-    var client =  RetryingHttpClient.create(
+    var client = RetryingHttpClient.create(
       WiremockHttpClient.create().build(),
       new DefaultRetryStrategy(1));
     var requestUri = UriWrapper.fromUri(serverUri)
@@ -71,18 +101,45 @@ class RetryingHttpClientTest {
     assertThrows(ExecutionException.class, action);
   }
 
+  @Test
+  void shouldIntegrateWithExternalResilienceLibraries() {
+    setupServerToFirstFailThenSucceed();
+
+    var retryStrategy = new ResilienceRetryStrategy() ;
+    var client = RetryingHttpClient.create(WiremockHttpClient.create().build(), retryStrategy);
+    var requestUri = UriWrapper.fromUri(serverUri)
+      .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
+    var request = HttpRequest.newBuilder(requestUri).GET().build();
+    var response = client.send(request, BodyHandlers.ofString(StandardCharsets.UTF_8));
+    assertThat(response.statusCode()).isEqualTo(HTTP_OK);
+    assertThat(response.body()).isEqualTo(expectedResponseBody);
+    server.verify(2, getRequestedFor(anyUrl()));
+  }
+
+  private void setupServerToAlwaysSucceed() {
+    this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
+      .willReturn(aResponse().withBody(expectedResponseBody)));
+  }
+
   private void setupServerToFirstFailThenSucceed() {
     this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
-      .inScenario("FirstFailThenSucceed")
+      .inScenario("FirstRequest")
       .whenScenarioStateIs(STARTED)
       .willReturn(aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE))
       .willSetStateTo("Failed"));
 
     this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
-      .inScenario("FirstFailThenSucceed")
+      .inScenario("FirstRequest")
       .whenScenarioStateIs("Failed")
       .willReturn(aResponse().withBody(expectedResponseBody))
       .willSetStateTo(STARTED));
+
+  }
+
+  private void setupServerToAlwaysFail() {
+    this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
+      .willReturn(aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
+
   }
 
 }
