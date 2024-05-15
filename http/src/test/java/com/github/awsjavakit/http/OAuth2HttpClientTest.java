@@ -72,8 +72,7 @@ class OAuth2HttpClientTest {
   }
 
   @Test
-  void shouldRemoveAnyOtherExistingAuthorizationHeader()
-    throws IOException, InterruptedException {
+  void shouldRemoveAnyOtherExistingAuthorizationHeader() throws IOException, InterruptedException {
     var request = HttpRequest.newBuilder(protectedEndpoint()).GET()
       .setHeader(AUTHORIZATION_HEADER, randomString())
       .build();
@@ -108,10 +107,11 @@ class OAuth2HttpClientTest {
 
   @Test
   void shouldRetrySyncRequestsBasedOnTheRetryPolicy() throws IOException, InterruptedException {
-    var unauthorizedClient = WiremockHttpClient.create().build();
+    var unauthorizedClient =
+      RetryingHttpClient.create(WiremockHttpClient.create().build(), new DefaultRetryStrategy(1));
     setupServerToFirstFailThenSucceed();
 
-    var client = OAuth2HttpClient.create(unauthorizedClient, tokenProvider,new DefaultRetryStrategy(1));
+    var client = OAuth2HttpClient.create(unauthorizedClient, tokenProvider);
     var requestUri = UriWrapper.fromUri(serverUrl)
       .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
     var request = HttpRequest.newBuilder(requestUri).GET().build();
@@ -131,7 +131,8 @@ class OAuth2HttpClientTest {
       .addChild(RANDOMLY_FAILING_ENDPOINT).getUri();
     var request = HttpRequest.newBuilder(requestUri).GET().build();
 
-    Executable action = () -> client.sendAsync(request, BodyHandlers.ofString(StandardCharsets.UTF_8))
+    Executable action = () -> client.sendAsync(request,
+        BodyHandlers.ofString(StandardCharsets.UTF_8))
       .get();
     assertThrows(ExecutionException.class, action);
   }

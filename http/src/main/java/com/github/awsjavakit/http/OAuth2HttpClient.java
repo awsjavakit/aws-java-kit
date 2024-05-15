@@ -1,6 +1,7 @@
 package com.github.awsjavakit.http;
 
 import com.github.awsjavakit.misc.JacocoGenerated;
+import java.io.IOException;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
@@ -26,30 +27,24 @@ public class OAuth2HttpClient extends HttpClient implements Tagged {
   public static final String AUTHORIZATION_HEADER = "Authorization";
   private final HttpClient httpClient;
   private final TokenProvider tokenProvider;
-  private final RetryStrategy retryStrategy;
 
-  protected OAuth2HttpClient(HttpClient httpClient, TokenProvider tokenProvider,
-    RetryStrategy retryStrategy) {
+  protected OAuth2HttpClient(HttpClient httpClient, TokenProvider tokenProvider) {
     super();
     this.httpClient = httpClient;
     this.tokenProvider = tokenProvider;
-    this.retryStrategy = retryStrategy;
   }
+
 
   public static OAuth2HttpClient create(HttpClient httpClient, TokenProvider tokenProvider) {
-    return create(httpClient, tokenProvider, RetryStrategy.defaultStrategy());
-  }
-
-  public static OAuth2HttpClient create(HttpClient httpClient, TokenProvider tokenProvider,
-    RetryStrategy retryStrategy) {
-    return new OAuth2HttpClient(httpClient, tokenProvider, retryStrategy);
+    return new OAuth2HttpClient(httpClient, tokenProvider);
   }
 
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
+  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
+    throws IOException, InterruptedException {
     var authorizedRequest = authorizeRequest(request);
 
-    return retryStrategy.apply(() -> httpClient.send(authorizedRequest, responseBodyHandler));
+    return  httpClient.send(authorizedRequest, responseBodyHandler);
 
   }
 
