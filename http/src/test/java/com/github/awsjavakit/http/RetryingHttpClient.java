@@ -15,13 +15,13 @@ import java.util.concurrent.Executor;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 
-public class RetryingHttpClient extends HttpClient {
+public final class RetryingHttpClient extends HttpClient {
 
   private final HttpClient httpClient;
   private final RetryStrategy retryStrategy;
 
   private RetryingHttpClient(HttpClient httpClient, RetryStrategy retryStrategy) {
-
+    super();
     this.httpClient = httpClient;
     this.retryStrategy = retryStrategy;
   }

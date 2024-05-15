@@ -7,12 +7,6 @@ import java.util.concurrent.Callable;
 @FunctionalInterface
 public interface RetryStrategy {
 
-  int DEFAULT_WAITING_TIME = 1000;
-
-  static RetryStrategy defaultStrategy() {
-    return new DefaultRetryStrategy(DEFAULT_WAITING_TIME);
-  }
-
   <T> T apply(Callable<T> trial);
 
   class DefaultRetryStrategy implements RetryStrategy {
