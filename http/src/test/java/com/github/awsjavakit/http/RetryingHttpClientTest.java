@@ -8,7 +8,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -123,7 +122,7 @@ class RetryingHttpClientTest {
   @ParameterizedTest
   @MethodSource("failingHttpClient")
   void shouldRethrowTheCheckedExceptionsTheContainedHttpClientHasThrown(
-    ExceptionTestSetup testSetup) {
+    ExceptionTestSetup testSetup) throws IOException, InterruptedException {
     var failingClient = testSetup.failingClient();
     var retryClient =
       RetryingHttpClient.create(failingClient, RetryStrategy.defaultStrategy(Duration.ZERO));
@@ -184,10 +183,9 @@ class RetryingHttpClientTest {
       return exception.getClass().getSimpleName();
     }
 
-    public HttpClient failingClient() {
+    public HttpClient failingClient() throws IOException, InterruptedException {
       var client = mock(HttpClient.class);
-      attempt(() -> when(client.send(any(HttpRequest.class), any(BodyHandler.class)))
-        .thenThrow(exception)).orElseThrow();
+      when(client.send(any(HttpRequest.class), any(BodyHandler.class))).thenThrow(exception);
       return client;
 
     }
