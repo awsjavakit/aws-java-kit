@@ -1,5 +1,6 @@
 package com.github.awsjavakit.http;
 
+import com.github.awsjavakit.misc.JacocoGenerated;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
@@ -30,50 +31,60 @@ public final class RetryingHttpClient extends HttpClient {
     return new RetryingHttpClient(httpClient, retryStrategy);
   }
 
+  @JacocoGenerated
   @Override
   public Optional<CookieHandler> cookieHandler() {
     return httpClient.cookieHandler();
   }
 
+  @JacocoGenerated
   @Override
   public Optional<Duration> connectTimeout() {
     return httpClient.connectTimeout();
   }
 
+  @JacocoGenerated
   @Override
   public Redirect followRedirects() {
     return httpClient.followRedirects();
   }
 
+  @JacocoGenerated
   @Override
   public Optional<ProxySelector> proxy() {
     return httpClient.proxy();
   }
 
+  @JacocoGenerated
   @Override
   public SSLContext sslContext() {
     return httpClient.sslContext();
   }
 
+  @JacocoGenerated
   @Override
   public SSLParameters sslParameters() {
     return httpClient.sslParameters();
   }
 
+  @JacocoGenerated
   @Override
   public Optional<Authenticator> authenticator() {
     return httpClient.authenticator();
   }
 
   @Override
+  @JacocoGenerated
   public Version version() {
     return httpClient.version();
   }
 
+  @JacocoGenerated
   @Override
   public Optional<Executor> executor() {
     return httpClient.executor();
   }
+
 
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
@@ -86,6 +97,7 @@ public final class RetryingHttpClient extends HttpClient {
     return httpClient.sendAsync(request, responseBodyHandler);
   }
 
+  @JacocoGenerated
   @Override
   public <T> CompletableFuture<HttpResponse<T>> sendAsync(HttpRequest request,
     BodyHandler<T> responseBodyHandler, PushPromiseHandler<T> pushPromiseHandler) {
