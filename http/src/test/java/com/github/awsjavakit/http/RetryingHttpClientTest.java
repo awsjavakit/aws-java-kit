@@ -122,7 +122,7 @@ class RetryingHttpClientTest {
 
   @ParameterizedTest
   @MethodSource("failingHttpClient")
-  void shouldRethrowTheCheckedExceptionsContainedHttpClientHasThrown(ExceptionTestSetup testSetup) {
+  void shouldRethrowTheCheckedExceptionsTheContainedHttpClientHasThrown(ExceptionTestSetup testSetup) {
     var failingClient = testSetup.failingClient();
     var retryClient =
       RetryingHttpClient.create(failingClient,RetryStrategy.defaultStrategy(Duration.ZERO));
