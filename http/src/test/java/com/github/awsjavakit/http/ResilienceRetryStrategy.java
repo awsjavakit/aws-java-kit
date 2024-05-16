@@ -1,7 +1,6 @@
 package com.github.awsjavakit.http;
 
 import com.gtihub.awsjavakit.attempt.FunctionWithException;
-import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.time.Duration;
@@ -20,18 +19,8 @@ public class ResilienceRetryStrategy implements RetryStrategy {
   }
 
   @Override
-  public <I, O, E extends Exception> O apply(FunctionWithException<I, O, E> trial, I input) {
-    var checkedSupplier = new CheckedSupplier<O>() {
-      @Override
-      public O get() throws Throwable {
-        return trial.apply(input);
-      }
-    };
-    try {
-      return registry.retry(input.toString()).executeCheckedSupplier(checkedSupplier);
-    } catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
-
+  public <I, O, E extends Exception> O apply(FunctionWithException<I, O, E> trial, I input)
+    throws Exception {
+    return registry.retry(input.toString()).executeCallable(() -> trial.apply(input));
   }
 }

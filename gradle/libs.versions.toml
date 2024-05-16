@@ -19,6 +19,7 @@ awsLambdaEvents = { strictly = '3.11.4' }
 awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.30' }
 dynamoDbLocal = { strictly = '2.2.1' }
+resilience4j = {strictly= '2.2.0'}
 
 [libraries]
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
@@ -66,6 +67,7 @@ mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version
 lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
 dynamoDbLocal = { group = 'com.amazonaws', name = 'DynamoDBLocal', version.ref = 'dynamoDbLocal' }
 
+resilience4j = {group= 'io.github.resilience4j', name= 'resilience4j-retry', version.ref= 'resilience4j'}
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal", 'hamcrest-jackson']
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]

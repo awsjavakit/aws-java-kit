@@ -18,7 +18,7 @@ dependencies {
     implementation project(":attempt")
     implementation project(":misc")
 
-    testImplementation group: 'io.github.resilience4j', name: 'resilience4j-retry', version: '2.2.0'
+
     testImplementation project(":testingutils")
     testImplementation project(":secrets")
     testImplementation libs.aws.ssm
@@ -27,6 +27,7 @@ dependencies {
     testImplementation libs.wiremock
     testImplementation libs.aws.secrets
     testImplementation libs.aws.s3
+    testImplementation libs.resilience4j
 
 
 
