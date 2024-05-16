@@ -122,10 +122,11 @@ class RetryingHttpClientTest {
 
   @ParameterizedTest
   @MethodSource("failingHttpClient")
-  void shouldRethrowTheCheckedExceptionsTheContainedHttpClientHasThrown(ExceptionTestSetup testSetup) {
+  void shouldRethrowTheCheckedExceptionsTheContainedHttpClientHasThrown(
+    ExceptionTestSetup testSetup) {
     var failingClient = testSetup.failingClient();
     var retryClient =
-      RetryingHttpClient.create(failingClient,RetryStrategy.defaultStrategy(Duration.ZERO));
+      RetryingHttpClient.create(failingClient, RetryStrategy.defaultStrategy(Duration.ZERO));
     Executable action = () -> retryClient.send(dummyRequest(), BodyHandlers.ofString());
     var exception = assertThrows(testSetup.exception().getClass(), action);
     assertThat(exception.getMessage()).isEqualTo(testSetup.exception().getMessage());
@@ -158,13 +159,13 @@ class RetryingHttpClientTest {
 
   private void setupServerToFirstFailThenSucceed() {
     this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
-      .inScenario("FirstRequest")
+      .inScenario("FirstFailThenSucceed")
       .whenScenarioStateIs(STARTED)
       .willReturn(aResponse().withFault(Fault.RANDOM_DATA_THEN_CLOSE))
       .willSetStateTo("Failed"));
 
     this.server.stubFor(get(RANDOMLY_FAILING_ENDPOINT)
-      .inScenario("FirstRequest")
+      .inScenario("FirstFailThenSucceed")
       .whenScenarioStateIs("Failed")
       .willReturn(aResponse().withBody(expectedResponseBody))
       .willSetStateTo(STARTED));
