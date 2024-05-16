@@ -27,6 +27,7 @@ dependencies {
     testImplementation libs.wiremock
     testImplementation libs.aws.secrets
     testImplementation libs.aws.s3
+    testImplementation libs.resilience4j
 
 
 

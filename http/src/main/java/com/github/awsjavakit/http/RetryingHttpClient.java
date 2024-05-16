@@ -1,6 +1,7 @@
 package com.github.awsjavakit.http;
 
 import com.github.awsjavakit.misc.JacocoGenerated;
+import java.io.IOException;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
@@ -85,10 +86,19 @@ public final class RetryingHttpClient extends HttpClient {
     return httpClient.executor();
   }
 
-
+  //We need to suppress the warning because we want the original IOExceptions and InterruptedExceptions
+  // to be thrown as they are and not to be wrapped to runtime exceptions as this would change the contract.
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
-    return retryStrategy.apply(() -> httpClient.send(request, responseBodyHandler));
+  @SuppressWarnings("PMD.AvoidRethrowingException")
+  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
+    throws IOException, InterruptedException {
+    try {
+      return retryStrategy.apply(req -> httpClient.send(req, responseBodyHandler), request);
+    } catch (IOException | InterruptedException | RuntimeException httpClientException) {
+      throw httpClientException;
+    } catch (Exception nonHttpClientException) {
+      throw new RuntimeException(nonHttpClientException);
+    }
   }
 
   @Override
