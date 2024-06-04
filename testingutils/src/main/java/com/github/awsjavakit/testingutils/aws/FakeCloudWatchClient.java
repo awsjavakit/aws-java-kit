@@ -26,8 +26,7 @@ public class FakeCloudWatchClient implements CloudWatchClient {
   }
 
   @Override
-  public PutMetricDataResponse putMetricData(PutMetricDataRequest putMetricDataRequest)
-    throws MissingRequiredParameterException {
+  public PutMetricDataResponse putMetricData(PutMetricDataRequest putMetricDataRequest) {
     if (putMetricDataRequest.metricData().isEmpty()) {
       throw MissingRequiredParameterException.create("The parameter Metric data is required", null);
     }

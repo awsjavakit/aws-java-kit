@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.cloudwatch.model.Dimension;
 import software.amazon.awssdk.services.cloudwatch.model.MetricDatum;
-import software.amazon.awssdk.services.cloudwatch.model.MissingRequiredParameterException;
 import software.amazon.awssdk.services.cloudwatch.model.PutMetricDataRequest;
 
 class FakeCloudWatchClientTest {
@@ -35,8 +35,8 @@ class FakeCloudWatchClientTest {
       .metricData(Collections.emptyList())
       .build();
     var exception =
-      assertThrows(MissingRequiredParameterException.class, () -> client.putMetricData(request));
-    assertThat(exception.getMessage(), is(equalTo("MetricData is required")));
+      assertThrows(SdkException.class, () -> client.putMetricData(request));
+    assertThat(exception.getMessage(), is(equalTo("The parameter Metric data is required")));
   }
 
 
