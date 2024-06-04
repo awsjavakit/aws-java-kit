@@ -7,10 +7,13 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.cloudwatch.model.Dimension;
 import software.amazon.awssdk.services.cloudwatch.model.MetricDatum;
+import software.amazon.awssdk.services.cloudwatch.model.MissingRequiredParameterException;
 import software.amazon.awssdk.services.cloudwatch.model.PutMetricDataRequest;
 
 class FakeCloudWatchClientTest {
@@ -21,6 +24,19 @@ class FakeCloudWatchClientTest {
     var request = somePutDataRequest();
     client.putMetricData(request);
     assertThat(client.getPutMetricDataRequests(),contains(request));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenSendingRequestWithoutMetricData(){
+    var client = new FakeCloudWatchClient();
+    var request = PutMetricDataRequest
+      .builder()
+      .namespace(randomString())
+      .metricData(Collections.emptyList())
+      .build();
+    var exception =
+      assertThrows(MissingRequiredParameterException.class, () -> client.putMetricData(request));
+    assertThat(exception.getMessage(), is(equalTo("MetricData is required")));
   }
 
 
