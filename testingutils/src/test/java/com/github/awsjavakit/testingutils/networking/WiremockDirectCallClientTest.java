@@ -1,22 +1,24 @@
 package com.github.awsjavakit.testingutils.networking;
 
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomElement;
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 
 import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.direct.DirectCallHttpServer;
 import com.github.tomakehurst.wiremock.direct.DirectCallHttpServerFactory;
-import com.github.tomakehurst.wiremock.http.ImmutableRequest;
-import com.github.tomakehurst.wiremock.http.RequestMethod;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -34,12 +36,15 @@ class WiremockDirectCallClientTest {
 
   private WireMockServer directCallServer;
   private HttpClient directCallClient;
-  private WireMockServer jettyServer;
-  private HttpClient jettyClient;
-  private DirectCallHttpServer directCallHttpServer;
 
   public static Stream<URI> uriProvider() {
-    return Stream.of(uriWithPath("https://localhost"), uriWithParameters(), uriWithMultipleChildren());
+    return Stream.of(uriWithPath("https://localhost"),
+      uriWithParameters(),
+      uriWithMultipleChildren());
+  }
+
+  public static URI uriWithPath(String hostUri) {
+    return UriWrapper.fromUri(hostUri).addChild("some/path").getUri();
   }
 
   @BeforeEach
@@ -50,15 +55,8 @@ class WiremockDirectCallClientTest {
       options()
         .httpServerFactory(factory));
     directCallServer.start(); // no-op, not required
-
-    this.jettyServer = new WireMockServer(
-      options().dynamicHttpsPort().httpDisabled(true)
-    );
-    jettyServer.start();
-
-    this.directCallHttpServer = factory.getHttpServer();
+    var directCallHttpServer = factory.getHttpServer();
     this.directCallClient = new WiremockDirectCallClient(directCallHttpServer);
-    this.jettyClient = WiremockHttpClient.create().build();
   }
 
   @AfterEach
@@ -83,7 +81,7 @@ class WiremockDirectCallClientTest {
   }
 
   @Test
-  void shouldPost() throws IOException, InterruptedException {
+  void shouldTransformPostRequestWithBody() throws IOException, InterruptedException {
     var uri = uriWithPath("https://localhost");
     var expectedResponseBody = randomString();
     var expectedRequestBody = "ExpectedRequestBody";
@@ -93,7 +91,9 @@ class WiremockDirectCallClientTest {
       .willReturn(aResponse().withBody(expectedResponseBody).withStatus(HTTP_OK));
     directCallServer.stubFor(mapping);
 
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(expectedRequestBody)).build();
+    var request = HttpRequest.newBuilder(uri)
+      .POST(BodyPublishers.ofString(expectedRequestBody))
+      .build();
 
     var response = directCallClient.send(request, BodyHandlers.ofString());
 
@@ -102,43 +102,48 @@ class WiremockDirectCallClientTest {
   }
 
   @Test
-  void shouldFailWhenSubmittingWrongRequestBodyDirectCallVersion() throws IOException, InterruptedException {
+  void shouldTransformPostRequestWithoutBody() throws IOException, InterruptedException {
     var uri = uriWithPath("https://localhost");
     var expectedResponseBody = randomString();
-    var expectedRequestBody = "ExpectedRequestBody";
-    var wrongRequestBody = "WrongRequestBody";
 
-    directCallServer.stubFor(WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(expectedRequestBody))
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(HTTP_OK)));
-
-    var wireMockRequest = ImmutableRequest.create()
-      .withAbsoluteUrl(uri.toString())
-      .withMethod(RequestMethod.POST)
-//      .withBody(expectedRequestBody.getBytes(StandardCharsets.UTF_8))
-      .build();
-    var response = directCallHttpServer.stubRequest(wireMockRequest);
-
-    assertThat(response.getBodyAsString(), response.getStatus(), is(equalTo(HTTP_OK)));
-    assertThat(response.getBodyAsString(), is(equalTo(expectedResponseBody)));
-  }
-
-  @Test
-  void shouldFailWhenSubmittingWrongRequestBodyJettyVersion() throws IOException, InterruptedException {
-    var uri = uriWithPath(jettyServer.baseUrl());
-    var expectedResponseBody = randomString();
-    var expectedRequestBody = "ExpectedRequestBody";
-    var wrongRequestBody = "WrongRequestBody";
-
-    jettyServer.stubFor(WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(expectedRequestBody))
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(HTTP_OK)));
+    var mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+      .withRequestBody(WireMock.absent())
+      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(HTTP_OK));
+    directCallServer.stubFor(mapping);
 
     var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
-    var response = jettyClient.send(request, BodyHandlers.ofString());
+
+    var response = directCallClient.send(request, BodyHandlers.ofString());
 
     assertThat(response.body(), response.statusCode(), is(equalTo(HTTP_OK)));
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldIncludeQueryParametersForPostRequests() throws IOException, InterruptedException {
+    var uri = uriWithParameters();
+    var requestBody = randomString();
+    var expectedResponseBody = randomString();
+    var mapping = WireMock.post(urlPathEqualTo(uri.getPath()));
+    mapping = addQueryParameters(uri, mapping);
+    mapping = mapping.withRequestBody(WireMock.equalTo(requestBody));
+    int expectedResponseCode = randomResponseCode();
+    mapping = mapping.willReturn(aResponse().withBody(expectedResponseBody)
+      .withStatus(expectedResponseCode));
+
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri)
+      .POST(BodyPublishers.ofString(requestBody))
+      .build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  private static Integer randomResponseCode() {
+    return randomElement(randomInteger(1000));
   }
 
   private static MappingBuilder createStubForGetRequest(URI uri, String expectedBody) {
@@ -153,15 +158,14 @@ class WiremockDirectCallClientTest {
     var newMapping = mapping;
     if (StringUtils.isNotBlank(uri.getRawQuery())) {
       var queryParameters = UriWrapper.fromUri(uri).getQueryParameters();
+      assertThat(queryParameters.keySet(), is(not(empty())));
+
       for (var entry : queryParameters.entrySet()) {
         newMapping = newMapping.withQueryParam(entry.getKey(), WireMock.equalTo(entry.getValue()));
       }
     }
-    return newMapping;
-  }
 
-  private static URI uriWithPath(String hostUri) {
-    return UriWrapper.fromUri(hostUri).addChild("some/path").getUri();
+    return newMapping;
   }
 
   private static URI uriWithParameters() {
