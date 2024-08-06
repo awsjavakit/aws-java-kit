@@ -64,7 +64,7 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
   public T body() {
     var publisher = BodyPublishers.ofByteArray(wiremockResponse.getBody());
     var subscriber =
-      this.reponseBodyHandler.apply(new CustomResponseInfo(wiremockResponse));
+      this.reponseBodyHandler.apply(CustomResponseInfo.create(wiremockResponse));
     var wrapper = new CustomerSubscriber(subscriber);
     publisher.subscribe(wrapper);
     return attempt(() -> subscriber.getBody().toCompletableFuture().get()).orElseThrow();
@@ -85,23 +85,6 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
     return Version.HTTP_2;
   }
 
-  private record CustomResponseInfo(Response wiremockResponse) implements ResponseInfo {
-
-    @Override
-    public int statusCode() {
-      return wiremockResponse.getStatus();
-    }
-
-    @Override
-    public HttpHeaders headers() {
-      return parseHeaders(wiremockResponse);
-    }
-
-    @Override
-    public Version version() {
-      return Version.HTTP_2;
-    }
-  }
 
   private class CustomerSubscriber implements Subscriber<ByteBuffer> {
 
