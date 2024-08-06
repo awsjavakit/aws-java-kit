@@ -28,14 +28,54 @@ All functionality is described in the test classes. Below you can find a short s
 of the implemented features.
 
 ### Testing Utils (testingutils):
-**Description:**
-The `testingutils` module contains: 
-1. A set of simple fake clients for use in testing.
-   Most clients implement only a limited subset of API methods, however, it is simple to extend the clients to add missing functionality.
-   All implemented functionality is described in the associated test class
-2. An HttpClient that works with Wiremock and the Https protocol.
-3. A Hamcrest matcher that checks recursively whether a class has empty fields.
-4. A random data generator for different types of data.
+
+#### Fake AWS clients
+The fake clients implement the AWS interfaces (e.g. the FakeS3Client implements the S3Client interface),
+but they do not implement all the methods of the interface. 
+
+Most fake clients have been implemented under the assumption 
+that the client code will not read and write at the same time from an AWS service. 
+For example, a Lambda function will publish to an SQS queue using the `SqsClient` , 
+but will not read from the SQS queue using the same client.
+As a result, for most clients one can fetch the write requests that have been sent using the client, 
+but one cannot use the read methods of that client to fetch the written values. 
+
+Exceptions from this rule are the `FakeS3Client` and the `FakeSecretsManagerClient`.
+
+##### Examples:
+
+###### FakeSqsClient
+
+```java
+
+@Test
+void shouldReturnSendRequestsThatWereSent() {
+  FakeSqsClient client = new FakeSqsClient();
+  SendMessageRequest writeRequest = validMessage();
+
+  client.sendMessage(writeRequest);
+
+  ReceiveMessageRequest receiveMessageRequest = createReceiveMessageRequest(writeRequest);
+  assertThrows(UnsupportedOperationException.class, () -> client.receiveMessage(receiveMessageRequest));
+
+  assertThat(client.getSendMessageRequests()).containsExactly(writeRequest);
+
+}
+
+```
+
+In the above test we see that the `FakeSqsClient` 
+has an own method (i.e., not inherited from the `SqsClient` interface)
+that lists the  submitted `SendMessageRequest` but trying to receive the message 
+throws an `UnsupportedOperationException`. The rationale behind this is that 
+the same piece of code will rarely write and read messages from the same queue
+and thus we are mostly interested in the write requests. 
+
+
+
+
+
+
 
 
 
