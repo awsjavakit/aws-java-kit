@@ -30,7 +30,7 @@ of the implemented features.
 ### Testing Utils (testingutils):
 
 #### Fake AWS clients
-The fake clients implement the AWS interfaces (e.g. the FakeS3Client implements the S3Client interface),
+The fake clients implement the AWS interfaces, (e.g. the FakeS3Client implements the S3Client interface),
 but they do not implement all the methods of the interface. 
 
 Most fake clients have been implemented under the assumption 
@@ -44,7 +44,7 @@ Exceptions from this rule are the `FakeS3Client` and the `FakeSecretsManagerClie
 
 ##### Examples:
 
-###### FakeSqsClient
+###### FakeSqsClient:
 
 ```java
 
