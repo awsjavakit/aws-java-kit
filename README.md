@@ -66,7 +66,8 @@ void shouldReturnSendRequestsThatWereSent() {
 
 In the above test we see that the `FakeSqsClient` 
 has an own method (i.e., not inherited from the `SqsClient` interface)
-that lists the  submitted `SendMessageRequest` but trying to receive the message 
+that lists the  submitted `SendMessageRequest`. Trying to receive the message 
+using the method `SqsClient::receiveMessage`
 throws an `UnsupportedOperationException`. The rationale behind this is that 
 the same piece of code will rarely write and read messages from the same queue
 and thus we are mostly interested in the write requests. 
