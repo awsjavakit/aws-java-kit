@@ -1,8 +1,8 @@
 package com.github.awsjavakit.testingutils.networking;
 
+import static com.github.awsjavakit.testingutils.networking.HeadersUtils.wiremockHeadersToJavaHeaders;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
-import com.github.tomakehurst.wiremock.http.MultiValue;
 import com.github.tomakehurst.wiremock.http.Response;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
@@ -15,12 +15,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Flow.Subscription;
-import java.util.stream.Collectors;
 import javax.net.ssl.SSLSession;
 
 public class MockHttpResponse<T> implements HttpResponse<T> {
 
-  public static final java.util.function.BiPredicate<String, String> ACCEPT_ALL_HEADERS = (headerName, headerValue) -> true;
   private final Response wiremockResponse;
   private final HttpRequest request;
   private final BodyHandler<T> reponseBodyHandler;
@@ -31,13 +29,6 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
     this.wiremockResponse = wiremockResponse;
     this.request = request;
     this.reponseBodyHandler = reponseBodyHandler;
-  }
-
-  public static HttpHeaders parseHeaders(Response response) {
-    var headers = response.getHeaders().all()
-      .stream()
-      .collect(Collectors.toMap(MultiValue::getKey, MultiValue::getValues));
-    return HttpHeaders.of(headers, ACCEPT_ALL_HEADERS);
   }
 
   @Override
@@ -57,7 +48,7 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
 
   @Override
   public HttpHeaders headers() {
-    return parseHeaders(wiremockResponse);
+    return wiremockHeadersToJavaHeaders(wiremockResponse.getHeaders());
   }
 
   @Override

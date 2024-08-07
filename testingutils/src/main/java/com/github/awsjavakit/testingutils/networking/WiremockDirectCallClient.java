@@ -1,5 +1,6 @@
 package com.github.awsjavakit.testingutils.networking;
 
+import static com.github.awsjavakit.testingutils.networking.HeadersUtils.javaHeadersToWiremockHeaders;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
 import com.github.tomakehurst.wiremock.direct.DirectCallHttpServer;
@@ -91,6 +92,7 @@ public class WiremockDirectCallClient extends HttpClient {
       .withAbsoluteUrl(request.uri().toString())
       .withMethod(RequestMethod.fromString(request.method()))
       .withBody(body)
+      .withHeaders(javaHeadersToWiremockHeaders(request.headers()))
       .build();
     var wireMockResponse = server.stubRequest(wireMockRequest);
     return CompletableFuture.completedFuture(new MockHttpResponse<>(wireMockResponse,

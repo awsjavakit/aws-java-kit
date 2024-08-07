@@ -1,6 +1,6 @@
 package com.github.awsjavakit.testingutils.networking;
 
-import static com.github.awsjavakit.testingutils.networking.MockHttpResponse.parseHeaders;
+import static com.github.awsjavakit.testingutils.networking.HeadersUtils.wiremockHeadersToJavaHeaders;
 
 import com.github.tomakehurst.wiremock.http.Response;
 import java.net.http.HttpClient;
@@ -20,7 +20,8 @@ public final class CustomResponseInfo implements HttpResponse.ResponseInfo {
   }
 
   public static CustomResponseInfo create(Response wiremockResponse) {
-    return new CustomResponseInfo(wiremockResponse.getStatus(), parseHeaders(wiremockResponse));
+    return new CustomResponseInfo(wiremockResponse.getStatus(),
+      wiremockHeadersToJavaHeaders(wiremockResponse.getHeaders()));
   }
 
   @Override
