@@ -7,6 +7,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 
 import com.github.awsjavakit.misc.StringUtils;
@@ -21,6 +22,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +81,7 @@ class WiremockDirectCallClientTest {
 
   @ParameterizedTest
   @MethodSource("uriProvider")
-  void shouldIncludeHeadersForGetRequests(URI uri) throws IOException, InterruptedException {
+  void shouldForwardHeadersForGetRequests(URI uri) throws IOException, InterruptedException {
     var requestHeaderKey = randomString();
     var requestHeaderValue = randomString();
     int expectedResponseCode = randomResponseCode();
@@ -96,6 +98,29 @@ class WiremockDirectCallClientTest {
 
     assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldForwardHeadersFromGetResponse() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var expectedResponseHeaderKey = randomString();
+    var expectedResponseHeaderValue = randomString();
+    var expectedResponseBody = randomString();
+    int expectedResponseCode = randomResponseCode();
+
+    var mapping = WireMock.get(WireMock.urlPathEqualTo(uri.getPath()))
+      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
+        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri).GET().build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    var responseHeaders = response.headers().map();
+    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
+    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
   }
 
   @Test
@@ -135,7 +160,7 @@ class WiremockDirectCallClientTest {
   }
 
   @Test
-  void shouldIncludeQueryParametersForPostRequests() throws IOException, InterruptedException {
+  void shouldForwardQueryParametersForPostRequests() throws IOException, InterruptedException {
     var uri = uriWithParameters();
     var requestBody = randomString();
     var expectedResponseBody = randomString();
@@ -154,7 +179,7 @@ class WiremockDirectCallClientTest {
   }
 
   @Test
-  void shouldIncludeHeadersForPostRequests() throws IOException, InterruptedException {
+  void shouldForwardHeadersForPostRequests() throws IOException, InterruptedException {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
     var requestHeader = randomString();
@@ -173,6 +198,31 @@ class WiremockDirectCallClientTest {
 
     assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldForwardHeadersFromPostResponse() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var requestBody = randomString();
+    var expectedResponseHeaderKey = randomString();
+    var expectedResponseHeaderValue = randomString();
+    var expectedResponseBody = randomString();
+    int expectedResponseCode = randomResponseCode();
+
+    var mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+      .withRequestBody(WireMock.equalTo(requestBody))
+      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
+        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    var responseHeaders = response.headers().map();
+    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
+    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
   }
 
   private static Integer randomResponseCode() {
