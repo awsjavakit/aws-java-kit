@@ -225,6 +225,110 @@ class WiremockDirectCallClientTest {
     assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
   }
 
+  @Test
+  void shouldTransformPutRequestWithBody() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var requestBody = randomString();
+    var expectedResponseBody = randomString();
+    var expectedResponseCode = randomResponseCode();
+
+    var mapping = createBasicStubForPutRequest(uri, requestBody,
+      expectedResponseBody, expectedResponseCode);
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri)
+      .PUT(BodyPublishers.ofString(requestBody)).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldTransformPutRequestWithoutBody() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var expectedResponseBody = randomString();
+    var expectedResponseCode = randomResponseCode();
+
+    var mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
+      .withRequestBody(WireMock.absent())
+      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode));
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldForwardQueryParametersForPutRequests() throws IOException, InterruptedException {
+    var uri = uriWithParameters();
+    var requestBody = randomString();
+    var expectedResponseBody = randomString();
+    int expectedResponseCode = randomResponseCode();
+
+    var mapping = createBasicStubForPutRequest(uri, requestBody,
+      expectedResponseBody, expectedResponseCode);
+    addQueryParametersToStubMapping(uri, mapping);
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri)
+      .PUT(BodyPublishers.ofString(requestBody)).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldForwardHeadersForPutRequests() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var requestBody = randomString();
+    var requestHeader = randomString();
+    var requestHeaderValue = randomString();
+    int expectedResponseCode = randomResponseCode();
+    var expectedResponseBody = randomString();
+
+    var mapping = createBasicStubForPutRequest(uri, requestBody,
+      expectedResponseBody, expectedResponseCode);
+    addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
+      .header(requestHeader, requestHeaderValue).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+  }
+
+  @Test
+  void shouldForwardHeadersFromPutResponse() throws IOException, InterruptedException {
+    var uri = uriWithPath(LOCALHOST);
+    var requestBody = randomString();
+    var expectedResponseHeaderKey = randomString();
+    var expectedResponseHeaderValue = randomString();
+    var expectedResponseBody = randomString();
+    int expectedResponseCode = randomResponseCode();
+
+    var mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
+      .withRequestBody(WireMock.equalTo(requestBody))
+      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
+        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
+    directCallServer.stubFor(mapping);
+
+    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+
+    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
+    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    var responseHeaders = response.headers().map();
+    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
+    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
+  }
+
   private static Integer randomResponseCode() {
     return randomElement(randomInteger(1000));
   }
@@ -239,6 +343,14 @@ class WiremockDirectCallClientTest {
                                                               String responseBody,
                                                               Integer responseCode) {
     return WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+      .withRequestBody(WireMock.equalTo(requestBody))
+      .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+  }
+
+  private static MappingBuilder createBasicStubForPutRequest(URI uri, String requestBody,
+                                                             String responseBody,
+                                                             Integer responseCode) {
+    return WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
       .withRequestBody(WireMock.equalTo(requestBody))
       .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
   }
