@@ -26,21 +26,18 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class WiremockDirectCallClientTest {
 
   public static final String LOCALHOST = "https://localhost";
+  public static final String GET = "GET";
+  public static final String POST = "POST";
+  public static final String PUT = "PUT";
+  public static final String METHOD_ERROR = "Unrecognized value of variable method";
   private WireMockServer directCallServer;
   private HttpClient directCallClient;
-
-  public static Stream<URI> uriProvider() {
-    return Stream.of(uriWithPath(LOCALHOST),
-      uriWithParameters(),
-      uriWithMultipleChildren());
-  }
 
   public static URI uriWithPath(String hostUri) {
     return UriWrapper.fromUri(hostUri).addChild("some/path").getUri();
@@ -62,17 +59,16 @@ class WiremockDirectCallClientTest {
   }
 
   @ParameterizedTest
-  @MethodSource("uriProvider")
-  void shouldTransformWiremockResponsesForGetRequests(URI uri)
+  @MethodSource("requestProvider")
+  void shouldTransformWiremockResponseForRequests(TestSetup testSetup)
     throws IOException, InterruptedException {
-    var expectedResponseBody = randomString();
-    var expectedResponseCode = randomResponseCode();
+    var expectedResponseBody = testSetup.responseBody();
+    var expectedResponseCode = testSetup.responseCode();
 
-    var mapping = createBasicStubForGetRequest(uri, expectedResponseBody, expectedResponseCode);
-    addQueryParametersToStubMapping(uri, mapping);
+    var mapping = testSetup.mapping();
     directCallServer.stubFor(mapping);
 
-    var request = HttpRequest.newBuilder(uri).GET().build();
+    var request = testSetup.request();
     var response = directCallClient.send(request, BodyHandlers.ofString());
 
     assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
@@ -80,253 +76,262 @@ class WiremockDirectCallClientTest {
   }
 
   @ParameterizedTest
-  @MethodSource("uriProvider")
-  void shouldForwardHeadersForGetRequests(URI uri) throws IOException, InterruptedException {
-    var requestHeaderKey = randomString();
-    var requestHeaderValue = randomString();
-    int expectedResponseCode = randomResponseCode();
-    var expectedResponseBody = randomString();
+  @MethodSource("responseProvider")
+  void shouldForwardResponseHeaders(TestSetup testSetup) throws IOException, InterruptedException {
+    var expectedResponseBody = testSetup.responseBody();
+    var expectedResponseCode = testSetup.responseCode();
+    var expectedResponseHeaderKey = testSetup.responseHeader();
+    var expectedResponseHeaderValue = testSetup.responseHeaderValue();
 
-    var mapping = createBasicStubForGetRequest(uri, expectedResponseBody, expectedResponseCode);
-    addQueryParametersToStubMapping(uri, mapping);
-    addHeadersToStubMapping(mapping, requestHeaderKey, requestHeaderValue);
+    var mapping = testSetup.mapping();
     directCallServer.stubFor(mapping);
 
-    var request =
-      HttpRequest.newBuilder(uri).GET().header(requestHeaderKey, requestHeaderValue).build();
+    var request = testSetup.request();
     var response = directCallClient.send(request, BodyHandlers.ofString());
 
     assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    var responseHeaders = response.headers().map();
+    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
+    assertThat(responseHeaders.get(expectedResponseHeaderKey),
+      is(equalTo(List.of(expectedResponseHeaderValue))));
   }
 
-  @Test
-  void shouldForwardHeadersFromGetResponse() throws IOException, InterruptedException {
+  private static Stream<TestSetup> requestProvider() {
+    return Stream.of(createSetupWithSimpleGetRequest(),
+      createSetupWithGetRequestWithQueryParams(),
+      createSetupWithGetRequestWithHeaders(),
+
+      createSetupWithPostRequestWithBody(),
+      createSetupWithPostRequestWithEmptyBody(),
+      createSetupWithPostRequestWithQueryParams(),
+      createSetupWithPostRequestWithHeaders(),
+
+      createSetupWithPutRequestWithBody(),
+      createSetupWithPutRequestWithEmptyBody(),
+      createSetupWithPutRequestWithQueryParams(),
+      createSetupWithPutRequestWithHeaders());
+  }
+
+  private static Stream<TestSetup> responseProvider() {
+    return Stream.of(createSetupWithGetRequestExpectingResponseHeaders(),
+      createSetupWithPostRequestExpectingResponseHeaders(),
+      createSetupWithPutRequestExpectingResponseHeaders()
+    );
+  }
+
+  private static TestSetup createSetupWithSimpleGetRequest() {
     var uri = uriWithPath(LOCALHOST);
-    var expectedResponseHeaderKey = randomString();
-    var expectedResponseHeaderValue = randomString();
-    var expectedResponseBody = randomString();
-    int expectedResponseCode = randomResponseCode();
+    var responseBody = randomString();
+    var responseCode = randomResponseCode();
 
-    var mapping = WireMock.get(WireMock.urlPathEqualTo(uri.getPath()))
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
-        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
-    directCallServer.stubFor(mapping);
-
+    var mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
     var request = HttpRequest.newBuilder(uri).GET().build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-    var responseHeaders = response.headers().map();
-    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
-    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
+    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
   }
 
-  @Test
-  void shouldTransformPostRequestWithBody() throws IOException, InterruptedException {
+  private static TestSetup createSetupWithPostRequestWithBody() {
+    return createSetupWithRequestWithBody(POST);
+  }
+
+  private static TestSetup createSetupWithPutRequestWithBody() {
+    return createSetupWithRequestWithBody(PUT);
+  }
+
+  private static TestSetup createSetupWithRequestWithBody(String method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
-    var expectedResponseBody = randomString();
-    var expectedResponseCode = randomResponseCode();
+    var responseBody = randomString();
+    var responseCode = randomResponseCode();
 
-    var mapping =
-      createBasicStubForPostRequest(uri, requestBody, expectedResponseBody, expectedResponseCode);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    MappingBuilder mapping;
+    HttpRequest request;
+    switch (method){
+      case GET:
+        throw new IllegalArgumentException("GET doesn't have a body");
+      case POST:
+        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
+        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
+        break;
+      case PUT:
+        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
+        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
+        break;
+      default:
+        throw new IllegalArgumentException(METHOD_ERROR);
+    }
+    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
   }
 
-  @Test
-  void shouldTransformPostRequestWithoutBody() throws IOException, InterruptedException {
+  private static TestSetup createSetupWithPostRequestWithEmptyBody() {
+    return createSetupWithRequestWithEmptyBody(POST);
+  }
+
+  private static TestSetup createSetupWithPutRequestWithEmptyBody() {
+    return createSetupWithRequestWithEmptyBody(PUT);
+  }
+
+  private static TestSetup createSetupWithRequestWithEmptyBody(String method) {
     var uri = uriWithPath(LOCALHOST);
-    var expectedResponseBody = randomString();
-    var expectedResponseCode = randomResponseCode();
+    var responseBody = randomString();
+    var responseCode = randomResponseCode();
 
-    var mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.absent())
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode));
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    MappingBuilder mapping;
+    HttpRequest request;
+    switch (method) {
+      case GET:
+        throw new IllegalArgumentException("GET doesn't have a body");
+      case POST:
+        mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath())).withRequestBody(WireMock.absent())
+          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
+        break;
+      case PUT:
+        mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath())).withRequestBody(WireMock.absent())
+          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
+        break;
+      default:
+        throw new IllegalArgumentException(METHOD_ERROR);
+    }
+    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
   }
 
-  @Test
-  void shouldForwardQueryParametersForPostRequests() throws IOException, InterruptedException {
+  private static TestSetup createSetupWithGetRequestWithQueryParams() {
+    return createSetupWithRequestWithQueryParams(GET);
+  }
+
+  private static TestSetup createSetupWithPostRequestWithQueryParams() {
+    return createSetupWithRequestWithQueryParams(POST);
+  }
+
+  private static TestSetup createSetupWithPutRequestWithQueryParams() {
+    return createSetupWithRequestWithQueryParams(PUT);
+  }
+
+  private static TestSetup createSetupWithRequestWithQueryParams(String method) {
     var uri = uriWithParameters();
     var requestBody = randomString();
-    var expectedResponseBody = randomString();
-    int expectedResponseCode = randomResponseCode();
+    var responseBody = randomString();
+    var responseCode = randomResponseCode();
 
-    var mapping =
-      createBasicStubForPostRequest(uri, requestBody, expectedResponseBody, expectedResponseCode);
-    addQueryParametersToStubMapping(uri, mapping);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    MappingBuilder mapping;
+    HttpRequest request;
+    switch (method){
+      case GET:
+        mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
+        addQueryParametersToStubMapping(uri, mapping);
+        request = HttpRequest.newBuilder(uri).GET().build();
+        break;
+      case POST:
+        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
+        addQueryParametersToStubMapping(uri, mapping);
+        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
+        break;
+      case PUT:
+        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
+        addQueryParametersToStubMapping(uri, mapping);
+        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
+        break;
+      default:
+        throw new IllegalArgumentException(METHOD_ERROR);
+    }
+    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
   }
 
-  @Test
-  void shouldForwardHeadersForPostRequests() throws IOException, InterruptedException {
+  private static TestSetup createSetupWithGetRequestWithHeaders() {
+    return createSetupWithRequestWithHeaders(GET);
+  }
+
+  private static TestSetup createSetupWithPostRequestWithHeaders() {
+    return createSetupWithRequestWithHeaders(POST);
+  }
+
+  private static TestSetup createSetupWithPutRequestWithHeaders() {
+    return createSetupWithRequestWithHeaders(PUT);
+  }
+
+  private static TestSetup createSetupWithRequestWithHeaders(String method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
     var requestHeader = randomString();
     var requestHeaderValue = randomString();
-    int expectedResponseCode = randomResponseCode();
-    var expectedResponseBody = randomString();
+    var responseBody = randomString();
+    var responseCode = randomResponseCode();
 
-    var mapping =
-      createBasicStubForPostRequest(uri, requestBody, expectedResponseBody, expectedResponseCode);
-    addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
-      .header(requestHeader, requestHeaderValue).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
+    MappingBuilder mapping;
+    HttpRequest request;
+    switch (method){
+      case GET:
+        mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
+        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
+        request = HttpRequest.newBuilder(uri).GET().header(requestHeader, requestHeaderValue).build();
+        break;
+      case POST:
+        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
+        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
+        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
+          .header(requestHeader, requestHeaderValue).build();
+        break;
+      case PUT:
+        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
+        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
+        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
+          .header(requestHeader, requestHeaderValue).build();
+        break;
+      default:
+        throw new IllegalArgumentException(METHOD_ERROR);
+    }
+    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
   }
 
-  @Test
-  void shouldForwardHeadersFromPostResponse() throws IOException, InterruptedException {
+  private static TestSetup createSetupWithGetRequestExpectingResponseHeaders() {
+    return createSetupWithRequestExpectingResponseHeaders(GET);
+  }
+
+  private static TestSetup createSetupWithPostRequestExpectingResponseHeaders() {
+    return createSetupWithRequestExpectingResponseHeaders(POST);
+  }
+
+  private static TestSetup createSetupWithPutRequestExpectingResponseHeaders() {
+    return createSetupWithRequestExpectingResponseHeaders(PUT);
+  }
+
+  private static TestSetup createSetupWithRequestExpectingResponseHeaders(String method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
-    var expectedResponseHeaderKey = randomString();
-    var expectedResponseHeaderValue = randomString();
-    var expectedResponseBody = randomString();
-    int expectedResponseCode = randomResponseCode();
+    var responseHeaderKey = randomString();
+    var responseHeaderValue = randomString();
+    var responseBody = randomString();
+    int responseCode = randomResponseCode();
 
-    var mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(requestBody))
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
-        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-    var responseHeaders = response.headers().map();
-    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
-    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
-  }
-
-  @Test
-  void shouldTransformPutRequestWithBody() throws IOException, InterruptedException {
-    var uri = uriWithPath(LOCALHOST);
-    var requestBody = randomString();
-    var expectedResponseBody = randomString();
-    var expectedResponseCode = randomResponseCode();
-
-    var mapping = createBasicStubForPutRequest(uri, requestBody,
-      expectedResponseBody, expectedResponseCode);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri)
-      .PUT(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-  }
-
-  @Test
-  void shouldTransformPutRequestWithoutBody() throws IOException, InterruptedException {
-    var uri = uriWithPath(LOCALHOST);
-    var expectedResponseBody = randomString();
-    var expectedResponseCode = randomResponseCode();
-
-    var mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.absent())
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode));
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-  }
-
-  @Test
-  void shouldForwardQueryParametersForPutRequests() throws IOException, InterruptedException {
-    var uri = uriWithParameters();
-    var requestBody = randomString();
-    var expectedResponseBody = randomString();
-    int expectedResponseCode = randomResponseCode();
-
-    var mapping = createBasicStubForPutRequest(uri, requestBody,
-      expectedResponseBody, expectedResponseCode);
-    addQueryParametersToStubMapping(uri, mapping);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri)
-      .PUT(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-  }
-
-  @Test
-  void shouldForwardHeadersForPutRequests() throws IOException, InterruptedException {
-    var uri = uriWithPath(LOCALHOST);
-    var requestBody = randomString();
-    var requestHeader = randomString();
-    var requestHeaderValue = randomString();
-    int expectedResponseCode = randomResponseCode();
-    var expectedResponseBody = randomString();
-
-    var mapping = createBasicStubForPutRequest(uri, requestBody,
-      expectedResponseBody, expectedResponseCode);
-    addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
-      .header(requestHeader, requestHeaderValue).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-  }
-
-  @Test
-  void shouldForwardHeadersFromPutResponse() throws IOException, InterruptedException {
-    var uri = uriWithPath(LOCALHOST);
-    var requestBody = randomString();
-    var expectedResponseHeaderKey = randomString();
-    var expectedResponseHeaderValue = randomString();
-    var expectedResponseBody = randomString();
-    int expectedResponseCode = randomResponseCode();
-
-    var mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(requestBody))
-      .willReturn(aResponse().withBody(expectedResponseBody).withStatus(expectedResponseCode)
-        .withHeader(expectedResponseHeaderKey, expectedResponseHeaderValue));
-    directCallServer.stubFor(mapping);
-
-    var request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-    var responseHeaders = response.headers().map();
-    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
-    assertThat(responseHeaders.get(expectedResponseHeaderKey), is(equalTo(List.of(expectedResponseHeaderValue))));
+    MappingBuilder mapping;
+    HttpRequest request;
+    switch (method){
+      case GET:
+        mapping = WireMock.get(WireMock.urlPathEqualTo(uri.getPath()))
+          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
+            .withHeader(responseHeaderKey, responseHeaderValue));
+        request = HttpRequest.newBuilder(uri).GET().build();
+        break;
+      case POST:
+        mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+          .withRequestBody(WireMock.equalTo(requestBody))
+          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
+            .withHeader(responseHeaderKey, responseHeaderValue));
+        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
+        break;
+      case PUT:
+        mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
+          .withRequestBody(WireMock.equalTo(requestBody))
+          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
+            .withHeader(responseHeaderKey, responseHeaderValue));
+        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
+        break;
+      default:
+        throw new IllegalArgumentException(METHOD_ERROR);
+    }
+    return new TestSetup(responseBody, responseCode, responseHeaderKey, responseHeaderValue, mapping, request);
   }
 
   private static Integer randomResponseCode() {
@@ -374,10 +379,8 @@ class WiremockDirectCallClientTest {
       .addQueryParameter(randomString(), randomString()).getUri();
   }
 
-  private static URI uriWithMultipleChildren() {
-    return UriWrapper.fromUri(LOCALHOST).addChild("some/path")
-      .addChild("second/path")
-      .getUri();
+  private record TestSetup(String responseBody, Integer responseCode,
+                           String responseHeader, String responseHeaderValue,
+                           MappingBuilder mapping, HttpRequest request) {
   }
-
 }
