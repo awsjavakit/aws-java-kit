@@ -36,6 +36,7 @@ class WiremockDirectCallClientTest {
   public static final String POST = "POST";
   public static final String PUT = "PUT";
   public static final String METHOD_ERROR = "Unrecognized value of variable method";
+  public static final String NOT_USED = null;
   private WireMockServer directCallServer;
   private HttpClient directCallClient;
 
@@ -99,24 +100,24 @@ class WiremockDirectCallClientTest {
 
   private static Stream<TestSetup> requestProvider() {
     return Stream.of(createSetupWithSimpleGetRequest(),
-      createSetupWithGetRequestWithQueryParams(),
-      createSetupWithGetRequestWithHeaders(),
+      createSetupWithRequestWithQueryParams(GET),
+      createSetupWithRequestWithHeaders(GET),
 
-      createSetupWithPostRequestWithBody(),
-      createSetupWithPostRequestWithEmptyBody(),
-      createSetupWithPostRequestWithQueryParams(),
-      createSetupWithPostRequestWithHeaders(),
+      createSetupWithRequestWithBody(POST),
+      createSetupWithRequestWithEmptyBody(POST),
+      createSetupWithRequestWithQueryParams(POST),
+      createSetupWithRequestWithHeaders(POST),
 
-      createSetupWithPutRequestWithBody(),
-      createSetupWithPutRequestWithEmptyBody(),
-      createSetupWithPutRequestWithQueryParams(),
-      createSetupWithPutRequestWithHeaders());
+      createSetupWithRequestWithBody(PUT),
+      createSetupWithRequestWithEmptyBody(PUT),
+      createSetupWithRequestWithQueryParams(PUT),
+      createSetupWithRequestWithHeaders(PUT));
   }
 
   private static Stream<TestSetup> responseProvider() {
-    return Stream.of(createSetupWithGetRequestExpectingResponseHeaders(),
-      createSetupWithPostRequestExpectingResponseHeaders(),
-      createSetupWithPutRequestExpectingResponseHeaders()
+    return Stream.of(createSetupWithRequestExpectingResponseHeaders(GET),
+      createSetupWithRequestExpectingResponseHeaders(POST),
+      createSetupWithRequestExpectingResponseHeaders(PUT)
     );
   }
 
@@ -125,17 +126,10 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    var mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
-    var request = HttpRequest.newBuilder(uri).GET().build();
-    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
-  }
-
-  private static TestSetup createSetupWithPostRequestWithBody() {
-    return createSetupWithRequestWithBody(POST);
-  }
-
-  private static TestSetup createSetupWithPutRequestWithBody() {
-    return createSetupWithRequestWithBody(PUT);
+    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET);
+    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    var request = createBasicHttpRequest(uri, NOT_USED, GET);
+    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithBody(String method) {
@@ -144,31 +138,10 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping;
-    HttpRequest request;
-    switch (method){
-      case GET:
-        throw new IllegalArgumentException("GET doesn't have a body");
-      case POST:
-        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
-        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-        break;
-      case PUT:
-        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
-        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
-        break;
-      default:
-        throw new IllegalArgumentException(METHOD_ERROR);
-    }
-    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
-  }
-
-  private static TestSetup createSetupWithPostRequestWithEmptyBody() {
-    return createSetupWithRequestWithEmptyBody(POST);
-  }
-
-  private static TestSetup createSetupWithPutRequestWithEmptyBody() {
-    return createSetupWithRequestWithEmptyBody(PUT);
+    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
+    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithEmptyBody(String method) {
@@ -176,37 +149,10 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping;
-    HttpRequest request;
-    switch (method) {
-      case GET:
-        throw new IllegalArgumentException("GET doesn't have a body");
-      case POST:
-        mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath())).withRequestBody(WireMock.absent())
-          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
-        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
-        break;
-      case PUT:
-        mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath())).withRequestBody(WireMock.absent())
-          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
-        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
-        break;
-      default:
-        throw new IllegalArgumentException(METHOD_ERROR);
-    }
-    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
-  }
-
-  private static TestSetup createSetupWithGetRequestWithQueryParams() {
-    return createSetupWithRequestWithQueryParams(GET);
-  }
-
-  private static TestSetup createSetupWithPostRequestWithQueryParams() {
-    return createSetupWithRequestWithQueryParams(POST);
-  }
-
-  private static TestSetup createSetupWithPutRequestWithQueryParams() {
-    return createSetupWithRequestWithQueryParams(PUT);
+    MappingBuilder mapping = createStubRequestMappingWithEmptyBody(uri, method);
+    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    HttpRequest request = createHttpRequestWithEmptyBody(uri, method);
+    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithQueryParams(String method) {
@@ -215,40 +161,11 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping;
-    HttpRequest request;
-    switch (method){
-      case GET:
-        mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
-        addQueryParametersToStubMapping(uri, mapping);
-        request = HttpRequest.newBuilder(uri).GET().build();
-        break;
-      case POST:
-        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
-        addQueryParametersToStubMapping(uri, mapping);
-        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-        break;
-      case PUT:
-        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
-        addQueryParametersToStubMapping(uri, mapping);
-        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
-        break;
-      default:
-        throw new IllegalArgumentException(METHOD_ERROR);
-    }
-    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
-  }
-
-  private static TestSetup createSetupWithGetRequestWithHeaders() {
-    return createSetupWithRequestWithHeaders(GET);
-  }
-
-  private static TestSetup createSetupWithPostRequestWithHeaders() {
-    return createSetupWithRequestWithHeaders(POST);
-  }
-
-  private static TestSetup createSetupWithPutRequestWithHeaders() {
-    return createSetupWithRequestWithHeaders(PUT);
+    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    addQueryParametersToStubMapping(mapping, uri);
+    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
+    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithHeaders(String method) {
@@ -259,42 +176,12 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping;
-    HttpRequest request;
-    switch (method){
-      case GET:
-        mapping = createBasicStubForGetRequest(uri, responseBody, responseCode);
-        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-        request = HttpRequest.newBuilder(uri).GET().header(requestHeader, requestHeaderValue).build();
-        break;
-      case POST:
-        mapping = createBasicStubForPostRequest(uri, requestBody, responseBody, responseCode);
-        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
-          .header(requestHeader, requestHeaderValue).build();
-        break;
-      case PUT:
-        mapping = createBasicStubForPutRequest(uri, requestBody, responseBody, responseCode);
-        addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
-          .header(requestHeader, requestHeaderValue).build();
-        break;
-      default:
-        throw new IllegalArgumentException(METHOD_ERROR);
-    }
-    return new TestSetup(responseBody, responseCode, null, null, mapping, request);
-  }
-
-  private static TestSetup createSetupWithGetRequestExpectingResponseHeaders() {
-    return createSetupWithRequestExpectingResponseHeaders(GET);
-  }
-
-  private static TestSetup createSetupWithPostRequestExpectingResponseHeaders() {
-    return createSetupWithRequestExpectingResponseHeaders(POST);
-  }
-
-  private static TestSetup createSetupWithPutRequestExpectingResponseHeaders() {
-    return createSetupWithRequestExpectingResponseHeaders(PUT);
+    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
+    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    HttpRequest request = createHttpRequestWithHeaders(uri, requestBody,
+      requestHeader, requestHeaderValue, method);
+    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestExpectingResponseHeaders(String method) {
@@ -305,32 +192,9 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     int responseCode = randomResponseCode();
 
-    MappingBuilder mapping;
-    HttpRequest request;
-    switch (method){
-      case GET:
-        mapping = WireMock.get(WireMock.urlPathEqualTo(uri.getPath()))
-          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
-            .withHeader(responseHeaderKey, responseHeaderValue));
-        request = HttpRequest.newBuilder(uri).GET().build();
-        break;
-      case POST:
-        mapping = WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-          .withRequestBody(WireMock.equalTo(requestBody))
-          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
-            .withHeader(responseHeaderKey, responseHeaderValue));
-        request = HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-        break;
-      case PUT:
-        mapping = WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-          .withRequestBody(WireMock.equalTo(requestBody))
-          .willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
-            .withHeader(responseHeaderKey, responseHeaderValue));
-        request = HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
-        break;
-      default:
-        throw new IllegalArgumentException(METHOD_ERROR);
-    }
+    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    addResponseWithHeadersToStubMapping(mapping, responseBody, responseCode, responseHeaderKey, responseHeaderValue);
+    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
     return new TestSetup(responseBody, responseCode, responseHeaderKey, responseHeaderValue, mapping, request);
   }
 
@@ -338,29 +202,29 @@ class WiremockDirectCallClientTest {
     return randomElement(randomInteger(1000));
   }
 
-  private static MappingBuilder createBasicStubForGetRequest(URI uri, String responseBody,
-                                                             int responseCode) {
-    return WireMock.get(WireMock.urlPathEqualTo(uri.getPath()))
-      .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+  private static MappingBuilder createBasicStubRequestMapping(URI uri, String requestBody, String method) {
+    return switch (method) {
+      case GET -> WireMock.get(WireMock.urlPathEqualTo(uri.getPath()));
+      case POST -> WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+        .withRequestBody(WireMock.equalTo(requestBody));
+      case PUT -> WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
+        .withRequestBody(WireMock.equalTo(requestBody));
+      default -> throw new IllegalArgumentException(METHOD_ERROR);
+    };
   }
 
-  private static MappingBuilder createBasicStubForPostRequest(URI uri, String requestBody,
-                                                              String responseBody,
-                                                              Integer responseCode) {
-    return WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(requestBody))
-      .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+  private static MappingBuilder createStubRequestMappingWithEmptyBody(URI uri, String method) {
+    return switch (method) {
+      case GET -> WireMock.get(WireMock.urlPathEqualTo(uri.getPath()));
+      case POST -> WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
+        .withRequestBody(WireMock.absent());
+      case PUT -> WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
+        .withRequestBody(WireMock.absent());
+      default -> throw new IllegalArgumentException(METHOD_ERROR);
+    };
   }
 
-  private static MappingBuilder createBasicStubForPutRequest(URI uri, String requestBody,
-                                                             String responseBody,
-                                                             Integer responseCode) {
-    return WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-      .withRequestBody(WireMock.equalTo(requestBody))
-      .willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
-  }
-
-  private static void addQueryParametersToStubMapping(URI uri, MappingBuilder mapping) {
+  private static void addQueryParametersToStubMapping(MappingBuilder mapping, URI uri) {
     if (StringUtils.isNotBlank(uri.getRawQuery())) {
       UriWrapper.fromUri(uri).getQueryParameters()
         .forEach((key, value) -> mapping.withQueryParam(key, WireMock.equalTo(value)));
@@ -372,6 +236,47 @@ class WiremockDirectCallClientTest {
     if (StringUtils.isNotBlank(headerKey) && StringUtils.isNotBlank(headerValue)) {
       mapping.withHeader(headerKey, WireMock.equalTo(headerValue));
     }
+  }
+
+  private static void addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody, Integer responseCode){
+    mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+  }
+
+  private static void addResponseWithHeadersToStubMapping(MappingBuilder mapping, String responseBody,
+                                                          Integer responseCode, String header, String headerValue){
+    mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
+      .withHeader(header, headerValue));
+  }
+
+  private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, String method) {
+    return switch (method) {
+      case GET -> HttpRequest.newBuilder(uri).GET().build();
+      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
+      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
+      default -> throw new IllegalArgumentException(METHOD_ERROR);
+    };
+  }
+
+  private static HttpRequest createHttpRequestWithEmptyBody(URI uri, String method) {
+    return switch (method) {
+      case GET -> HttpRequest.newBuilder(uri).GET().build();
+      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
+      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
+      default -> throw new IllegalArgumentException(METHOD_ERROR);
+    };
+  }
+
+  private static HttpRequest createHttpRequestWithHeaders(URI uri, String requestBody,
+                                                          String requestHeader, String requestHeaderValue,
+                                                          String method) {
+    return switch (method) {
+      case GET -> HttpRequest.newBuilder(uri).GET().header(requestHeader, requestHeaderValue).build();
+      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
+        .header(requestHeader, requestHeaderValue).build();
+      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
+        .header(requestHeader, requestHeaderValue).build();
+      default -> throw new IllegalArgumentException(METHOD_ERROR);
+    };
   }
 
   private static URI uriWithParameters() {
