@@ -56,7 +56,7 @@ public class FakeSqsClient implements SqsClient {
     return SendMessageBatchResponse.builder().build();
   }
 
-  public List<SendMessageRequest> getMessages() {
+  public List<SendMessageRequest> getSendMessageRequests() {
     return messages;
   }
 

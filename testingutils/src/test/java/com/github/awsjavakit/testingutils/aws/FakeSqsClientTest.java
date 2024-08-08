@@ -18,6 +18,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
@@ -33,9 +34,16 @@ class FakeSqsClientTest {
 
   @Test
   void shouldReturnSendRequestsThatWereSent() {
-    var message = validMessage();
-    client.sendMessage(message);
-    assertThat(client.getMessages()).containsExactly(message);
+    var client = new FakeSqsClient();
+    var writeRequest = validMessage();
+
+    client.sendMessage(writeRequest);
+
+    var receiveMessageRequest = createReceiveMessageRequest(writeRequest);
+    assertThrows(UnsupportedOperationException.class, () -> client.receiveMessage(receiveMessageRequest));
+
+    assertThat(client.getSendMessageRequests()).containsExactly(writeRequest);
+
   }
 
   @Test
@@ -55,7 +63,7 @@ class FakeSqsClientTest {
     var request = sampleBatchRequest();
     client.sendMessageBatch(request);
     var expectedMessages = convertBatchEntriesToSingleRequests(request);
-    var actualMessages = client.getMessages();
+    var actualMessages = client.getSendMessageRequests();
     assertThat(actualMessages)
       .containsExactlyInAnyOrder(expectedMessages.toArray(SendMessageRequest[]::new));
   }
@@ -92,6 +100,13 @@ class FakeSqsClientTest {
     var exception =
       assertThrows(IllegalArgumentException.class, () -> client.sendMessageBatch(request));
     assertThat(exception.getMessage()).contains(BATCH_SIZE_ERROR);
+  }
+
+  private static ReceiveMessageRequest createReceiveMessageRequest(
+    SendMessageRequest writeRequest) {
+    return ReceiveMessageRequest.builder()
+      .queueUrl(writeRequest.queueUrl())
+      .build();
   }
 
   private static Consumer<MessageAttribute> assertThatAttributeValuesAreEquivalent(
