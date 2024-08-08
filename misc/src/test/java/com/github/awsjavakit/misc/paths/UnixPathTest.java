@@ -2,7 +2,7 @@ package com.github.awsjavakit.misc.paths;
 
 import static com.github.awsjavakit.misc.paths.UnixPath.PATH_DELIMITER;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.github.npathai.hamcrestopt.OptionalMatchers.isEmpty;
+import static com.spotify.hamcrest.optional.OptionalMatchers.emptyOptional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -125,7 +125,7 @@ class UnixPathTest {
   @NullAndEmptySource
   void shouldReturnEmptyOptionalWhenUnixPathIsEmpty(String path) {
     UnixPath unixPath = UnixPath.of(path);
-    assertThat(unixPath.getParent(), isEmpty());
+    assertThat(unixPath.getParent(), emptyOptional());
   }
 
   @Test
