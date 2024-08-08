@@ -3,6 +3,7 @@ package com.github.awsjavakit.testingutils.networking;
 import static com.github.awsjavakit.testingutils.networking.HeadersUtils.wiremockHeadersToJavaHeaders;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 
+import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.tomakehurst.wiremock.http.Response;
 import java.net.URI;
 import java.net.http.HttpClient.Version;
@@ -20,14 +21,10 @@ import javax.net.ssl.SSLSession;
 public class MockHttpResponse<T> implements HttpResponse<T> {
 
   private final Response wiremockResponse;
-  private final HttpRequest request;
   private final BodyHandler<T> reponseBodyHandler;
 
-  public MockHttpResponse(Response wiremockResponse, HttpRequest request,
-    BodyHandler<T> reponseBodyHandler) {
-
+  public MockHttpResponse(Response wiremockResponse, BodyHandler<T> reponseBodyHandler) {
     this.wiremockResponse = wiremockResponse;
-    this.request = request;
     this.reponseBodyHandler = reponseBodyHandler;
   }
 
@@ -38,12 +35,12 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
 
   @Override
   public HttpRequest request() {
-    return request;
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
   public Optional<HttpResponse<T>> previousResponse() {
-    return Optional.empty();
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
@@ -54,34 +51,33 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
   @Override
   public T body() {
     var publisher = BodyPublishers.ofByteArray(wiremockResponse.getBody());
-    var subscriber =
-      this.reponseBodyHandler.apply(CustomResponseInfo.create(wiremockResponse));
-    var wrapper = new CustomerSubscriber(subscriber);
+    var subscriber = this.reponseBodyHandler.apply(CustomResponseInfo.create(wiremockResponse));
+    var wrapper = new CustomSubscriber(subscriber);
     publisher.subscribe(wrapper);
     return attempt(() -> subscriber.getBody().toCompletableFuture().get()).orElseThrow();
   }
 
   @Override
   public Optional<SSLSession> sslSession() {
-    return Optional.empty();
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
   public URI uri() {
-    return request.uri();
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
   @Override
   public Version version() {
-    return Version.HTTP_2;
+    throw new UnsupportedOperationException("Not implemented yet");
   }
 
 
-  private class CustomerSubscriber implements Subscriber<ByteBuffer> {
+  private class CustomSubscriber implements Subscriber<ByteBuffer> {
 
     private final Subscriber<List<ByteBuffer>> subscriber;
 
-    public CustomerSubscriber(BodySubscriber<T> subscriber) {
+    public CustomSubscriber(BodySubscriber<T> subscriber) {
       this.subscriber = subscriber;
     }
 
@@ -96,6 +92,7 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
     }
 
     @Override
+    @JacocoGenerated
     public void onError(Throwable throwable) {
       subscriber.onError(throwable);
     }

@@ -8,7 +8,9 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -23,12 +25,14 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("PMD.GodClass")
 class WiremockDirectCallClientTest {
 
   public static final String LOCALHOST = "https://localhost";
@@ -37,8 +41,8 @@ class WiremockDirectCallClientTest {
   public static final String PUT = "PUT";
   public static final String METHOD_ERROR = "Unrecognized value of variable method";
   public static final String NOT_USED = null;
+  private static HttpClient directCallClient;
   private WireMockServer directCallServer;
-  private HttpClient directCallClient;
 
   public static URI uriWithPath(String hostUri) {
     return UriWrapper.fromUri(hostUri).addChild("some/path").getUri();
@@ -47,11 +51,10 @@ class WiremockDirectCallClientTest {
   @BeforeEach
   public void init() {
     var factory = new DirectCallHttpServerFactory();
-
     this.directCallServer = new WireMockServer(options().httpServerFactory(factory));
     directCallServer.start(); // no-op, not required
     var directCallHttpServer = factory.getHttpServer();
-    this.directCallClient = new WiremockDirectCallClient(directCallHttpServer);
+    directCallClient = new WiremockDirectCallClient(directCallHttpServer);
   }
 
   @AfterEach
@@ -98,16 +101,25 @@ class WiremockDirectCallClientTest {
       is(equalTo(List.of(expectedResponseHeaderValue))));
   }
 
+  @ParameterizedTest
+  @MethodSource("unsupportedProvider")
+  void shouldThrowExceptionWhenCallingUnsupportedMethod(Supplier<Object> supplier) {
+    var exception = assertThrows(UnsupportedOperationException.class, supplier::get);
+    assertThat(exception, is(instanceOf(UnsupportedOperationException.class)));
+
+    exception = assertThrows(UnsupportedOperationException.class,
+      () -> directCallClient.sendAsync(null, null, null));
+    assertThat(exception, is(instanceOf(UnsupportedOperationException.class)));
+  }
+
   private static Stream<TestSetup> requestProvider() {
     return Stream.of(createSetupWithSimpleGetRequest(),
       createSetupWithRequestWithQueryParams(GET),
       createSetupWithRequestWithHeaders(GET),
-
       createSetupWithRequestWithBody(POST),
       createSetupWithRequestWithEmptyBody(POST),
       createSetupWithRequestWithQueryParams(POST),
       createSetupWithRequestWithHeaders(POST),
-
       createSetupWithRequestWithBody(PUT),
       createSetupWithRequestWithEmptyBody(PUT),
       createSetupWithRequestWithQueryParams(PUT),
@@ -117,8 +129,19 @@ class WiremockDirectCallClientTest {
   private static Stream<TestSetup> responseProvider() {
     return Stream.of(createSetupWithRequestExpectingResponseHeaders(GET),
       createSetupWithRequestExpectingResponseHeaders(POST),
-      createSetupWithRequestExpectingResponseHeaders(PUT)
-    );
+      createSetupWithRequestExpectingResponseHeaders(PUT));
+  }
+
+  private static Stream<Supplier<Object>> unsupportedProvider() {
+    return Stream.of(directCallClient::cookieHandler,
+      directCallClient::connectTimeout,
+      directCallClient::followRedirects,
+      directCallClient::proxy,
+      directCallClient::sslContext,
+      directCallClient::sslParameters,
+      directCallClient::authenticator,
+      directCallClient::version,
+      directCallClient::executor);
   }
 
   private static TestSetup createSetupWithSimpleGetRequest() {
@@ -179,8 +202,8 @@ class WiremockDirectCallClientTest {
     MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
     addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
     addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    HttpRequest request = createHttpRequestWithHeaders(uri, requestBody,
-      requestHeader, requestHeaderValue, method);
+    HttpRequest request =
+      createHttpRequestWithHeaders(uri, requestBody, requestHeader, requestHeaderValue, method);
     return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
   }
 
@@ -193,9 +216,11 @@ class WiremockDirectCallClientTest {
     int responseCode = randomResponseCode();
 
     MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
-    addResponseWithHeadersToStubMapping(mapping, responseBody, responseCode, responseHeaderKey, responseHeaderValue);
+    addResponseWithHeadersToStubMapping(mapping, responseBody, responseCode,
+      responseHeaderKey, responseHeaderValue);
     HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
-    return new TestSetup(responseBody, responseCode, responseHeaderKey, responseHeaderValue, mapping, request);
+    return new TestSetup(responseBody, responseCode, responseHeaderKey, responseHeaderValue,
+      mapping, request);
   }
 
   private static Integer randomResponseCode() {
@@ -238,12 +263,14 @@ class WiremockDirectCallClientTest {
     }
   }
 
-  private static void addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody, Integer responseCode){
+  private static void addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody,
+                                                    Integer responseCode) {
     mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
   }
 
-  private static void addResponseWithHeadersToStubMapping(MappingBuilder mapping, String responseBody,
-                                                          Integer responseCode, String header, String headerValue){
+  private static void addResponseWithHeadersToStubMapping(MappingBuilder mapping,
+                                                          String responseBody, Integer responseCode,
+                                                          String header, String headerValue) {
     mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
       .withHeader(header, headerValue));
   }
@@ -267,10 +294,12 @@ class WiremockDirectCallClientTest {
   }
 
   private static HttpRequest createHttpRequestWithHeaders(URI uri, String requestBody,
-                                                          String requestHeader, String requestHeaderValue,
+                                                          String requestHeader,
+                                                          String requestHeaderValue,
                                                           String method) {
     return switch (method) {
-      case GET -> HttpRequest.newBuilder(uri).GET().header(requestHeader, requestHeaderValue).build();
+      case GET -> HttpRequest.newBuilder(uri).GET()
+        .header(requestHeader, requestHeaderValue).build();
       case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
         .header(requestHeader, requestHeaderValue).build();
       case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
@@ -284,8 +313,8 @@ class WiremockDirectCallClientTest {
       .addQueryParameter(randomString(), randomString()).getUri();
   }
 
-  private record TestSetup(String responseBody, Integer responseCode,
-                           String responseHeader, String responseHeaderValue,
-                           MappingBuilder mapping, HttpRequest request) {
+  private record TestSetup(String responseBody, Integer responseCode, String responseHeader,
+                           String responseHeaderValue, MappingBuilder mapping,
+                           HttpRequest request) {
   }
 }

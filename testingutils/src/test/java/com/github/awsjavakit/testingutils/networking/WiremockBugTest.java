@@ -25,10 +25,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-public class WIremockBugTest {
+public class WiremockBugTest {
 
   private WireMockServer directCallServer;
-  private HttpClient directCallClient;
   private WireMockServer jettyServer;
   private HttpClient jettyClient;
   private DirectCallHttpServer directCallHttpServer;
@@ -37,18 +36,13 @@ public class WIremockBugTest {
   public void init() {
     var factory = new DirectCallHttpServerFactory();
 
-    this.directCallServer = new WireMockServer(
-      options()
-        .httpServerFactory(factory));
+    this.directCallServer = new WireMockServer(options().httpServerFactory(factory));
     directCallServer.start(); // no-op, not required
 
-    this.jettyServer = new WireMockServer(
-      options().dynamicHttpsPort().httpDisabled(true)
-    );
+    this.jettyServer = new WireMockServer(options().dynamicHttpsPort().httpDisabled(true));
     jettyServer.start();
 
     this.directCallHttpServer = factory.getHttpServer();
-    this.directCallClient = new WiremockDirectCallClient(directCallHttpServer);
     this.jettyClient = WiremockHttpClient.create().build();
   }
 
@@ -60,12 +54,10 @@ public class WIremockBugTest {
 
   @Test
   @Disabled
-  void shouldFailWhenSubmittingWrongRequestBodyDirectCallVersion()
-    throws IOException, InterruptedException {
+  void shouldFailWhenSubmittingWrongRequestBodyDirectCallVersion() {
     var uri = uriWithPath("https://localhost");
     var expectedResponseBody = randomString();
     var expectedRequestBody = "ExpectedRequestBody";
-    var wrongRequestBody = "WrongRequestBody";
 
     directCallServer.stubFor(WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
       .withRequestBody(WireMock.equalTo(expectedRequestBody))
@@ -89,7 +81,6 @@ public class WIremockBugTest {
     var uri = uriWithPath(jettyServer.baseUrl());
     var expectedResponseBody = randomString();
     var expectedRequestBody = "ExpectedRequestBody";
-    var wrongRequestBody = "WrongRequestBody";
 
     jettyServer.stubFor(WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
       .withRequestBody(WireMock.equalTo(expectedRequestBody))
