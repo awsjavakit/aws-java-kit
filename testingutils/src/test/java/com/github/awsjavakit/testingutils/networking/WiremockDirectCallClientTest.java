@@ -3,11 +3,11 @@ package com.github.awsjavakit.testingutils.networking;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomElement;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
+import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.like;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -18,13 +18,14 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.direct.DirectCallHttpServerFactory;
+import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
@@ -66,8 +67,8 @@ class WiremockDirectCallClientTest {
   @MethodSource("requestProvider")
   void shouldTransformWiremockResponseForRequests(TestSetup testSetup)
     throws IOException, InterruptedException {
-    var expectedResponseBody = testSetup.responseBody();
-    var expectedResponseCode = testSetup.responseCode();
+    var expectedResponseBody = testSetup.expectedResponse().getBody();
+    var expectedResponseCode = testSetup.expectedResponse().getStatus();
 
     var mapping = testSetup.mapping();
     directCallServer.stubFor(mapping);
@@ -82,10 +83,11 @@ class WiremockDirectCallClientTest {
   @ParameterizedTest
   @MethodSource("responseProvider")
   void shouldForwardResponseHeaders(TestSetup testSetup) throws IOException, InterruptedException {
-    var expectedResponseBody = testSetup.responseBody();
-    var expectedResponseCode = testSetup.responseCode();
-    var expectedResponseHeaderKey = testSetup.responseHeader();
-    var expectedResponseHeaderValue = testSetup.responseHeaderValue();
+    var expectedResponseBody = testSetup.expectedResponse().getBody();
+    var expectedResponseCode = testSetup.expectedResponse().getStatus();
+    var expectedHeaders = new ConcurrentHashMap<>(HeadersUtils.wiremockHeadersToJavaHeaders(testSetup.expectedResponse().getHeaders()).map());
+
+
 
     var mapping = testSetup.mapping();
     directCallServer.stubFor(mapping);
@@ -95,10 +97,10 @@ class WiremockDirectCallClientTest {
 
     assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
-    var responseHeaders = response.headers().map();
-    assertThat(responseHeaders.keySet(), hasItem(expectedResponseHeaderKey));
-    assertThat(responseHeaders.get(expectedResponseHeaderKey),
-      is(equalTo(List.of(expectedResponseHeaderValue))));
+    var responseHeaders = new ConcurrentHashMap<>(response.headers().map());
+    responseHeaders.remove("Matched-Stub-Id");
+    assertThat(responseHeaders,is(equalTo(expectedHeaders)));
+
   }
 
   @ParameterizedTest
@@ -148,11 +150,12 @@ class WiremockDirectCallClientTest {
     var uri = uriWithPath(LOCALHOST);
     var responseBody = randomString();
     var responseCode = randomResponseCode();
+    var response=aResponse().withBody(responseBody).withStatus(responseCode);
+    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET)
+      .willReturn(response);
 
-    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET);
-    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
     var request = createBasicHttpRequest(uri, NOT_USED, GET);
-    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
+    return new TestSetup(response.build(), mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithBody(String method) {
@@ -161,10 +164,13 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
-    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
-    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
+    var response =
+      aResponse().withBody(responseBody).withStatus(responseCode).build();
+
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method)
+      .willReturn(like(response));
+    var request = createBasicHttpRequest(uri, requestBody, method);
+    return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithEmptyBody(String method) {
@@ -172,10 +178,10 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping = createStubRequestMappingWithEmptyBody(uri, method);
-    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    HttpRequest request = createHttpRequestWithEmptyBody(uri, method);
-    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
+    var mapping = createStubRequestMappingWithEmptyBody(uri, method);
+    var response=addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    var request = createHttpRequestWithEmptyBody(uri, method);
+    return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithQueryParams(String method) {
@@ -184,11 +190,11 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method);
     addQueryParametersToStubMapping(mapping, uri);
-    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
-    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
+    var response= addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    var request = createBasicHttpRequest(uri, requestBody, method);
+    return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithHeaders(String method) {
@@ -199,12 +205,12 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method);
     addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-    addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    HttpRequest request =
+    var response=addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    var request =
       createHttpRequestWithHeaders(uri, requestBody, requestHeader, requestHeaderValue, method);
-    return new TestSetup(responseBody, responseCode, NOT_USED, NOT_USED, mapping, request);
+    return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestExpectingResponseHeaders(String method) {
@@ -214,13 +220,16 @@ class WiremockDirectCallClientTest {
     var responseHeaderValue = randomString();
     var responseBody = randomString();
     int responseCode = randomResponseCode();
+    var response = aResponse()
+      .withBody(responseBody)
+      .withStatus(responseCode)
+      .withHeader(responseHeaderKey,responseHeaderValue);
 
-    MappingBuilder mapping = createBasicStubRequestMapping(uri, requestBody, method);
-    addResponseWithHeadersToStubMapping(mapping, responseBody, responseCode,
-      responseHeaderKey, responseHeaderValue);
-    HttpRequest request = createBasicHttpRequest(uri, requestBody, method);
-    return new TestSetup(responseBody, responseCode, responseHeaderKey, responseHeaderValue,
-      mapping, request);
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method)
+      .willReturn(response);
+
+    var request = createBasicHttpRequest(uri, requestBody, method);
+    return new TestSetup(response.build(), mapping, request);
   }
 
   private static Integer randomResponseCode() {
@@ -263,17 +272,16 @@ class WiremockDirectCallClientTest {
     }
   }
 
-  private static void addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody,
+  private static ResponseDefinition addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody,
                                                     Integer responseCode) {
-    mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode));
+
+    var response =
+      aResponse().withBody(responseBody).withStatus(responseCode).build();
+    mapping.willReturn(like(response));
+    return response;
   }
 
-  private static void addResponseWithHeadersToStubMapping(MappingBuilder mapping,
-                                                          String responseBody, Integer responseCode,
-                                                          String header, String headerValue) {
-    mapping.willReturn(aResponse().withBody(responseBody).withStatus(responseCode)
-      .withHeader(header, headerValue));
-  }
+
 
   private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, String method) {
     return switch (method) {
@@ -313,8 +321,8 @@ class WiremockDirectCallClientTest {
       .addQueryParameter(randomString(), randomString()).getUri();
   }
 
-  private record TestSetup(String responseBody, Integer responseCode, String responseHeader,
-                           String responseHeaderValue, MappingBuilder mapping,
+  private record TestSetup(ResponseDefinition expectedResponse,
+                           MappingBuilder mapping,
                            HttpRequest request) {
   }
 }
