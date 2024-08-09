@@ -42,11 +42,9 @@ class WiremockDirectCallClientTest {
   public static final String GET = "GET";
   public static final String POST = "POST";
   public static final String PUT = "PUT";
-  public static final String NOT_USED = null;
-  public static final String NO_BODY = null;
   public static final BiPredicate<String, String> ALLOW_ALL_HEADERS = (header, value) -> true;
   public static final String HEADER_DELIMITER = ",";
-  public static final String EMPTY_BODY = null;
+  public static final String EMPTY = null;
   private HttpClient directCallClient;
   private WireMockServer directCallServer;
 
@@ -119,9 +117,9 @@ class WiremockDirectCallClientTest {
   private static TestSetup createSetupWithSimpleGetRequest() {
     var uri = uriWithPath(LOCALHOST);
     var response = aResponse().withBody(randomString()).withStatus(randomResponseCode());
-    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET).willReturn(response);
+    var mapping = createBasicStubRequestMapping(uri, EMPTY, GET).willReturn(response);
 
-    var request = createBasicHttpRequest(uri, NOT_USED, GET);
+    var request = createBasicHttpRequest(uri, EMPTY, GET);
     return new TestSetup(response.build(), mapping, request);
   }
 
@@ -143,9 +141,9 @@ class WiremockDirectCallClientTest {
     var uri = uriWithPath(LOCALHOST);
     var response = aResponse().withBody(randomString()).withStatus(randomResponseCode()).build();
 
-    var mapping = createBasicStubRequestMapping(uri, EMPTY_BODY, method).willReturn(like(response));
+    var mapping = createBasicStubRequestMapping(uri, EMPTY, method).willReturn(like(response));
 
-    var request = createBasicHttpRequest(uri, NO_BODY, method);
+    var request = createBasicHttpRequest(uri, EMPTY, method);
 
     return new TestSetup(response, mapping, request);
   }
