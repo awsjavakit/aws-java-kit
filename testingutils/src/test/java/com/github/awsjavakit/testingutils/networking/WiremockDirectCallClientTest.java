@@ -148,7 +148,7 @@ class WiremockDirectCallClientTest {
   private static TestSetup createSetupWithRequestWithEmptyBody(HttpMethod method) {
     var uri = uriWithPath(LOCALHOST);
     var response = aResponse().withBody(randomString()).withStatus(randomResponseCode()).build();
-
+    // TODO Empty body should be non null
     var mapping = createBasicStubRequestMapping(uri, EMPTY, method).willReturn(like(response));
 
     var request = createBasicHttpRequest(uri, EMPTY, method);
