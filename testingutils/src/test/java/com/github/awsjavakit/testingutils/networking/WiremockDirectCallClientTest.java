@@ -5,10 +5,11 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteg
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.like;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static java.util.Objects.nonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -18,6 +19,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.MappingBuilder;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.direct.DirectCallHttpServerFactory;
+import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 import java.io.IOException;
 import java.net.URI;
@@ -26,23 +28,26 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
+import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("PMD.GodClass")
 class WiremockDirectCallClientTest {
 
   public static final String LOCALHOST = "https://localhost";
   public static final String GET = "GET";
   public static final String POST = "POST";
   public static final String PUT = "PUT";
-  public static final String METHOD_ERROR = "Unrecognized value of variable method";
   public static final String NOT_USED = null;
-  private static HttpClient directCallClient;
+  public static final String NO_BODY = null;
+  public static final BiPredicate<String, String> ALLOW_ALL_HEADERS = (header, value) -> true;
+  public static final String HEADER_DELIMITER = ",";
+  public static final String EMPTY_BODY = null;
+  private HttpClient directCallClient;
   private WireMockServer directCallServer;
 
   public static URI uriWithPath(String hostUri) {
@@ -69,27 +74,10 @@ class WiremockDirectCallClientTest {
     throws IOException, InterruptedException {
     var expectedResponseBody = testSetup.expectedResponse().getBody();
     var expectedResponseCode = testSetup.expectedResponse().getStatus();
-
+    var expectedHeaders = new ConcurrentHashMap<>(
+      HeadersUtils.wiremockHeadersToJavaHeaders(testSetup.expectedResponse().getHeaders()).map());
     var mapping = testSetup.mapping();
-    directCallServer.stubFor(mapping);
 
-    var request = testSetup.request();
-    var response = directCallClient.send(request, BodyHandlers.ofString());
-
-    assertThat(response.body(), response.statusCode(), is(equalTo(expectedResponseCode)));
-    assertThat(response.body(), is(equalTo(expectedResponseBody)));
-  }
-
-  @ParameterizedTest
-  @MethodSource("responseProvider")
-  void shouldForwardResponseHeaders(TestSetup testSetup) throws IOException, InterruptedException {
-    var expectedResponseBody = testSetup.expectedResponse().getBody();
-    var expectedResponseCode = testSetup.expectedResponse().getStatus();
-    var expectedHeaders = new ConcurrentHashMap<>(HeadersUtils.wiremockHeadersToJavaHeaders(testSetup.expectedResponse().getHeaders()).map());
-
-
-
-    var mapping = testSetup.mapping();
     directCallServer.stubFor(mapping);
 
     var request = testSetup.request();
@@ -99,60 +87,39 @@ class WiremockDirectCallClientTest {
     assertThat(response.body(), is(equalTo(expectedResponseBody)));
     var responseHeaders = new ConcurrentHashMap<>(response.headers().map());
     responseHeaders.remove("Matched-Stub-Id");
-    assertThat(responseHeaders,is(equalTo(expectedHeaders)));
-
+    assertThat(responseHeaders, is(equalTo(expectedHeaders)));
   }
 
-  @ParameterizedTest
-  @MethodSource("unsupportedProvider")
-  void shouldThrowExceptionWhenCallingUnsupportedMethod(Supplier<Object> supplier) {
-    var exception = assertThrows(UnsupportedOperationException.class, supplier::get);
-    assertThat(exception, is(instanceOf(UnsupportedOperationException.class)));
-
-    exception = assertThrows(UnsupportedOperationException.class,
+  @Test
+  void shouldThrowExceptionWhenCallingUnsupportedMethod() {
+    assertThrows(UnsupportedOperationException.class, directCallClient::cookieHandler);
+    assertThrows(UnsupportedOperationException.class, directCallClient::connectTimeout);
+    assertThrows(UnsupportedOperationException.class, directCallClient::followRedirects);
+    assertThrows(UnsupportedOperationException.class, directCallClient::proxy);
+    assertThrows(UnsupportedOperationException.class, directCallClient::sslContext);
+    assertThrows(UnsupportedOperationException.class, directCallClient::sslParameters);
+    assertThrows(UnsupportedOperationException.class, directCallClient::authenticator);
+    assertThrows(UnsupportedOperationException.class, directCallClient::version);
+    assertThrows(UnsupportedOperationException.class, directCallClient::executor);
+    assertThrows(UnsupportedOperationException.class,
       () -> directCallClient.sendAsync(null, null, null));
-    assertThat(exception, is(instanceOf(UnsupportedOperationException.class)));
+
   }
 
   private static Stream<TestSetup> requestProvider() {
-    return Stream.of(createSetupWithSimpleGetRequest(),
-      createSetupWithRequestWithQueryParams(GET),
-      createSetupWithRequestWithHeaders(GET),
-      createSetupWithRequestWithBody(POST),
-      createSetupWithRequestWithEmptyBody(POST),
-      createSetupWithRequestWithQueryParams(POST),
-      createSetupWithRequestWithHeaders(POST),
-      createSetupWithRequestWithBody(PUT),
-      createSetupWithRequestWithEmptyBody(PUT),
-      createSetupWithRequestWithQueryParams(PUT),
-      createSetupWithRequestWithHeaders(PUT));
-  }
-
-  private static Stream<TestSetup> responseProvider() {
-    return Stream.of(createSetupWithRequestExpectingResponseHeaders(GET),
-      createSetupWithRequestExpectingResponseHeaders(POST),
-      createSetupWithRequestExpectingResponseHeaders(PUT));
-  }
-
-  private static Stream<Supplier<Object>> unsupportedProvider() {
-    return Stream.of(directCallClient::cookieHandler,
-      directCallClient::connectTimeout,
-      directCallClient::followRedirects,
-      directCallClient::proxy,
-      directCallClient::sslContext,
-      directCallClient::sslParameters,
-      directCallClient::authenticator,
-      directCallClient::version,
-      directCallClient::executor);
+    return Stream.of(createSetupWithSimpleGetRequest(), createSetupWithRequestWithQueryParams(GET),
+      createSetupWithRequestWithHeaders(GET), createSetupWithRequestWithBody(POST),
+      createSetupWithRequestWithEmptyBody(POST), createSetupWithRequestWithQueryParams(POST),
+      createSetupWithRequestWithHeaders(POST), createSetupWithRequestWithBody(PUT),
+      createSetupWithRequestWithEmptyBody(PUT), createSetupWithRequestWithQueryParams(PUT),
+      createSetupWithRequestWithHeaders(PUT), createSetupWhereResponseHasHeaders(GET),
+      createSetupWhereResponseHasHeaders(POST), createSetupWhereResponseHasHeaders(PUT));
   }
 
   private static TestSetup createSetupWithSimpleGetRequest() {
     var uri = uriWithPath(LOCALHOST);
-    var responseBody = randomString();
-    var responseCode = randomResponseCode();
-    var response=aResponse().withBody(responseBody).withStatus(responseCode);
-    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET)
-      .willReturn(response);
+    var response = aResponse().withBody(randomString()).withStatus(randomResponseCode());
+    var mapping = createBasicStubRequestMapping(uri, NOT_USED, GET).willReturn(response);
 
     var request = createBasicHttpRequest(uri, NOT_USED, GET);
     return new TestSetup(response.build(), mapping, request);
@@ -164,35 +131,34 @@ class WiremockDirectCallClientTest {
     var responseBody = randomString();
     var responseCode = randomResponseCode();
 
-    var response =
-      aResponse().withBody(responseBody).withStatus(responseCode).build();
+    var response = aResponse().withBody(responseBody).withStatus(responseCode).build();
 
-    var mapping = createBasicStubRequestMapping(uri, requestBody, method)
-      .willReturn(like(response));
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method).willReturn(
+      like(response));
     var request = createBasicHttpRequest(uri, requestBody, method);
     return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithEmptyBody(String method) {
     var uri = uriWithPath(LOCALHOST);
-    var responseBody = randomString();
-    var responseCode = randomResponseCode();
+    var response = aResponse().withBody(randomString()).withStatus(randomResponseCode()).build();
 
-    var mapping = createStubRequestMappingWithEmptyBody(uri, method);
-    var response=addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    var request = createHttpRequestWithEmptyBody(uri, method);
+    var mapping = createBasicStubRequestMapping(uri, EMPTY_BODY, method).willReturn(like(response));
+
+    var request = createBasicHttpRequest(uri, NO_BODY, method);
+
     return new TestSetup(response, mapping, request);
   }
 
   private static TestSetup createSetupWithRequestWithQueryParams(String method) {
-    var uri = uriWithParameters();
+    var uri = uriWithQueryParameters();
     var requestBody = randomString();
-    var responseBody = randomString();
-    var responseCode = randomResponseCode();
+    var response = aResponse().withBody(randomString()).withStatus(randomInteger()).build();
 
     var mapping = createBasicStubRequestMapping(uri, requestBody, method);
     addQueryParametersToStubMapping(mapping, uri);
-    var response= addBasicResponseToStubMapping(mapping, responseBody, responseCode);
+    mapping.willReturn(like(response));
+
     var request = createBasicHttpRequest(uri, requestBody, method);
     return new TestSetup(response, mapping, request);
   }
@@ -200,33 +166,26 @@ class WiremockDirectCallClientTest {
   private static TestSetup createSetupWithRequestWithHeaders(String method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
-    var requestHeader = randomString();
-    var requestHeaderValue = randomString();
-    var responseBody = randomString();
-    var responseCode = randomResponseCode();
+    var requestHeader = HttpHeader.httpHeader(randomString(), randomString());
+    var response = aResponse().withBody(randomString()).withStatus(randomResponseCode()).build();
 
     var mapping = createBasicStubRequestMapping(uri, requestBody, method);
-    addHeadersToStubMapping(mapping, requestHeader, requestHeaderValue);
-    var response=addBasicResponseToStubMapping(mapping, responseBody, responseCode);
-    var request =
-      createHttpRequestWithHeaders(uri, requestBody, requestHeader, requestHeaderValue, method);
+    addHeadersToStubMapping(mapping, requestHeader);
+
+    mapping.willReturn(like(response));
+
+    var request = createHttpRequestWithHeaders(uri, requestBody, requestHeader, method);
     return new TestSetup(response, mapping, request);
   }
 
-  private static TestSetup createSetupWithRequestExpectingResponseHeaders(String method) {
+  private static TestSetup createSetupWhereResponseHasHeaders(String method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
-    var responseHeaderKey = randomString();
-    var responseHeaderValue = randomString();
-    var responseBody = randomString();
-    int responseCode = randomResponseCode();
-    var response = aResponse()
-      .withBody(responseBody)
-      .withStatus(responseCode)
-      .withHeader(responseHeaderKey,responseHeaderValue);
 
-    var mapping = createBasicStubRequestMapping(uri, requestBody, method)
-      .willReturn(response);
+    var response = aResponse().withBody(randomString()).withStatus(randomResponseCode())
+      .withHeader(randomString(), randomString());
+
+    var mapping = createBasicStubRequestMapping(uri, requestBody, method).willReturn(response);
 
     var request = createBasicHttpRequest(uri, requestBody, method);
     return new TestSetup(response.build(), mapping, request);
@@ -236,26 +195,15 @@ class WiremockDirectCallClientTest {
     return randomElement(randomInteger(1000));
   }
 
-  private static MappingBuilder createBasicStubRequestMapping(URI uri, String requestBody, String method) {
-    return switch (method) {
-      case GET -> WireMock.get(WireMock.urlPathEqualTo(uri.getPath()));
-      case POST -> WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-        .withRequestBody(WireMock.equalTo(requestBody));
-      case PUT -> WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-        .withRequestBody(WireMock.equalTo(requestBody));
-      default -> throw new IllegalArgumentException(METHOD_ERROR);
-    };
-  }
+  private static MappingBuilder createBasicStubRequestMapping(URI uri,
+                                                              String requestBody,
+                                                              String method) {
+    var mapping = WireMock.request(method, urlPathEqualTo(uri.getPath()));
+    if (StringUtils.isNotBlank(requestBody)) {
+      mapping = mapping.withRequestBody(WireMock.equalTo(requestBody));
+    }
+    return mapping;
 
-  private static MappingBuilder createStubRequestMappingWithEmptyBody(URI uri, String method) {
-    return switch (method) {
-      case GET -> WireMock.get(WireMock.urlPathEqualTo(uri.getPath()));
-      case POST -> WireMock.post(WireMock.urlPathEqualTo(uri.getPath()))
-        .withRequestBody(WireMock.absent());
-      case PUT -> WireMock.put(WireMock.urlPathEqualTo(uri.getPath()))
-        .withRequestBody(WireMock.absent());
-      default -> throw new IllegalArgumentException(METHOD_ERROR);
-    };
   }
 
   private static void addQueryParametersToStubMapping(MappingBuilder mapping, URI uri) {
@@ -265,64 +213,49 @@ class WiremockDirectCallClientTest {
     }
   }
 
-  private static void addHeadersToStubMapping(MappingBuilder mapping, String headerKey,
-                                              String headerValue) {
-    if (StringUtils.isNotBlank(headerKey) && StringUtils.isNotBlank(headerValue)) {
-      mapping.withHeader(headerKey, WireMock.equalTo(headerValue));
+  private static void addHeadersToStubMapping(MappingBuilder mapping, HttpHeader httpHeader) {
+    if (StringUtils.isNotBlank(httpHeader.getKey()) && StringUtils.isNotBlank(
+      joinHeaderValues(httpHeader))) {
+      mapping.withHeader(httpHeader.key(), WireMock.equalTo(joinHeaderValues(httpHeader)));
     }
   }
 
-  private static ResponseDefinition addBasicResponseToStubMapping(MappingBuilder mapping, String responseBody,
-                                                    Integer responseCode) {
-
-    var response =
-      aResponse().withBody(responseBody).withStatus(responseCode).build();
-    mapping.willReturn(like(response));
-    return response;
-  }
-
-
-
   private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, String method) {
-    return switch (method) {
-      case GET -> HttpRequest.newBuilder(uri).GET().build();
-      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody)).build();
-      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody)).build();
-      default -> throw new IllegalArgumentException(METHOD_ERROR);
-    };
+    var bodyPublisher =
+      nonNull(requestBody) ? BodyPublishers.ofString(requestBody) : BodyPublishers.noBody();
+    return HttpRequest.newBuilder(uri).method(method, bodyPublisher).build();
   }
 
-  private static HttpRequest createHttpRequestWithEmptyBody(URI uri, String method) {
-    return switch (method) {
-      case GET -> HttpRequest.newBuilder(uri).GET().build();
-      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.noBody()).build();
-      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.noBody()).build();
-      default -> throw new IllegalArgumentException(METHOD_ERROR);
-    };
-  }
-
-  private static HttpRequest createHttpRequestWithHeaders(URI uri, String requestBody,
-                                                          String requestHeader,
-                                                          String requestHeaderValue,
+  private static HttpRequest createHttpRequestWithHeaders(URI uri,
+                                                          String requestBody,
+                                                          HttpHeader httpHeader,
                                                           String method) {
-    return switch (method) {
-      case GET -> HttpRequest.newBuilder(uri).GET()
-        .header(requestHeader, requestHeaderValue).build();
-      case POST -> HttpRequest.newBuilder(uri).POST(BodyPublishers.ofString(requestBody))
-        .header(requestHeader, requestHeaderValue).build();
-      case PUT -> HttpRequest.newBuilder(uri).PUT(BodyPublishers.ofString(requestBody))
-        .header(requestHeader, requestHeaderValue).build();
-      default -> throw new IllegalArgumentException(METHOD_ERROR);
-    };
+    var headerValues = joinHeaderValues(httpHeader);
+
+    return HttpRequest.newBuilder(createBasicHttpRequest(uri, requestBody, method),
+      ALLOW_ALL_HEADERS).header(httpHeader.getKey(), headerValues).build();
+
   }
 
-  private static URI uriWithParameters() {
+  private static String joinHeaderValues(HttpHeader httpHeader) {
+    var headerString = String.join(HEADER_DELIMITER, httpHeader.values()).trim();
+    if (headerString.endsWith(HEADER_DELIMITER)) {
+      return removeLastHeaderDelimiter(headerString);
+    }
+    return headerString;
+  }
+
+  private static String removeLastHeaderDelimiter(String headerString) {
+    return headerString.substring(0, headerString.length() - 1);
+  }
+
+  private static URI uriWithQueryParameters() {
     return UriWrapper.fromUri(LOCALHOST).addChild("some/path")
       .addQueryParameter(randomString(), randomString()).getUri();
   }
 
-  private record TestSetup(ResponseDefinition expectedResponse,
-                           MappingBuilder mapping,
+  private record TestSetup(ResponseDefinition expectedResponse, MappingBuilder mapping,
                            HttpRequest request) {
+
   }
 }
