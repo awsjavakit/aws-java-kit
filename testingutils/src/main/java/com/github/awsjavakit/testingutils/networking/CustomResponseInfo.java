@@ -8,15 +8,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 
-public final class CustomResponseInfo implements HttpResponse.ResponseInfo {
-
-  private final int status;
-  private final HttpHeaders httpHeaders;
-
-  public CustomResponseInfo(int status, HttpHeaders httpHeaders) {
-    this.status = status;
-    this.httpHeaders = httpHeaders;
-  }
+@JacocoGenerated
+public record CustomResponseInfo(int status, HttpHeaders httpHeaders) implements HttpResponse.ResponseInfo {
 
   public static CustomResponseInfo create(Response wiremockResponse) {
     return new CustomResponseInfo(wiremockResponse.getStatus(),
@@ -24,7 +17,6 @@ public final class CustomResponseInfo implements HttpResponse.ResponseInfo {
   }
 
   @Override
-  @JacocoGenerated
   public int statusCode() {
     return status;
   }
@@ -35,7 +27,6 @@ public final class CustomResponseInfo implements HttpResponse.ResponseInfo {
   }
 
   @Override
-  @JacocoGenerated
   public HttpClient.Version version() {
     return HttpClient.Version.HTTP_2;
   }
