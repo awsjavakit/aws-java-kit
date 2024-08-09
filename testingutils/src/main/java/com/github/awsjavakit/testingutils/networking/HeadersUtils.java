@@ -15,7 +15,7 @@ public final class HeadersUtils {
     (headerName, headerValue) -> true;
 
   private HeadersUtils() {
-    // No-op; won't be called
+    // NO-OP
   }
 
   public static java.net.http.HttpHeaders wiremockHeadersToJavaHeaders(

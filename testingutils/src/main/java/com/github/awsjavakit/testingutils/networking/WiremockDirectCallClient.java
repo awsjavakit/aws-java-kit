@@ -31,7 +31,7 @@ public class WiremockDirectCallClient extends HttpClient {
   private final DirectCallHttpServer server;
 
   public WiremockDirectCallClient(DirectCallHttpServer server) {
-    super(); // pmd asked to use it
+    super();
     this.server = server;
   }
 
