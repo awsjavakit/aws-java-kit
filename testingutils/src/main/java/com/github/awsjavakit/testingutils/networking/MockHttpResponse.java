@@ -69,7 +69,7 @@ public class MockHttpResponse<T> implements HttpResponse<T> {
 
   @Override
   public Version version() {
-    throw new UnsupportedOperationException("Not implemented yet");
+    return Version.HTTP_2;
   }
 
 
