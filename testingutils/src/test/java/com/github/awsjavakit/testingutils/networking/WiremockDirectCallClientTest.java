@@ -1,5 +1,8 @@
 package com.github.awsjavakit.testingutils.networking;
 
+import static com.github.awsjavakit.apigateway.HttpMethod.GET;
+import static com.github.awsjavakit.apigateway.HttpMethod.POST;
+import static com.github.awsjavakit.apigateway.HttpMethod.PUT;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomElement;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
@@ -13,6 +16,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.github.awsjavakit.apigateway.HttpMethod;
 import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -39,9 +43,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 class WiremockDirectCallClientTest {
 
   public static final String LOCALHOST = "https://localhost";
-  public static final String GET = "GET";
-  public static final String POST = "POST";
-  public static final String PUT = "PUT";
   public static final BiPredicate<String, String> ALLOW_ALL_HEADERS = (header, value) -> true;
   public static final String HEADER_DELIMITER = ",";
   public static final String EMPTY = null;
@@ -105,13 +106,20 @@ class WiremockDirectCallClientTest {
   }
 
   private static Stream<TestSetup> requestProvider() {
-    return Stream.of(createSetupWithSimpleGetRequest(), createSetupWithRequestWithQueryParams(GET),
-      createSetupWithRequestWithHeaders(GET), createSetupWithRequestWithBody(POST),
-      createSetupWithRequestWithEmptyBody(POST), createSetupWithRequestWithQueryParams(POST),
-      createSetupWithRequestWithHeaders(POST), createSetupWithRequestWithBody(PUT),
-      createSetupWithRequestWithEmptyBody(PUT), createSetupWithRequestWithQueryParams(PUT),
-      createSetupWithRequestWithHeaders(PUT), createSetupWhereResponseHasHeaders(GET),
-      createSetupWhereResponseHasHeaders(POST), createSetupWhereResponseHasHeaders(PUT));
+    return Stream.of(createSetupWithSimpleGetRequest(),
+      createSetupWithRequestWithQueryParams(GET),
+      createSetupWithRequestWithHeaders(GET),
+      createSetupWithRequestWithBody(POST),
+      createSetupWithRequestWithEmptyBody(POST),
+      createSetupWithRequestWithQueryParams(POST),
+      createSetupWithRequestWithHeaders(POST),
+      createSetupWithRequestWithBody(PUT),
+      createSetupWithRequestWithEmptyBody(PUT),
+      createSetupWithRequestWithQueryParams(PUT),
+      createSetupWithRequestWithHeaders(PUT),
+      createSetupWhereResponseHasHeaders(GET),
+      createSetupWhereResponseHasHeaders(POST),
+      createSetupWhereResponseHasHeaders(PUT));
   }
 
   private static TestSetup createSetupWithSimpleGetRequest() {
@@ -123,7 +131,7 @@ class WiremockDirectCallClientTest {
     return new TestSetup(response.build(), mapping, request);
   }
 
-  private static TestSetup createSetupWithRequestWithBody(String method) {
+  private static TestSetup createSetupWithRequestWithBody(HttpMethod method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
     var responseBody = randomString();
@@ -137,7 +145,7 @@ class WiremockDirectCallClientTest {
     return new TestSetup(response, mapping, request);
   }
 
-  private static TestSetup createSetupWithRequestWithEmptyBody(String method) {
+  private static TestSetup createSetupWithRequestWithEmptyBody(HttpMethod method) {
     var uri = uriWithPath(LOCALHOST);
     var response = aResponse().withBody(randomString()).withStatus(randomResponseCode()).build();
 
@@ -148,7 +156,7 @@ class WiremockDirectCallClientTest {
     return new TestSetup(response, mapping, request);
   }
 
-  private static TestSetup createSetupWithRequestWithQueryParams(String method) {
+  private static TestSetup createSetupWithRequestWithQueryParams(HttpMethod method) {
     var uri = uriWithQueryParameters();
     var requestBody = randomString();
     var response = aResponse().withBody(randomString()).withStatus(randomInteger()).build();
@@ -161,7 +169,7 @@ class WiremockDirectCallClientTest {
     return new TestSetup(response, mapping, request);
   }
 
-  private static TestSetup createSetupWithRequestWithHeaders(String method) {
+  private static TestSetup createSetupWithRequestWithHeaders(HttpMethod method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
     var requestHeader = HttpHeader.httpHeader(randomString(), randomString());
@@ -176,7 +184,7 @@ class WiremockDirectCallClientTest {
     return new TestSetup(response, mapping, request);
   }
 
-  private static TestSetup createSetupWhereResponseHasHeaders(String method) {
+  private static TestSetup createSetupWhereResponseHasHeaders(HttpMethod method) {
     var uri = uriWithPath(LOCALHOST);
     var requestBody = randomString();
 
@@ -193,10 +201,8 @@ class WiremockDirectCallClientTest {
     return randomElement(randomInteger(1000));
   }
 
-  private static MappingBuilder createBasicStubRequestMapping(URI uri,
-                                                              String requestBody,
-                                                              String method) {
-    var mapping = WireMock.request(method, urlPathEqualTo(uri.getPath()));
+  private static MappingBuilder createBasicStubRequestMapping(URI uri, String requestBody, HttpMethod method) {
+    var mapping = WireMock.request(method.toString(), urlPathEqualTo(uri.getPath()));
     if (StringUtils.isNotBlank(requestBody)) {
       mapping = mapping.withRequestBody(WireMock.equalTo(requestBody));
     }
@@ -218,16 +224,14 @@ class WiremockDirectCallClientTest {
     }
   }
 
-  private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, String method) {
+  private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, HttpMethod method) {
     var bodyPublisher =
       nonNull(requestBody) ? BodyPublishers.ofString(requestBody) : BodyPublishers.noBody();
-    return HttpRequest.newBuilder(uri).method(method, bodyPublisher).build();
+    return HttpRequest.newBuilder(uri).method(method.toString(), bodyPublisher).build();
   }
 
-  private static HttpRequest createHttpRequestWithHeaders(URI uri,
-                                                          String requestBody,
-                                                          HttpHeader httpHeader,
-                                                          String method) {
+  private static HttpRequest createHttpRequestWithHeaders(URI uri, String requestBody,
+                                                          HttpHeader httpHeader, HttpMethod method) {
     var headerValues = joinHeaderValues(httpHeader);
 
     return HttpRequest.newBuilder(createBasicHttpRequest(uri, requestBody, method),

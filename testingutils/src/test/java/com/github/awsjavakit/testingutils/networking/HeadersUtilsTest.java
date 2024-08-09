@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class HeadersUtilsTest {
 
   @Test
-  void shouldTranslateJavaHeadersToWireMockHeaders() {
+  void shouldConvertJavaHeadersToWireMockHeaders() {
     var javaHeadersMap = Map.of(randomString(), List.of(randomString()));
     var javaHeaders = java.net.http.HttpHeaders.of(javaHeadersMap, ACCEPT_ALL_HEADERS);
     var wiremockHeaders = HeadersUtils.javaHeadersToWiremockHeaders(javaHeaders);
@@ -29,7 +29,7 @@ class HeadersUtilsTest {
   }
 
   @Test
-  void shouldTranslateWiremockHeadersToJavaHeaders() {
+  void shouldConvertWiremockHeadersToJavaHeaders() {
     var wiremockHeaders = new HttpHeaders(new HttpHeader(randomString(), randomString()));
     var javaHeaders = HeadersUtils.wiremockHeadersToJavaHeaders(wiremockHeaders);
 
