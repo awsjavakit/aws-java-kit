@@ -22,9 +22,10 @@ dependencies {
     implementation libs.aws.firehose
     implementation libs.bundles.json
     implementation libs.bundles.testing
+    implementation libs.wiremock
 
+    implementation libs.bundles.logging
     testImplementation project(":apigateway")
     testImplementation project(":secrets")
-    testImplementation libs.wiremock
 
 }
