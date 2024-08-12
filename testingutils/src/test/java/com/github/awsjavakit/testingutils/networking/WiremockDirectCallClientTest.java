@@ -56,15 +56,15 @@ class WiremockDirectCallClientTest {
   @BeforeEach
   public void init() {
     var factory = new DirectCallHttpServerFactory();
-    this.directCallServer = new WireMockServer(options().httpServerFactory(factory));
-    directCallServer.start(); // no-op, not required
+    directCallServer = new WireMockServer(options().httpServerFactory(factory));
+    directCallServer.start();
     var directCallHttpServer = factory.getHttpServer();
     directCallClient = new WiremockDirectCallClient(directCallHttpServer);
   }
 
   @AfterEach
   public void stop() {
-    this.directCallServer.stop();
+    directCallServer.stop();
   }
 
   @ParameterizedTest
@@ -105,21 +105,33 @@ class WiremockDirectCallClientTest {
 
   }
 
-  private static Stream<TestSetup> requestProvider() {
+  private static Stream<TestSetup> getRequestsProvider() {
     return Stream.of(createSetupWithSimpleGetRequest(),
       createSetupWithRequestWithQueryParams(GET),
       createSetupWithRequestWithHeaders(GET),
-      createSetupWithRequestWithBody(POST),
+      createSetupWhereResponseHasHeaders(GET));
+  }
+
+  private static Stream<TestSetup> postRequestsProvider() {
+    return Stream.of(createSetupWithRequestWithBody(POST),
       createSetupWithRequestWithEmptyBody(POST),
       createSetupWithRequestWithQueryParams(POST),
       createSetupWithRequestWithHeaders(POST),
-      createSetupWithRequestWithBody(PUT),
+      createSetupWhereResponseHasHeaders(POST)
+      );
+  }
+
+  private static Stream<TestSetup> putRequestsProvider() {
+    return Stream.of(createSetupWithRequestWithBody(PUT),
       createSetupWithRequestWithEmptyBody(PUT),
       createSetupWithRequestWithQueryParams(PUT),
       createSetupWithRequestWithHeaders(PUT),
-      createSetupWhereResponseHasHeaders(GET),
-      createSetupWhereResponseHasHeaders(POST),
       createSetupWhereResponseHasHeaders(PUT));
+  }
+
+  private static Stream<TestSetup> requestProvider() {
+    return Stream.of(getRequestsProvider(), postRequestsProvider(), putRequestsProvider())
+      .reduce(Stream::concat).get();
   }
 
   private static TestSetup createSetupWithSimpleGetRequest() {
@@ -240,15 +252,7 @@ class WiremockDirectCallClientTest {
   }
 
   private static String joinHeaderValues(HttpHeader httpHeader) {
-    var headerString = String.join(HEADER_DELIMITER, httpHeader.values()).trim();
-    if (headerString.endsWith(HEADER_DELIMITER)) {
-      return removeLastHeaderDelimiter(headerString);
-    }
-    return headerString;
-  }
-
-  private static String removeLastHeaderDelimiter(String headerString) {
-    return headerString.substring(0, headerString.length() - 1);
+    return String.join(HEADER_DELIMITER, httpHeader.values()).trim();
   }
 
   private static URI uriWithQueryParameters() {
