@@ -13,14 +13,14 @@ import org.junit.jupiter.api.function.Executable;
 class InstantIsCloseToTest {
 
   @Test
-  void shouldReturnTrueIfActualIsEqualToExpected() {
+  void shouldSucceedWhenActualIsEqualToExpected() {
     var expected = Instant.parse("1980-01-01T00:00:00z");
     var actual = Instant.parse("1980-01-01T00:00:00z");
     assertThat(actual, is(closeTo(expected, Duration.ofSeconds(1))));
   }
 
   @Test
-  void shouldReturnFalseIfActualIsNotEqualToExpected() {
+  void shouldFailWhenActualIsNotEqualToExpected() {
     var expected = Instant.parse("1980-01-01T00:00:00z");
     var actual = Instant.now();
     Executable action = () -> assertThat(actual, is(closeTo(expected, Duration.ofSeconds(1))));
@@ -29,7 +29,7 @@ class InstantIsCloseToTest {
   }
 
   @Test
-  void shouldReturnTrueIfActualIsWithinAcceptableRange() {
+  void shouldSucceedIfActualIsWithinAcceptableRange() {
     var expected = Instant.parse("1980-01-01T00:00:00z");
     var actual = Instant.parse("1980-01-01T00:00:05z");
     assertThat(actual, is(closeTo(expected, Duration.ofSeconds(10))));
