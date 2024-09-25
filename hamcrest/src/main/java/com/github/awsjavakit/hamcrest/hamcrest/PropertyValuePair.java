@@ -2,7 +2,6 @@ package com.github.awsjavakit.hamcrest.hamcrest;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -14,13 +13,13 @@ import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PropertyValuePair {
 
@@ -71,10 +70,10 @@ public class PropertyValuePair {
       .collect(Collectors.toSet());
 
     var collectRecordProperties = collectRecordPropertyDescriptors();
-    var output = new HashSet<PropertyValuePair>();
-    output.addAll(extractedClassProperties);
-    output.addAll(collectRecordProperties);
-    return output.stream().toList();
+    return Stream.of(extractedClassProperties,collectRecordProperties)
+      .flatMap(Collection::stream)
+      .distinct()
+      .toList();
   }
 
   public boolean isBaseType() {
