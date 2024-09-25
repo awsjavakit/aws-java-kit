@@ -64,16 +64,18 @@ public class PropertyValuePair {
   }
 
   public List<PropertyValuePair> children() {
-    var properties = collectPropertyDescriptors();
-    var extractedClassProperties = properties.stream()
-      .map(this::extractFieldValue)
-      .collect(Collectors.toSet());
 
-    var collectRecordProperties = collectRecordPropertyDescriptors();
-    return Stream.of(extractedClassProperties,collectRecordProperties)
+    return Stream.of(collectClassPropertyDescriptors(), collectRecordPropertyDescriptors())
       .flatMap(Collection::stream)
       .distinct()
       .toList();
+  }
+
+  private Set<PropertyValuePair> collectClassPropertyDescriptors() {
+    var properties = collectPropertyDescriptors();
+    return properties.stream()
+      .map(this::extractFieldValue)
+      .collect(Collectors.toSet());
   }
 
   public boolean isBaseType() {
