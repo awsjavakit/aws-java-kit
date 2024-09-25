@@ -8,13 +8,17 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -44,7 +48,7 @@ public class PropertyValuePair {
   }
 
   public static PropertyValuePair collectionElement(String propertyName, Object value,
-    String parentPath, int index) {
+                                                    String parentPath, int index) {
     return new PropertyValuePair(propertyName + formatArrayIndex(index), value, parentPath);
   }
 
@@ -61,10 +65,16 @@ public class PropertyValuePair {
   }
 
   public List<PropertyValuePair> children() {
-    List<PropertyDescriptor> properties = collectPropertyDescriptors();
-    return properties.stream()
+    var properties = collectPropertyDescriptors();
+    var extractedClassProperties = properties.stream()
       .map(this::extractFieldValue)
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
+
+    var collectRecordProperties = collectRecordPropertyDescriptors();
+    var output = new HashSet<PropertyValuePair>();
+    output.addAll(extractedClassProperties);
+    output.addAll(collectRecordProperties);
+    return output.stream().toList();
   }
 
   public boolean isBaseType() {
@@ -115,6 +125,34 @@ public class PropertyValuePair {
 
   private static String formatArrayIndex(int index) {
     return LEFT_BRACE + index + RIGHT_BRACE;
+  }
+
+  private Collection<PropertyValuePair> collectRecordPropertyDescriptors() {
+    return
+      Optional.ofNullable(value.getClass().getRecordComponents()).stream()
+        .flatMap(Arrays::stream)
+        .map(this::getDeclaredField)
+        .map(field -> new PropertyValuePair(field.getName(), getValue(field), this.fieldPath))
+        .toList();
+
+  }
+
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  private Object getValue(Field field) {
+    try {
+      field.setAccessible(true);
+      return field.get(value);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Field getDeclaredField(RecordComponent comp) {
+    try {
+      return value.getClass().getDeclaredField(comp.getName());
+    } catch (NoSuchFieldException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private boolean classShouldBeChecked(Set<Class<?>> stopRecursionClasses) {

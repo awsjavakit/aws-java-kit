@@ -13,10 +13,8 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -169,14 +167,6 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
-  void shouldStopRecursionForClock() {
-    var entry = new ClassWithCustomObject<>(Clock.systemDefaultZone());
-    assertThat(entry, doesNotHaveEmptyValues());
-    var emptyEntry = new ClassWithCustomObject<Clock>(null);
-    assertThat(emptyEntry, not(doesNotHaveEmptyValues()));
-  }
-
-  @Test
   public void matchesDoesNotCheckFieldInAdditionalCustomIgnoreClass() {
     WithBaseTypes ignoredObjectWithEmptyProperties =
       new WithBaseTypes(null, null, null, null, null);
@@ -220,6 +210,14 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
+  void shouldStopRecursionForClock() {
+    var entry = new ClassWithCustomObject<>(Clock.systemDefaultZone());
+    assertThat(entry, doesNotHaveEmptyValues());
+    var emptyEntry = new ClassWithCustomObject<Clock>(null);
+    assertThat(emptyEntry, not(doesNotHaveEmptyValues()));
+  }
+
+  @Test
   void shouldReturnTrueWhenIgnoredFieldIsEmptyAndFieldsInIgnoredClassAreEmpty() {
     var withBaseTypes = new WithBaseTypes(EMPTY_STRING,
       NULL_INTEGER,
@@ -234,10 +232,35 @@ class DoesNotHaveEmptyValuesTest {
         Set.of(WithBaseTypes.class), Set.of("someStringField")));
   }
 
+  @Test
+  void shouldAcceptRecordWithNoEmptyFields() {
+    var customObject = new ClassWithCustomObject<>(new ClassWithUri<>(EXAMPLE_URI, "someOtherField"));
+    var record = new RecordWithFields<>("someStringField1", "someStringField2", customObject);
+    assertThat(record, doesNotHaveEmptyValues());
+  }
 
+  @Test
+  void shouldFailWhenRecordHasAnEmptyField() {
+    var recordObject = new WithBaseTypes("someString", SAMPLE_INT, List.of("someString"),
+      Map.of("key", "value"), nonEmptyJsonNode());
+    var record = new RecordWithFields<>(null, "someStringField2", recordObject);
+    var error = assertThrows(AssertionError.class,
+      () -> assertThat(record, doesNotHaveEmptyValues()));
+    assertThat(error.getMessage(), containsString("field1"));
+  }
+
+  @Test
+  void shouldFailWhenRecordContainsAClassWithAnEmptyField() {
+    var customObject = objectMissingStringField();
+
+    var record = new RecordWithFields<>("someStringField1", "someStringField2", customObject);
+    var error = assertThrows(AssertionError.class,
+      () -> assertThat(record, doesNotHaveEmptyValues()));
+    assertThat(error.getMessage(), containsString("stringField"));
+  }
 
   private static JsonNode nonEmptyJsonNode() {
-    ObjectNode node = new ObjectMapper().createObjectNode();
+    var node = new ObjectMapper().createObjectNode();
     node.put(SAMPLE_STRING, SAMPLE_STRING);
     return node;
   }
@@ -266,7 +289,7 @@ class DoesNotHaveEmptyValuesTest {
     private final JsonNode jsonNode;
 
     public WithBaseTypes(String stringField, Integer intField, List<String> list,
-      Map<String, String> map, JsonNode jsonNode) {
+                         Map<String, String> map, JsonNode jsonNode) {
       this.stringField = stringField;
       this.intField = intField;
       this.list = list;
@@ -302,8 +325,8 @@ class DoesNotHaveEmptyValuesTest {
     private Integer someIntField;
 
     public ClassWithChildrenWithMultipleFields(String someStringField,
-      WithBaseTypes objectWithFields,
-      Integer someIntField) {
+                                               WithBaseTypes objectWithFields,
+                                               Integer someIntField) {
       this.someStringField = someStringField;
       this.objectWithFields = objectWithFields;
       this.someIntField = someIntField;
@@ -429,6 +452,10 @@ class DoesNotHaveEmptyValuesTest {
     public void setCustomObject(T customObject) {
       this.customObject = customObject;
     }
+
+  }
+
+  private record RecordWithFields<T>(String field1, String field2, T recordObject) {
 
   }
 }

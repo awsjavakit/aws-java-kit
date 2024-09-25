@@ -12,7 +12,7 @@ dependencies {
     testImplementation project(":testingutils")
 
     testImplementation libs.bundles.testing
-    testImplementation libs.wiremock
+    testImplementation libs.bundles.wiremock
     testImplementation libs.guava
 
 }

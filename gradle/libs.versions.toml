@@ -61,7 +61,9 @@ datafaker = { group = 'net.datafaker', name = 'datafaker', version.ref = 'datafa
 hamcrest = { group = 'org.hamcrest', name = 'hamcrest', version.ref = 'hamcrest' }
 hamcrest-optional = { group = 'com.spotify', name = 'hamcrest-optional', version.ref = 'hamcrestOptional' }
 hamcrest-jackson = { group = 'com.spotify', name = 'hamcrest-jackson', version.ref = 'hamcrestJackson' }
-wiremock = { group = 'org.wiremock', name = 'wiremock-standalone', version.ref = 'wiremock' }
+wiremock-core = { group = 'org.wiremock', name = 'wiremock-standalone', version.ref = 'wiremock' }
+#wiremock-jetty = { group= 'org.wiremock', name= 'wiremock-jetty12', version.ref= 'wiremock' }
+#jetty = {group= 'org.eclipse.jetty.ee10', name= 'jetty-ee10-servlet', version= '12.0.13'}
 mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mockito' }
 mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
 lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
@@ -72,4 +74,4 @@ resilience4j = {group= 'io.github.resilience4j', name= 'resilience4j-retry', ver
 testing = ["junit-api", "junit-engine", "junit-params", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal", 'hamcrest-jackson']
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
 logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
-
+wiremock = ['wiremock-core']

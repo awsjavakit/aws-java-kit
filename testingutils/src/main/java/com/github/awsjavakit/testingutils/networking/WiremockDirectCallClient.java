@@ -37,9 +37,13 @@ public class WiremockDirectCallClient extends HttpClient {
   public static final String FORM_KEY_VALUE_DELIMITER = "=";
   private final DirectCallHttpServer server;
 
-  public WiremockDirectCallClient(DirectCallHttpServer server) {
+  protected WiremockDirectCallClient(DirectCallHttpServer server) {
     super();
     this.server = server;
+  }
+
+  public static WiremockDirectCallClient create(DirectCallHttpServer server){
+    return new WiremockDirectCallClient(server);
   }
 
   @Override

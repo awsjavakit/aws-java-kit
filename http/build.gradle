@@ -24,7 +24,7 @@ dependencies {
     testImplementation libs.aws.ssm
     testImplementation libs.bundles.testing
     testImplementation libs.aws.secrets
-    testImplementation libs.wiremock
+    testImplementation libs.bundles.wiremock
     testImplementation libs.aws.secrets
     testImplementation libs.aws.s3
     testImplementation libs.resilience4j
