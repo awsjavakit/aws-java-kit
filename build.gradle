@@ -1,8 +1,3 @@
 plugins {
     id 'com.github.awsjavakit.root'
 }
-
-wrapper {
-    distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = "8.3"
-}

@@ -3,11 +3,12 @@ plugins {
     id 'pmd'
     id 'checkstyle'
     id 'jacoco'
+    id "com.diffplug.spotless"
 }
 
 
 group 'io.github.awsjavakit'
-version = '0.18.5'
+version = '0.18.6'
 
 repositories {
     mavenCentral()
@@ -72,7 +73,7 @@ jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
 
 pmd {
     consoleOutput = true
-    toolVersion = "6.39.0"
+    toolVersion = "7.5.0"
     rulesMinimumPriority = 5
     ruleSets = ["${rootProject.getRootDir()}/qa_config/pmd/ruleset.xml"]
 }
@@ -91,4 +92,9 @@ tasks.withType(Checkstyle) {
 
 
 
+spotless{
+  java {
+    removeUnusedImports()
+  }
+}
 
