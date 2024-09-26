@@ -13,6 +13,7 @@ test: cpt
 
 build: test
 	./gradlew build
+	./gradlew spotlessApply
 
 clean:
 	./gradlew clean
