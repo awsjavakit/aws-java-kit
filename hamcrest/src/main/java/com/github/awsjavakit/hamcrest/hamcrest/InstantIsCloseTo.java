@@ -1,4 +1,4 @@
-package com.github.awsjavakit.testingutils.hamcrest;
+package com.github.awsjavakit.hamcrest.hamcrest;
 
 import java.time.Duration;
 import java.time.Instant;
