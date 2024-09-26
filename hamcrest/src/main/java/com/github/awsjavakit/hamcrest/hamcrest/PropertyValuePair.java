@@ -63,12 +63,10 @@ public class PropertyValuePair {
     return fieldPath;
   }
 
-  public List<PropertyValuePair> children() {
-
+  public Set<PropertyValuePair> children() {
     return Stream.of(collectClassPropertyDescriptors(), collectRecordPropertyDescriptors())
       .flatMap(Collection::stream)
-      .distinct()
-      .toList();
+      .collect(Collectors.toSet());
   }
 
   private Set<PropertyValuePair> collectClassPropertyDescriptors() {
@@ -128,15 +126,15 @@ public class PropertyValuePair {
     return LEFT_BRACE + index + RIGHT_BRACE;
   }
 
-  private Collection<PropertyValuePair> collectRecordPropertyDescriptors() {
+  private List<PropertyValuePair> collectRecordPropertyDescriptors() {
     return
       Optional.ofNullable(value.getClass().getRecordComponents()).stream()
         .flatMap(Arrays::stream)
         .map(this::getDeclaredField)
-        .map(field -> new PropertyValuePair(field.getName(), getValue(field), this.fieldPath))
+        .map(this::extractFieldValue)
         .toList();
-
   }
+
 
   @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
   private Object getValue(Field field) {
@@ -195,6 +193,11 @@ public class PropertyValuePair {
       throw new RuntimeException(e);
     }
   }
+
+  private PropertyValuePair extractFieldValue(Field field) {
+    return new PropertyValuePair(field.getName(), getValue(field), this.fieldPath);
+  }
+
 
   private PropertyValuePair extractFieldValue(PropertyDescriptor propertyDescriptor) {
     try {
