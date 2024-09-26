@@ -69,7 +69,7 @@ class WiremockDirectCallClientTest {
     directCallServer = new WireMockServer(options().httpServerFactory(factory));
     directCallServer.start();
     var directCallHttpServer = factory.getHttpServer();
-    directCallClient = new WiremockDirectCallClient(directCallHttpServer);
+    directCallClient = WiremockDirectCallClient.create(directCallHttpServer);
   }
 
   @AfterEach
