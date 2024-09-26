@@ -1,6 +1,6 @@
-package com.github.awsjavakit.testingutils.hamcrest;
+package com.github.awsjavakit.hamcrest.hamcrest;
 
-import static com.github.awsjavakit.testingutils.hamcrest.InstantIsCloseTo.closeTo;
+import static com.github.awsjavakit.hamcrest.hamcrest.InstantIsCloseTo.closeTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
