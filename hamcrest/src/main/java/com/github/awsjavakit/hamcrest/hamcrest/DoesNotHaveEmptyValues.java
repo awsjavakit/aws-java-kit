@@ -127,8 +127,8 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     }
   }
 
-  private static boolean isEmptyContainer(JsonNode n) {
-    return n.isContainerNode() && n.isEmpty();
+  private static boolean isEmptyContainer(JsonNode node) {
+    return node.isContainerNode() && node.isEmpty();
   }
 
   private List<PropertyValuePair> createListWithFieldsToBeChecked(PropertyValuePair rootObject) {
