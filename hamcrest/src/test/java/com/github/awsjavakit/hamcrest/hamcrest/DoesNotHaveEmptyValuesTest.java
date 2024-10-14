@@ -262,7 +262,7 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
-  void shouldFailWhenClassCopntainsRecordWithEmptyFields() {
+  void shouldFailWhenClassContainsRecordWithEmptyFields() {
     var object = new ClassWithCustomObject<>(
       new RecordWithFields<String>(null, "someString", "someString"));
     var exception =
