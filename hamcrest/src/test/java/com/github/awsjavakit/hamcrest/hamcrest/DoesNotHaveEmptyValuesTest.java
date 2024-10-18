@@ -13,6 +13,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.MalformedURLException;
@@ -234,7 +235,8 @@ class DoesNotHaveEmptyValuesTest {
 
   @Test
   void shouldAcceptRecordWithNoEmptyFields() {
-    var customObject = new ClassWithCustomObject<>(new ClassWithUri<>(EXAMPLE_URI, "someOtherField"));
+    var customObject = new ClassWithCustomObject<>(
+      new ClassWithUri<>(EXAMPLE_URI, "someOtherField"));
     var record = new RecordWithFields<>("someStringField1", "someStringField2", customObject);
     assertThat(record, doesNotHaveEmptyValues());
   }
@@ -259,10 +261,34 @@ class DoesNotHaveEmptyValuesTest {
     assertThat(error.getMessage(), containsString("stringField"));
   }
 
+  @Test
+  void shouldFailWhenClassContainsRecordWithEmptyFields() {
+    var object = new ClassWithCustomObject<>(
+      new RecordWithFields<String>(null, "someString", "someString"));
+    var exception =
+      assertThrows(AssertionError.class, () -> assertThat(object, doesNotHaveEmptyValues()));
+    assertThat(exception.getMessage(), containsString("field1"));
+  }
+
+  @Test
+  void shouldSucceedWhenInputContainsANonEmptyTextNode() throws JsonProcessingException {
+    var sampleObject = new WithBaseTypes(STRING_FIELD,
+      1,
+      List.of("someString"),
+      Map.of("someString", "someString"),
+      randomTextNode());
+    assertThat(sampleObject, doesNotHaveEmptyValues());
+  }
+
   private static JsonNode nonEmptyJsonNode() {
     var node = new ObjectMapper().createObjectNode();
     node.put(SAMPLE_STRING, SAMPLE_STRING);
     return node;
+  }
+
+  private JsonNode randomTextNode() throws JsonProcessingException {
+    var someStringValue = String.format("\"%s\"", "someString");
+    return JSON.readTree(someStringValue);
   }
 
   private void assertThatContainedObjectHasEmptyFields(WithBaseTypes withBaseTypes) {

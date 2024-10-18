@@ -127,6 +127,10 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     }
   }
 
+  private static boolean isEmptyContainer(JsonNode node) {
+    return node.isContainerNode() && node.isEmpty();
+  }
+
   private List<PropertyValuePair> createListWithFieldsToBeChecked(PropertyValuePair rootObject) {
     List<PropertyValuePair> fieldsToBeChecked = new ArrayList<>();
     Stack<PropertyValuePair> fieldsToBeVisited = initializeFieldsToBeVisited(rootObject);
@@ -147,7 +151,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
   }
 
   private void addNestedFieldsToFieldsToBeVisited(Stack<PropertyValuePair> fieldsToBeVisited,
-    PropertyValuePair currentField) {
+                                                  PropertyValuePair currentField) {
     if (currentField.isComplexObject()) {
       fieldsToBeVisited.addAll(currentField.children());
     } else if (currentField.isCollection()) {
@@ -156,7 +160,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
   }
 
   private void addEachArrayElementAsFieldToBeVisited(Stack<PropertyValuePair> fieldsToBeVisited,
-    PropertyValuePair currentField) {
+                                                     PropertyValuePair currentField) {
     List<PropertyValuePair> collectionElements = currentField.createPropertyValuePairsForEachCollectionItem();
     fieldsToBeVisited.addAll(collectionElements);
   }
@@ -196,9 +200,17 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
 
   private boolean isEmptyJsonNode(Object value) {
     if (value instanceof JsonNode) {
-      return ((JsonNode) value).isEmpty();
+      return isEmptyContainer((JsonNode) value) || isEmptyValueNode((JsonNode) value);
     }
     return false;
+  }
+
+  private boolean isEmptyValueNode(JsonNode value) {
+    if (value.isTextual()) {
+      return isNull(value.textValue()) || value.textValue().isBlank();
+    }
+    return value.isMissingNode() || value.isNull();
+
   }
 
   private boolean isEmptyCollection(Object value) {
