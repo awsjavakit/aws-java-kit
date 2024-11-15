@@ -32,11 +32,13 @@ aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2
 aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.ref = 'awsSdk2' }
 aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }
 aws-sqs = { group = 'software.amazon.awssdk', name = 'sqs', version.ref = 'awsSdk2' }
+aws-sns = { group = 'software.amazon.awssdk', name = 'sns', version.ref = 'awsSdk2' }
 aws-apache-client = { group = 'software.amazon.awssdk', name = 'apache-client', version.ref = 'awsSdk2' }
 aws-ssm = { group = 'software.amazon.awssdk', name = 'ssm', version.ref = 'awsSdk2' }
 aws-cloudwatch = { group = 'software.amazon.awssdk', name = 'cloudwatch', version.ref = 'awsSdk2' }
 aws-dynamodb = { group = 'software.amazon.awssdk', name = 'dynamodb', version.ref = 'awsSdk2' }
 aws-dynamodb-enhanced = { group = 'software.amazon.awssdk', name = 'dynamodb-enhanced', version.ref = 'awsSdk2' }
+aws-transfer = { group = 'software.amazon.awssdk', name = 'transfer', version.ref = 'awsSdk2' }
 aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
 
