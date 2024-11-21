@@ -17,7 +17,6 @@ class FakeSnsClientTest {
 
   private FakeSnsClient client;
   private String message;
-  private String topicArn;
   private PublishRequest publishRequest;
   private String batchId;
 
@@ -25,40 +24,34 @@ class FakeSnsClientTest {
   public void init() {
     this.client = new FakeSnsClient();
     this.message = randomJson();
-    this.topicArn = randomString();
     this.batchId = UUID.randomUUID().toString();
-    this.publishRequest =  PublishRequest.builder()
+    this.publishRequest = PublishRequest.builder()
       .messageDeduplicationId(randomString())
       .messageAttributes(randomMap())
       .messageStructure(randomString())
       .messageGroupId(randomString())
       .subject(randomString())
       .message(message)
-      .topicArn(topicArn)
+      .topicArn(randomString())
       .build();
   }
 
   @Test
   void shouldAllowPublishingMessages() {
     client.publish(publishRequest);
-
     assertThat(client.getPublishRequests(), contains(publishRequest));
   }
 
   @Test
   void shouldAllowPublishingBatchMessages() {
     var sampleBatchRequest = createSampleBatchRequest();
-
     client.publishBatch(sampleBatchRequest);
-
     assertThat(client.getPublishRequests(), contains(publishRequest));
 
   }
 
-
   private PublishBatchRequest createSampleBatchRequest() {
-
-    var entries = PublishBatchRequestEntry.builder()
+    var batchEntry = PublishBatchRequestEntry.builder()
       .message(message)
       .id(batchId)
       .messageStructure(publishRequest.messageStructure())
@@ -69,14 +62,13 @@ class FakeSnsClientTest {
       .build();
     return PublishBatchRequest.builder()
       .topicArn(publishRequest.topicArn())
-      .publishBatchRequestEntries(entries)
+      .publishBatchRequestEntries(batchEntry)
       .build();
   }
 
-
-
   private Map<String, MessageAttributeValue> randomMap() {
-    return Map.of(randomString(), MessageAttributeValue.builder().stringValue(randomString()).build());
+    return Map.of(randomString(),
+      MessageAttributeValue.builder().stringValue(randomString()).build());
   }
 
 }
