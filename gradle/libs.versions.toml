@@ -1,11 +1,11 @@
 [versions]
-awsSdk2 = { strictly = '2.28.29' }
+awsSdk2 = { strictly = '2.29.17' }
 junit = { strictly = '5.11.3' }
 assertj = { strictly = '3.26.3' }
 log4j = { strictly = '2.24.1' }
 slf4j = { require = '2.0.16' }
 lambda-log4j2 = { strictly = '1.6.0' }
-jackson = { strictly = '2.18.0' }
+jackson = { strictly = '2.18.1' }
 guava = { strictly = '33.3.1-jre' }
 apacheCommons = { strictly = '3.17.0' }
 datafaker = { strictly = '2.4.0' }
@@ -16,8 +16,8 @@ wiremock = { strictly = '3.9.2' }
 mockito = { strictly = '5.14.2' }
 awsLambdaEvents = { strictly = '3.14.0' }
 awsLambdaCore = { strictly = '1.2.3' }
-lombok = { strictly = '1.18.34' }
-dynamoDbLocal = { strictly = '2.5.2' }
+lombok = { strictly = '1.18.36' }
+dynamoDbLocal = { strictly = '2.5.3' }
 resilience4j = {strictly= '2.2.0'}
 
 [libraries]
