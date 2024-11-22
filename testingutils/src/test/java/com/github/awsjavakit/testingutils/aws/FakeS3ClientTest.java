@@ -175,22 +175,22 @@ class FakeS3ClientTest {
     var bucketUri = UriWrapper.fromUri("s3://" + bucket);
     var sourceFile = insertRandomFileToS3(client, bucket);
 
-//    var destination = UnixPath.of(randomString()).addChild(randomString());
-//    var request = CopyObjectRequest.builder()
-//      .sourceBucket(bucket)
-//      .sourceKey(sourceFile.toString())
-//      .destinationBucket(bucket)
-//      .destinationKey(destination.toString())
-//      .build();
-//    client.copyObject(request);
+    var destination = UnixPath.of(randomString()).addChild(randomString());
+    var request = CopyObjectRequest.builder()
+      .sourceBucket(bucket)
+      .sourceKey(sourceFile.toString())
+      .destinationBucket(bucket)
+      .destinationKey(destination.toString())
+      .build();
+    client.copyObject(request);
 
     var sourceUri = bucketUri.addChild(sourceFile).getUri();
     var sourceContent = getObject(client, sourceUri).asUtf8String();
-//    var destinationUri = bucketUri.addChild(destination).getUri();
-//    var destinationContent = getObject(client, destinationUri).asUtf8String();
+    var destinationUri = bucketUri.addChild(destination).getUri();
+    var destinationContent = getObject(client, destinationUri).asUtf8String();
 
     assertThat(sourceContent, is(not(nullValue())));
-//    assertThat(destinationContent, is(equalTo(sourceContent)));
+    assertThat(destinationContent, is(equalTo(sourceContent)));
 
   }
 
