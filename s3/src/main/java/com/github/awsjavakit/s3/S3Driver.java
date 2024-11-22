@@ -30,6 +30,7 @@ import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -248,6 +249,16 @@ public class S3Driver {
     return getFile(filename, StandardCharsets.UTF_8);
   }
 
+  public void copyFile(URI sourceUri, URI destinationUri) {
+    var request = CopyObjectRequest.builder()
+      .sourceKey(UriWrapper.fromUri(sourceUri).toS3bucketPath().toString())
+      .sourceBucket(sourceUri.getHost())
+      .destinationKey(UriWrapper.fromUri(destinationUri).toS3bucketPath().toString())
+      .destinationBucket(destinationUri.getHost())
+      .build();
+    client.copyObject(request);
+  }
+
   @JacocoGenerated
   private static SdkHttpClient httpClientForConcurrentQueries() {
     return ApacheHttpClient.builder()
@@ -310,7 +321,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Response fetchNewResultsBatch(UnixPath folder, String listingStartingPoint,
-    int responseSize) {
+                                                     int responseSize) {
     var request = requestForListingFiles(folder, listingStartingPoint, responseSize);
     return client.listObjectsV2(request);
   }
@@ -346,7 +357,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Request requestForListingFiles(UnixPath folder, String startingPoint,
-    int responseSize) {
+                                                      int responseSize) {
     return ListObjectsV2Request.builder()
       .bucket(bucketName)
       .prefix(folder.toString())
