@@ -4,14 +4,16 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomStrin
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
+import com.github.awsjavakit.misc.SingletonCollector;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
+import com.github.awsjavakit.misc.paths.UriWrapper;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +28,7 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
@@ -150,10 +153,51 @@ class FakeS3ClientTest {
     assertThrows(IllegalArgumentException.class, () -> s3Client.listObjectsV2(listObjectRequest));
   }
 
+  @Test
+  void shouldAcceptCopyRequests() {
+    var client = new FakeS3Client();
+    var request = CopyObjectRequest.builder()
+      .sourceBucket(randomString())
+      .sourceKey(randomString())
+      .sourceVersionId(randomString())
+      .destinationBucket(randomString())
+      .destinationKey(randomString())
+      .build();
+    client.copyObject(request);
+    var sentRequest = client.getCopyRequests().stream().collect(SingletonCollector.collect());
+    assertThat(sentRequest, is(equalTo(request)));
+  }
+
+  @Test
+  void shouldCopyTheFileContentsFromSourceToDestination() {
+    var client = new FakeS3Client();
+    var bucket = randomString();
+    var bucketUri = UriWrapper.fromUri("s3://" + bucket);
+    var sourceFile = insertRandomFileToS3(client, bucket);
+
+    var destination = UnixPath.of(randomString()).addChild(randomString());
+    var request = CopyObjectRequest.builder()
+      .sourceBucket(bucket)
+      .sourceKey(sourceFile.toString())
+      .destinationBucket(bucket)
+      .destinationKey(destination.toString())
+      .build();
+    client.copyObject(request);
+
+    var sourceUri = bucketUri.addChild(sourceFile).getUri();
+    var sourceContent = getObject(client, sourceUri).asUtf8String();
+    var destinationUri = bucketUri.addChild(destination).getUri();
+    var destinationContent = getObject(client, destinationUri).asUtf8String();
+
+    assertThat(sourceContent, is(not(nullValue())));
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+  }
+
   private static ListObjectsRequest createListObjectsRequest(String bucket,
-    UnixPath folder,
-    int pageSize,
-    String listingStartPoint) {
+                                                             UnixPath folder,
+                                                             int pageSize,
+                                                             String listingStartPoint) {
     return ListObjectsRequest.builder()
       .bucket(bucket)
       .prefix(folder.toString())
@@ -167,8 +211,8 @@ class FakeS3ClientTest {
   }
 
   private static UnixPath insertFileToS3UnderSubfolder(S3Client s3Client,
-    String bucket,
-    UnixPath subfolder) {
+                                                       String bucket,
+                                                       UnixPath subfolder) {
     var filePath = subfolder.addChild(randomString()).addChild(randomString());
     var putRequest = insertFileToS3(bucket, filePath);
     s3Client.putObject(putRequest, RequestBody.fromBytes(randomString().getBytes()));
@@ -190,8 +234,8 @@ class FakeS3ClientTest {
   }
 
   private static List<String> fetchAllExpectedFilesUsingPagination(FakeS3Client s3Client,
-    String bucket,
-    UnixPath expectedFolder) {
+                                                                   String bucket,
+                                                                   UnixPath expectedFolder) {
     final int smallPage = 3;
 
     var listObjectRequest =
@@ -216,10 +260,10 @@ class FakeS3ClientTest {
   }
 
   private void createAMixOfExpectedAndUnexpectedFiles(FakeS3Client s3Client,
-    String bucket,
-    UnixPath expectedFolder,
-    UnixPath unexpectedFolder,
-    int numberOfExpectedFiles) {
+                                                      String bucket,
+                                                      UnixPath expectedFolder,
+                                                      UnixPath unexpectedFolder,
+                                                      int numberOfExpectedFiles) {
 
     for (int counter = 0; counter < numberOfExpectedFiles; counter++) {
       insertFileToS3UnderSubfolder(s3Client, bucket, expectedFolder);
@@ -237,7 +281,7 @@ class FakeS3ClientTest {
   }
 
   private ListObjectsRequest insertFilesToBucketInOrder(List<String> sampleFilenames,
-    FakeS3Client s3Client) {
+                                                        FakeS3Client s3Client) {
     for (var filename : sampleFilenames) {
       putObject(s3Client, URI.create(SOME_BUCKET_URI + "/" + filename), randomString());
     }
@@ -255,20 +299,24 @@ class FakeS3ClientTest {
   }
 
   private ResponseBytes<GetObjectResponse> getObject(FakeS3Client fakeS3Client, URI s3Uri) {
-    GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+    var getObjectRequest = GetObjectRequest.builder()
       .bucket(s3Uri.getHost())
-      .key(s3Uri.getPath())
+      .key(extractKey(s3Uri))
       .build();
     return fakeS3Client.getObject(getObjectRequest, ResponseTransformer.toBytes());
   }
 
   private void putObject(FakeS3Client fakeS3Client, URI s3Uri, String expectedContent) {
-    PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+    var putObjectRequest = PutObjectRequest.builder()
       .bucket(s3Uri.getHost())
-      .key(s3Uri.getPath())
+      .key(extractKey(s3Uri))
       .build();
 
     fakeS3Client.putObject(putObjectRequest,
       RequestBody.fromBytes(expectedContent.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private static String extractKey(URI s3Uri) {
+    return UriWrapper.fromUri(s3Uri.getPath()).toS3bucketPath().toString();
   }
 }
