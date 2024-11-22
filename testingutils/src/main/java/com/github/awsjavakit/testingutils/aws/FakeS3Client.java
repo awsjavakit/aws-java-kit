@@ -2,7 +2,6 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
@@ -23,6 +22,8 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
 import software.amazon.awssdk.http.AbortableInputStream;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
@@ -40,6 +41,7 @@ public class FakeS3Client implements S3Client {
   public static final boolean LIST_ALL = true;
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, ByteBuffer> filesAndContent;
+  private final List<CopyObjectRequest> copyRequests;
 
   public FakeS3Client(String... filesInBucket) {
     this(readResourceFiles(filesInBucket));
@@ -47,6 +49,7 @@ public class FakeS3Client implements S3Client {
 
   public FakeS3Client(Map<String, ByteBuffer> filesAndContent) {
     this.filesAndContent = new LinkedHashMap<>(filesAndContent);
+    this.copyRequests = new ArrayList<>();
   }
 
   public static FakeS3Client fromContentsMap(Map<String, InputStream> filesAndContent) {
@@ -60,7 +63,7 @@ public class FakeS3Client implements S3Client {
   @SuppressWarnings("PMD.CloseResource")
   @Override
   public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
-    ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
+                                     ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
     String filename = getObjectRequest.key();
     var contents = extractContent(filename).array();
     GetObjectResponse response = GetObjectResponse.builder().contentLength((long) contents.length)
@@ -122,6 +125,14 @@ public class FakeS3Client implements S3Client {
   }
 
   @Override
+  public CopyObjectResponse copyObject(CopyObjectRequest copyObjectRequest) {
+    this.copyRequests.add(copyObjectRequest);
+    var contents = this.filesAndContent.get(copyObjectRequest.sourceKey());
+    this.filesAndContent.put(copyObjectRequest.destinationKey(), contents);
+    return CopyObjectResponse.builder().build();
+  }
+
+  @Override
   public String serviceName() {
     return "FakeS3Client";
   }
@@ -129,6 +140,10 @@ public class FakeS3Client implements S3Client {
   @Override
   public void close() {
     //NO-OP;
+  }
+
+  public List<CopyObjectRequest> getCopyRequests() {
+    return copyRequests;
   }
 
   private static Map<String, ByteBuffer> readResourceFiles(String... filesInBucket) {
@@ -164,14 +179,14 @@ public class FakeS3Client implements S3Client {
   }
 
   private String calculateNestStartListingPoint(List<String> fileKeys,
-    int excludedEndIndex) {
+                                                int excludedEndIndex) {
     return excludedEndIndex >= fileKeys.size()
       ? null
       : fileKeys.get(excludedEndIndex - 1);
   }
 
   private boolean filePathIsInSpecifiedParentFolder(String filePathString,
-    ListObjectsRequest listObjectsRequest) {
+                                                    ListObjectsRequest listObjectsRequest) {
     var filePath = UnixPath.of(filePathString).removeRoot();
     var parentFolder = Optional.of(listObjectsRequest)
       .map(ListObjectsRequest::prefix)
