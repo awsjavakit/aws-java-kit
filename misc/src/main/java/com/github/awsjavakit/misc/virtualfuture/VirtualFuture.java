@@ -1,6 +1,5 @@
 package com.github.awsjavakit.misc.virtualfuture;
 
-import com.gtihub.awsjavakit.attempt.FunctionWithException;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -8,21 +7,20 @@ import java.util.function.Supplier;
 
 public final class VirtualFuture<A> {
 
+
   private final Supplier<A> task;
   private final CompletableFuture<A> future;
 
   private VirtualFuture(Supplier<A> task) {
     this.task = task;
     this.future = new CompletableFuture<>();
-    Thread.startVirtualThread(() -> {
-      executeTaskInsideCompletableFuture(future);
-    });
+    Thread.startVirtualThread(() -> executeTaskInsideCompletableFuture(future));
 
   }
 
   public VirtualFuture(CompletableFuture<A> future) {
     this.future = future;
-    this.task = () -> null;
+    this.task = null;
   }
 
   public static <A> VirtualFuture<A> supply(Supplier<A> task) {
