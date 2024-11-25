@@ -7,7 +7,7 @@ import com.github.awsjavakit.misc.JacocoGenerated;
 import java.util.Objects;
 
 @JsonIgnoreProperties({"requestPayload", "region"})
-public class AwsEventBridgeDetail<I> {
+public final class AwsEventBridgeDetail<I> {
 
   @JsonProperty("version")
   private String version;
@@ -88,7 +88,7 @@ public class AwsEventBridgeDetail<I> {
     return requestContext;
   }
 
-  public void setRequestContext(JsonNode requestContext) {
+  public  void setRequestContext(JsonNode requestContext) {
     this.requestContext = requestContext;
   }
 

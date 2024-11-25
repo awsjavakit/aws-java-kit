@@ -3,6 +3,7 @@ package com.github.awsjavakit.misc.lists;
 import java.util.Iterator;
 import java.util.List;
 
+@SuppressWarnings("PMD.LooseCoupling")
 public class PartitionedListIterator<T> implements Iterator<List<T>> {
 
   private final PartitionedList<T> contents;

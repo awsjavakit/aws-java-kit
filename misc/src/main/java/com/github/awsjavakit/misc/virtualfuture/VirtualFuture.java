@@ -32,7 +32,7 @@ public final class VirtualFuture<A> {
       .toArray(CompletableFuture[]::new);
 
     var combinedFuture = CompletableFuture.allOf(completableFutures);
-    return new VirtualFuture<Void>(combinedFuture);
+    return new VirtualFuture<>(combinedFuture);
   }
 
   public A join() {
@@ -50,7 +50,7 @@ public final class VirtualFuture<A> {
         return function.apply(task.get());
       }
     };
-    return VirtualFuture.supply(supplier);
+    return supply(supplier);
   }
 
   private VirtualFuture<A> execute() {

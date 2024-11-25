@@ -39,12 +39,10 @@ class VirtualFutureTest {
     var awaitAllTasks =
       VirtualFuture.allOf(futures.toArray(VirtualFuture[]::new));
     awaitAllTasks.join();
-
     for (var future : futures) {
       assertThat(future.get()).isEqualTo(TASK_RESULT);
     }
   }
-
 
   @Test
   void shouldNotHaveATaskWhenCombiningFutures() throws ExecutionException, InterruptedException {
@@ -133,7 +131,7 @@ class VirtualFutureTest {
     return input;
   }
 
-  private HashSet<Long> taskReturningThreadId(Set<Long> threadIds) {
+  private Set<Long> taskReturningThreadId(Set<Long> threadIds) {
     var set = new HashSet<>(threadIds);
     set.add(Thread.currentThread().threadId());
     return set;

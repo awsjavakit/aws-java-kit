@@ -36,9 +36,9 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @JacocoGenerated
+@SuppressWarnings({"PMD.CouplingBetweenObjects","PMD.UnusedPrivateMethod"})
 public class FakeS3Client implements S3Client {
 
-  public static final boolean LIST_ALL = true;
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, ByteBuffer> filesAndContent;
   private final List<CopyObjectRequest> copyRequests;
@@ -64,9 +64,9 @@ public class FakeS3Client implements S3Client {
   @Override
   public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
                                      ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
-    String filename = getObjectRequest.key();
+    var filename = getObjectRequest.key();
     var contents = extractContent(filename).array();
-    GetObjectResponse response = GetObjectResponse.builder().contentLength((long) contents.length)
+    var response = GetObjectResponse.builder().contentLength((long) contents.length)
       .build();
     return transformResponse(responseTransformer, new ByteArrayInputStream(contents), response);
   }

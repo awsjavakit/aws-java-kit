@@ -23,7 +23,7 @@ public final class UnixPath {
 
   public static final UnixPath EMPTY_PATH = new UnixPath(Collections.emptyList());
   public static final String ROOT = "/";
-  public static final UnixPath ROOT_PATH = UnixPath.of(ROOT);
+  public static final UnixPath ROOT_PATH = of(ROOT);
   public static final String PATH_DELIMITER = "/";
   private static final String EMPTY_STRING = "";
 
@@ -45,7 +45,7 @@ public final class UnixPath {
 
   @JsonCreator
   public static UnixPath fromString(String childPath) {
-    return UnixPath.of(childPath);
+    return of(childPath);
   }
 
   public boolean isRoot() {
@@ -89,14 +89,14 @@ public final class UnixPath {
   }
 
   public UnixPath addChild(String childPath) {
-    return addChild(UnixPath.of(childPath));
+    return addChild(of(childPath));
   }
 
   public UnixPath addChild(UnixPath childPath) {
     List<String> newPathArray = new ArrayList<>();
     newPathArray.addAll(this.path);
     newPathArray.addAll(childPath.path);
-    return UnixPath.of(newPathArray.toArray(String[]::new));
+    return of(newPathArray.toArray(String[]::new));
   }
 
   public String getLastPathElement() {

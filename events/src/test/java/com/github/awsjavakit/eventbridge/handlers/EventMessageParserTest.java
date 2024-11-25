@@ -63,7 +63,7 @@ class EventMessageParserTest {
     return top;
   }
 
-  private static class OuterClass<InputType> {
+  private static final class OuterClass<InputType> {
 
     private InputType fieldA;
 
@@ -93,7 +93,7 @@ class EventMessageParserTest {
     }
   }
 
-  private static class MiddleClass<InputType> {
+  private static final  class MiddleClass<InputType> {
 
     private InputType fieldB;
 
@@ -123,7 +123,7 @@ class EventMessageParserTest {
     }
   }
 
-  private static class InnerClass<InputType> {
+  private static final class InnerClass<InputType> {
 
     private InputType fieldC;
 
