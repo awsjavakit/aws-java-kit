@@ -8,12 +8,11 @@ import java.util.function.Supplier;
 
 public final class VirtualFuture<A> {
 
-
   private final Supplier<A> task;
-  private  CompletableFuture<A> future;
+  private CompletableFuture<A> future;
 
   private VirtualFuture(Supplier<A> inputTask) {
-    this.task=  inputTask;
+    this.task = inputTask;
     execute();
   }
 
@@ -26,7 +25,7 @@ public final class VirtualFuture<A> {
     return new VirtualFuture<>(task);
   }
 
-    public static VirtualFuture<Void> allOf(VirtualFuture... futures) {
+  public static VirtualFuture<Void> allOf(VirtualFuture... futures) {
     var completableFutures = Arrays.stream(futures)
       .map(VirtualFuture::execute)
       .map(future -> future.future)
@@ -40,24 +39,24 @@ public final class VirtualFuture<A> {
     return this.future.join();
   }
 
-  private VirtualFuture<A> execute() {
-    this.future = new CompletableFuture<>();
-    Thread.startVirtualThread(() -> executeTaskInsideCompletableFuture(future));
-    return this;
-  }
-
   public A get() throws ExecutionException, InterruptedException {
     return future.get();
   }
 
   public <B> VirtualFuture<B> map(Function<A, B> function) {
-    var supplier = new Supplier<B>(){
+    var supplier = new Supplier<B>() {
       @Override
       public B get() {
         return function.apply(task.get());
       }
     };
     return VirtualFuture.supply(supplier);
+  }
+
+  private VirtualFuture<A> execute() {
+    this.future = new CompletableFuture<>();
+    Thread.startVirtualThread(() -> executeTaskInsideCompletableFuture(future));
+    return this;
   }
 
   private void executeTaskInsideCompletableFuture(CompletableFuture<A> future) {
