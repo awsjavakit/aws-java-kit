@@ -3,12 +3,16 @@ package com.github.awsjavakit.misc.virtualfuture;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import com.gtihub.awsjavakit.attempt.Try;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.apache.commons.lang3.IntegerRange;
 import org.junit.jupiter.api.Test;
@@ -41,16 +45,49 @@ class VirtualFutureTest {
     }
   }
 
+
   @Test
-  void shouldExecuteTasksInParallel() {
+  void shouldNotHaveATaskWhenCombiningFutures() throws ExecutionException, InterruptedException {
+    var future = VirtualFuture.supply(this::task);
+    var combinedFuture = VirtualFuture.allOf(future);
+    assertThat(combinedFuture.get()).isNull();
+  }
+
+  @Test
+  void shouldRunSuppliedMappingFunction() throws ExecutionException, InterruptedException {
+    Supplier<Integer> task1 = this::task;
+    Function<Integer, String> task2 = VirtualFutureTest::someMappingFunction;
+    var future = VirtualFuture.supply(task1).map(task2);
+
+    var result = future.join();
+    var resultAgain = future.get();
+
+    assertThat(result).isEqualTo(someMappingFunction(TASK_RESULT));
+    assertThat(resultAgain).isEqualTo(someMappingFunction(TASK_RESULT));
+
+  }
+
+  @Test
+  void shouldExecuteAllChainedTasksOnAFutureOnTheSameThread()
+    throws ExecutionException, InterruptedException {
+    Supplier<Set<Long>> task1 = () -> taskReturningThreadId(Collections.emptySet());
+    Function<Set<Long>, Set<Long>> task2 = this::taskReturningThreadId;
+    var numberOfExecutionThreads = VirtualFuture.supply(task1).map(task2);
+    numberOfExecutionThreads.join();
+
+    assertThat(numberOfExecutionThreads.get().size()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldExecuteAllTasksInParallel(){
     var range = IntegerRange.of(0, 100);
     var startTime = Instant.now();
 
     var futures = IntStream.range(range.getMinimum(), range.getMaximum() + 1)
       .boxed()
       .map(number -> VirtualFuture.supply(() -> taskWithDelay(number)))
+      .map(future->future.map(VirtualFutureTest::anotherTaskWihDelay))
       .toList();
-
     VirtualFuture.allOf(futures.toArray(VirtualFuture[]::new)).join();
 
     var summationResult = sumResultsOfAllFutures(futures);
@@ -64,11 +101,13 @@ class VirtualFutureTest {
 
   }
 
-  @Test
-  void shouldNotHaveATaskWhenCombiningFutures() throws ExecutionException, InterruptedException {
-    var future = VirtualFuture.supply(this::task);
-    var combinedFuture = VirtualFuture.allOf(future);
-    assertThat(combinedFuture.get()).isNull();
+  private static String someMappingFunction(Integer input) {
+    return input % 2 == 0 ? "even" : "odd";
+  }
+
+  private static Integer anotherTaskWihDelay(Integer input) {
+    delay();
+    return input;
   }
 
   private static Integer sumResultsOfAllFutures(List<VirtualFuture<Integer>> futures) {
@@ -94,7 +133,13 @@ class VirtualFutureTest {
     return input;
   }
 
-  private void delay() {
+  private HashSet<Long> taskReturningThreadId(Set<Long> threadIds) {
+    var set = new HashSet<>(threadIds);
+    set.add(Thread.currentThread().threadId());
+    return set;
+  }
+
+  private static void delay() {
     try {
       Thread.sleep(Duration.ofSeconds(1));
     } catch (InterruptedException e) {
