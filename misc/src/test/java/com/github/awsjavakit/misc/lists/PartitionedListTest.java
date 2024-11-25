@@ -67,11 +67,12 @@ class PartitionedListTest {
     var sample = sampleList(randomInteger(1000));
     var partitionSize = randomInteger(sample.size());
     var partitioned = new PartitionedList<>(sample, partitionSize);
-    var expectedSize = (int) Math.ceil((double) sample.size() / (double) partitionSize);
+    var expectedSize = (int) Math.ceil((double) sample.size() / partitionSize);
     assertThat(partitioned.size()).isEqualTo(expectedSize);
   }
 
   @Test
+  @SuppressWarnings("PMD.ForLoopCanBeForeach")
   void shouldReturnIteratorOfPartitions() {
     var sample = sampleList(randomInteger(1000));
     int partitionSize = randomInteger(sample.size());
@@ -209,6 +210,7 @@ class PartitionedListTest {
 
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private static List<List<String>> verifyAtCompileTimeThatIsListOfLists(
     PartitionedList<String> partitioned) {
     return partitioned.stream().toList();

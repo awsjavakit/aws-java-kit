@@ -30,7 +30,7 @@ import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 
-class DynamoCachedTokenProviderTest extends DynamoTest {
+class DynamoCachedTokenProviderTest extends LocalDynamo {
 
   public static final UnixPath AUTH_PATH = UnixPath.of("/oauth2/token");
   private WireMockServer server;

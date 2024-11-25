@@ -27,7 +27,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Flow;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
-
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 public class WiremockDirectCallClient extends HttpClient {
 
   public static final byte[] NON_NULL_EMPTY_BODY = {};

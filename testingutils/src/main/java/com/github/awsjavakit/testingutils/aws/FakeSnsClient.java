@@ -35,11 +35,13 @@ public class FakeSnsClient implements SnsClient {
     return publishRequests;
   }
 
+  @Override
   public PublishResponse publish(PublishRequest publishRequest) {
     this.publishRequests.add(publishRequest);
     return PublishResponse.builder().build();
   }
 
+  @Override
   public PublishBatchResponse publishBatch(PublishBatchRequest publishBatchRequest) {
     var batchEntries = publishBatchRequest.publishBatchRequestEntries();
     var requests = batchEntries.stream()
