@@ -264,7 +264,7 @@ class DoesNotHaveEmptyValuesTest {
   @Test
   void shouldFailWhenClassContainsRecordWithEmptyFields() {
     var object = new ClassWithCustomObject<>(
-      new RecordWithFields<String>(null, "someString", "someString"));
+      new RecordWithFields<>(null, "someString", "someString"));
     var exception =
       assertThrows(AssertionError.class, () -> assertThat(object, doesNotHaveEmptyValues()));
     assertThat(exception.getMessage(), containsString("field1"));
