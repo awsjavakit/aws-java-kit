@@ -3,7 +3,6 @@ package com.github.awsjavakit.misc.virtualfuture;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
 import com.gtihub.awsjavakit.attempt.Try;
 import java.time.Duration;
 import java.time.Instant;
@@ -57,11 +56,14 @@ class VirtualFutureTest {
   @Test
   void shouldRunSuppliedMappingFunction() throws ExecutionException, InterruptedException {
     Supplier<Integer> task1 = this::task;
-    Function<Integer, String> task2 = VirtualFutureTest::evenOrOdd;
+    Function<Integer, String> task2 = VirtualFutureTest::someMappingFunction;
     var future = VirtualFuture.supply(task1).map(task2);
-    future.join();
 
-    assertThat(future.get()).isEqualTo(evenOrOdd(TASK_RESULT));
+    var result = future.join();
+    var resultAgain = future.get();
+
+    assertThat(result).isEqualTo(someMappingFunction(TASK_RESULT));
+    assertThat(resultAgain).isEqualTo(someMappingFunction(TASK_RESULT));
 
   }
 
@@ -99,7 +101,7 @@ class VirtualFutureTest {
 
   }
 
-  private static String evenOrOdd(Integer input) {
+  private static String someMappingFunction(Integer input) {
     return input % 2 == 0 ? "even" : "odd";
   }
 

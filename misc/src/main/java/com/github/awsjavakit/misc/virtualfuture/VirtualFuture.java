@@ -37,7 +37,6 @@ public final class VirtualFuture<A> {
   }
 
   public A join() {
-
     return this.future.join();
   }
 
