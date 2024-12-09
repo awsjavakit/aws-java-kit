@@ -200,7 +200,8 @@ class S3DriverTest {
     var fileLocation = s3Driver.insertFile(fileName, expectedContents);
     var streamContent = s3Driver.readFileAsStream(fileLocation);
     try (var reader = new BufferedReader(new InputStreamReader(streamContent, StandardCharsets.UTF_8))) {
-      reader.lines().forEach(content -> assertThat(content, is(equalTo(expectedContents))));
+      var retrievedContent = reader.readLine();
+      assertThat(retrievedContent, is(equalTo(expectedContents)));
     }
   }
 
