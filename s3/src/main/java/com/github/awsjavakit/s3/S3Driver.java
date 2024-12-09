@@ -146,6 +146,11 @@ public class S3Driver {
     return getFile(filePath);
   }
 
+  public InputStream readFileAsStream(URI uri) {
+    var filePath = UriWrapper.fromUri(uri).toS3bucketPath();
+    return getFileAsStream(filePath);
+  }
+
   @JacocoGenerated
   @Deprecated
   public URI insertAndCompressFiles(UnixPath s3Folder, List<String> content) throws IOException {
@@ -228,10 +233,18 @@ public class S3Driver {
     return response.asString(charset);
   }
 
+  public InputStream getUncompressedFileAsStream(UnixPath file) {
+    return fetchObject(createGetObjectRequest(file)).asInputStream();
+  }
+
   public GZIPInputStream getCompressedFile(UnixPath file) throws IOException {
     GetObjectRequest getObjectRequest = createGetObjectRequest(file);
     ResponseInputStream<GetObjectResponse> response = client.getObject(getObjectRequest);
     return new GZIPInputStream(response);
+  }
+
+  public InputStream getCompressedFileAsStream(UnixPath file) throws IOException {
+    return new GZIPInputStream(client.getObject(createGetObjectRequest(file)));
   }
 
   public String getFile(UnixPath filename, Charset charset) {
@@ -241,6 +254,15 @@ public class S3Driver {
         .orElseThrow();
     } else {
       return getUncompressedFile(filename, charset);
+    }
+  }
+
+  public InputStream getFileAsStream(UnixPath filename) {
+    if (isCompressed(filename.getLastPathElement())) {
+      return attempt(() -> getCompressedFileAsStream(filename))
+        .orElseThrow();
+    } else {
+      return getUncompressedFileAsStream(filename);
     }
   }
 
