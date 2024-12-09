@@ -2,21 +2,24 @@ package com.github.awsjavakit.hamcrest.hamcrest;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class PropertyValuePair {
 
@@ -44,7 +47,7 @@ public class PropertyValuePair {
   }
 
   public static PropertyValuePair collectionElement(String propertyName, Object value,
-    String parentPath, int index) {
+                                                    String parentPath, int index) {
     return new PropertyValuePair(propertyName + formatArrayIndex(index), value, parentPath);
   }
 
@@ -60,11 +63,17 @@ public class PropertyValuePair {
     return fieldPath;
   }
 
-  public List<PropertyValuePair> children() {
-    List<PropertyDescriptor> properties = collectPropertyDescriptors();
+  public Set<PropertyValuePair> children() {
+    return Stream.of(collectClassPropertyDescriptors(), collectRecordPropertyDescriptors())
+      .flatMap(Collection::stream)
+      .collect(Collectors.toSet());
+  }
+
+  private Set<PropertyValuePair> collectClassPropertyDescriptors() {
+    var properties = collectPropertyDescriptors();
     return properties.stream()
       .map(this::extractFieldValue)
-      .collect(Collectors.toList());
+      .collect(Collectors.toSet());
   }
 
   public boolean isBaseType() {
@@ -117,6 +126,34 @@ public class PropertyValuePair {
     return LEFT_BRACE + index + RIGHT_BRACE;
   }
 
+  private List<PropertyValuePair> collectRecordPropertyDescriptors() {
+    return
+      Optional.ofNullable(value.getClass().getRecordComponents()).stream()
+        .flatMap(Arrays::stream)
+        .map(this::getDeclaredField)
+        .map(this::extractFieldValue)
+        .toList();
+  }
+
+
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  private Object getValue(Field field) {
+    try {
+      field.setAccessible(true);
+      return field.get(value);
+    } catch (IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private Field getDeclaredField(RecordComponent comp) {
+    try {
+      return value.getClass().getDeclaredField(comp.getName());
+    } catch (NoSuchFieldException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private boolean classShouldBeChecked(Set<Class<?>> stopRecursionClasses) {
     return stopRecursionClasses
       .stream()
@@ -156,6 +193,11 @@ public class PropertyValuePair {
       throw new RuntimeException(e);
     }
   }
+
+  private PropertyValuePair extractFieldValue(Field field) {
+    return new PropertyValuePair(field.getName(), getValue(field), this.fieldPath);
+  }
+
 
   private PropertyValuePair extractFieldValue(PropertyDescriptor propertyDescriptor) {
     try {

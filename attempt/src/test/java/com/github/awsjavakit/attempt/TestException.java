@@ -1,5 +1,6 @@
 package com.github.awsjavakit.attempt;
 
+@SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class TestException extends Exception {
 
   public TestException() {

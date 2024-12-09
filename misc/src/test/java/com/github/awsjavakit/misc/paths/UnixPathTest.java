@@ -270,7 +270,7 @@ class UnixPathTest {
     assertThat(actualPath, is(equalTo(expectedPath)));
   }
 
-  private static class ClassWithUnixPath {
+  private static final class ClassWithUnixPath {
 
     private UnixPath field;
 

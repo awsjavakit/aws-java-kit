@@ -137,7 +137,7 @@ public class PartitionedList<T> implements List<List<T>> {
   }
 
   private int calculateNumberOfPartitions(List<T> contents, int partitionSize) {
-    return (int) Math.ceil((double) contents.size() / (double) partitionSize);
+    return (int) Math.ceil((double) contents.size() / partitionSize);
   }
 
   private int calculatePartitionEndExclusive(int index) {

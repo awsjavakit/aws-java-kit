@@ -1,7 +1,7 @@
 package com.github.awsjavakit.http;
 
-import static com.github.awsjavakit.http.DynamoTest.PARTITION_KEY;
-import static com.github.awsjavakit.http.DynamoTest.SORT_KEY;
+import static com.github.awsjavakit.http.LocalDynamo.PARTITION_KEY;
+import static com.github.awsjavakit.http.LocalDynamo.SORT_KEY;
 import static com.github.awsjavakit.http.JsonConfig.fromJson;
 import static com.github.awsjavakit.http.JsonConfig.toJson;
 

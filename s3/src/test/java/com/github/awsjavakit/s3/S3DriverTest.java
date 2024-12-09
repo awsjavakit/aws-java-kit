@@ -300,6 +300,17 @@ class S3DriverTest {
   }
 
   @Test
+  void shouldCopyFileFromS3UriToS3Uri() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    s3Driver.copyFile(sourceUri, destinationUri);
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+  }
+
+  @Test
   void shouldThrowExceptionWhenWrongEncodingHasBeenUsed() {
     var expectedContent = randomString();
     var filename = randomFileName();
@@ -324,6 +335,7 @@ class S3DriverTest {
 
   private static UnixPath constructNestedPath() {
     UnixPath expectedFileName = UnixPath.of(randomFileName());
+
     UnixPath parentFolder = UnixPath.of("some", "nested", "path");
     return parentFolder.addChild(expectedFileName);
   }

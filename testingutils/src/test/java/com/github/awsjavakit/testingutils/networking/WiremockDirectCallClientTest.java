@@ -8,14 +8,15 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteg
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.like;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static java.net.HttpURLConnection.HTTP_OK;
 import static java.util.Objects.nonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.github.awsjavakit.apigateway.HttpMethod;
 import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -31,6 +32,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.util.Base64;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
@@ -46,11 +48,19 @@ class WiremockDirectCallClientTest {
   public static final BiPredicate<String, String> ALLOW_ALL_HEADERS = (header, value) -> true;
   public static final String HEADER_DELIMITER = ",";
   public static final String EMPTY = null;
+  public static final String NOT_IMPORTANT = "http://localhost";
+  public static final String FORM_URLENCODED = "application/x-www-form-urlencoded";
+  public static final String CONTENT_TYPE = "Content-Type";
+  public static final String AUTHORIZATION = "Authorization";
   private HttpClient directCallClient;
   private WireMockServer directCallServer;
 
   public static URI uriWithPath(String hostUri) {
     return UriWrapper.fromUri(hostUri).addChild("some/path").getUri();
+  }
+
+  public static byte[] formatCredentialsForBasicAuth(String username, String password) {
+    return String.format("%s:%s", username, password).getBytes();
   }
 
   @BeforeEach
@@ -59,7 +69,7 @@ class WiremockDirectCallClientTest {
     directCallServer = new WireMockServer(options().httpServerFactory(factory));
     directCallServer.start();
     var directCallHttpServer = factory.getHttpServer();
-    directCallClient = new WiremockDirectCallClient(directCallHttpServer);
+    directCallClient = WiremockDirectCallClient.create(directCallHttpServer);
   }
 
   @AfterEach
@@ -90,6 +100,47 @@ class WiremockDirectCallClientTest {
   }
 
   @Test
+  void shouldPropagateFormParameters() throws IOException, InterruptedException {
+    var username = randomString();
+    var password = randomString();
+
+    var formParamAKey = randomString();
+    var formParamAValue = randomString();
+    var formParamBKey = randomString();
+    var formParamBValue = randomString();
+    var expectedBody = randomString();
+    directCallServer.stubFor(post("/some/path")
+      .withBasicAuth(username, password)
+      .withHeader(CONTENT_TYPE, WireMock.equalTo(FORM_URLENCODED))
+      .withFormParam(formParamAKey, WireMock.equalTo(formParamAValue))
+      .withFormParam(formParamBKey, WireMock.equalTo(formParamBValue))
+      .willReturn(aResponse().withBody(expectedBody).withStatus(HTTP_OK))
+    );
+
+    var requestUri = UriWrapper.fromUri(LOCALHOST).addChild("some/path").getUri();
+    var form = crateFormBody(formParamAKey, formParamAValue, formParamBKey, formParamBValue);
+
+    var request = HttpRequest.newBuilder(requestUri).POST(BodyPublishers.ofString(form))
+      .header(AUTHORIZATION, getAuthorizationHeader(username, password))
+      .header(CONTENT_TYPE, FORM_URLENCODED)
+      .build();
+
+    var response = directCallClient.send(request, BodyHandlers.ofString());
+    assertThat(response.statusCode(), is(equalTo(HTTP_OK)));
+    assertThat(response.body(), is(equalTo(expectedBody)));
+  }
+
+  private static String crateFormBody(String formParamAKey,
+                                 String formParamAValue,
+                                 String formParamBKey,
+                                 String formParamBValue) {
+    return UriWrapper.fromUri(NOT_IMPORTANT)
+      .addQueryParameter(formParamAKey, formParamAValue)
+      .addQueryParameter(formParamBKey, formParamBValue)
+      .getUri().getQuery();
+  }
+
+  @Test
   void shouldThrowExceptionWhenCallingUnsupportedMethod() {
     assertThrows(UnsupportedOperationException.class, directCallClient::cookieHandler);
     assertThrows(UnsupportedOperationException.class, directCallClient::connectTimeout);
@@ -105,6 +156,11 @@ class WiremockDirectCallClientTest {
 
   }
 
+  private static String getAuthorizationHeader(String username, String password) {
+    return "Basic " + Base64.getEncoder()
+      .encodeToString(formatCredentialsForBasicAuth(username, password));
+  }
+
   private static Stream<TestSetup> getRequestsProvider() {
     return Stream.of(createSetupWithSimpleGetRequest(),
       createSetupWithRequestWithQueryParams(GET),
@@ -118,7 +174,7 @@ class WiremockDirectCallClientTest {
       createSetupWithRequestWithQueryParams(POST),
       createSetupWithRequestWithHeaders(POST),
       createSetupWhereResponseHasHeaders(POST)
-      );
+    );
   }
 
   private static Stream<TestSetup> putRequestsProvider() {
@@ -213,7 +269,9 @@ class WiremockDirectCallClientTest {
     return randomElement(randomInteger(1000));
   }
 
-  private static MappingBuilder createBasicStubRequestMapping(URI uri, String requestBody, HttpMethod method) {
+  private static MappingBuilder createBasicStubRequestMapping(URI uri,
+                                                              String requestBody,
+                                                              HttpMethod method) {
     var mapping = WireMock.request(method.toString(), urlPathEqualTo(uri.getPath()));
     if (StringUtils.isNotBlank(requestBody)) {
       mapping = mapping.withRequestBody(WireMock.equalTo(requestBody));
@@ -236,14 +294,18 @@ class WiremockDirectCallClientTest {
     }
   }
 
-  private static HttpRequest createBasicHttpRequest(URI uri, String requestBody, HttpMethod method) {
+  private static HttpRequest createBasicHttpRequest(URI uri,
+                                                    String requestBody,
+                                                    HttpMethod method) {
     var bodyPublisher =
       nonNull(requestBody) ? BodyPublishers.ofString(requestBody) : BodyPublishers.noBody();
     return HttpRequest.newBuilder(uri).method(method.toString(), bodyPublisher).build();
   }
 
-  private static HttpRequest createHttpRequestWithHeaders(URI uri, String requestBody,
-                                                          HttpHeader httpHeader, HttpMethod method) {
+  private static HttpRequest createHttpRequestWithHeaders(URI uri,
+                                                          String requestBody,
+                                                          HttpHeader httpHeader,
+                                                          HttpMethod method) {
     var headerValues = joinHeaderValues(httpHeader);
 
     return HttpRequest.newBuilder(createBasicHttpRequest(uri, requestBody, method),
