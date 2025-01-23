@@ -10,6 +10,7 @@ import java.util.stream.Stream;
  *
  * @param <T> the contained object.
  */
+@SuppressWarnings("PMD.UseDiamondOperator")
 public abstract class Try<T> {
 
   public static final String NULL_ACTION_MESSAGE = "Action cannot be null";

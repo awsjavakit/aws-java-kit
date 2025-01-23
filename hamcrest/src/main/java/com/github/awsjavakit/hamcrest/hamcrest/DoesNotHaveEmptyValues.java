@@ -131,6 +131,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     return node.isContainerNode() && node.isEmpty();
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private List<PropertyValuePair> createListWithFieldsToBeChecked(PropertyValuePair rootObject) {
     List<PropertyValuePair> fieldsToBeChecked = new ArrayList<>();
     var fieldsToBeVisited = initializeFieldsToBeVisited(rootObject);
@@ -144,12 +145,14 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     return fieldsToBeChecked;
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private Stack<PropertyValuePair> initializeFieldsToBeVisited(PropertyValuePair rootObject) {
     var fieldsToBeVisited = new Stack<PropertyValuePair>();
     fieldsToBeVisited.add(rootObject);
     return fieldsToBeVisited;
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private void addNestedFieldsToFieldsToBeVisited(Stack<PropertyValuePair> fieldsToBeVisited,
                                                   PropertyValuePair currentField) {
     if (currentField.isComplexObject()) {
@@ -159,6 +162,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     }
   }
 
+  @SuppressWarnings("PMD.LooseCoupling")
   private void addEachArrayElementAsFieldToBeVisited(Stack<PropertyValuePair> fieldsToBeVisited,
                                                      PropertyValuePair currentField) {
     var collectionElements = currentField.createPropertyValuePairsForEachCollectionItem();
@@ -180,6 +184,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
       .collect(Collectors.toList());
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isEmpty(Object value) {
     if (isNull(value)) {
       return true;
@@ -191,10 +196,12 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
         || isEmptyJsonNode(value);
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isEmptyMap(Object value) {
     return value instanceof Map && ((Map<?, ?>) value).isEmpty();
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isEmptyJsonNode(Object value) {
     if (value instanceof JsonNode) {
       return isEmptyContainer((JsonNode) value) || isEmptyValueNode((JsonNode) value);
@@ -202,6 +209,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
     return false;
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isEmptyValueNode(JsonNode value) {
     if (value.isTextual()) {
       return isNull(value.textValue()) || value.textValue().isBlank();
@@ -210,10 +218,12 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
 
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isEmptyCollection(Object value) {
     return value instanceof Collection && ((Collection<?>) value).isEmpty();
   }
 
+  @SuppressWarnings("PMD.SimplifyBooleanReturns")
   private boolean isBlankString(Object value) {
     return value instanceof String && ((String) value).isBlank();
   }

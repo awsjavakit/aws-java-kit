@@ -27,7 +27,6 @@ public final class VirtualFuture<A> {
 
   public static VirtualFuture<Void> allOf(VirtualFuture... futures) {
     var completableFutures = Arrays.stream(futures)
-      .map(VirtualFuture::execute)
       .map(future -> future.future)
       .toArray(CompletableFuture[]::new);
 
