@@ -192,6 +192,19 @@ class S3DriverTest {
     assertThat(retrievedContent, is(equalTo(content)));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = { "uncompressedFileName", "compressedFileName.gz"})
+  void shouldReadFileContentAsStreamBasedOnUri(String path) throws IOException {
+    var fileName = UnixPath.of(path);
+    var expectedContents = randomString();
+    var fileLocation = s3Driver.insertFile(fileName, expectedContents);
+    var streamContent = s3Driver.readFileAsStream(fileLocation);
+    try (var reader = new BufferedReader(new InputStreamReader(streamContent, StandardCharsets.UTF_8))) {
+      var retrievedContent = reader.readLine();
+      assertThat(retrievedContent, is(equalTo(expectedContents)));
+    }
+  }
+
   @Test
   void shouldReadFileWhenReadingEvent() throws IOException {
     s3Driver = new S3Driver(new FakeS3Client(), "ignoredBucketName");
