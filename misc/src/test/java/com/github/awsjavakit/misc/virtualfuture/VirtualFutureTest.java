@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -77,14 +78,14 @@ class VirtualFutureTest {
   }
 
   @Test
-  void shouldExecuteAllTasksInParallel(){
+  void shouldExecuteAllTasksInParallel() {
     var range = IntegerRange.of(0, 100);
     var startTime = Instant.now();
 
     var futures = IntStream.range(range.getMinimum(), range.getMaximum() + 1)
       .boxed()
       .map(number -> VirtualFuture.supply(() -> taskWithDelay(number)))
-      .map(future->future.map(VirtualFutureTest::anotherTaskWihDelay))
+      .map(future -> future.map(VirtualFutureTest::anotherTaskWihDelay))
       .toList();
     VirtualFuture.allOf(futures.toArray(VirtualFuture[]::new)).join();
 
@@ -97,6 +98,17 @@ class VirtualFutureTest {
     assertThat(taskDuration)
       .isLessThanOrEqualTo(Duration.ofSeconds(MUCH_LESS_TIME_THAN_SUM_OF_DELAYS));
 
+  }
+
+  @Test
+  void shouldExecuteSuppliedTasksOnce() {
+    var sharedResource = new AtomicInteger(0);
+    var futures = IntStream.range(0, 10).boxed()
+      .map(ignored -> VirtualFuture.supply(() -> taskWithSharedResource(1, sharedResource)))
+      .toList();
+    VirtualFuture.allOf(futures.toArray(VirtualFuture[]::new)).join();
+    var expectedValue = 10;
+    assertThat(sharedResource.get()).isEqualTo(expectedValue);
   }
 
   private static String someMappingFunction(Integer input) {
@@ -122,6 +134,18 @@ class VirtualFutureTest {
 
   }
 
+  private static void delay(Duration sleep) {
+    try {
+      Thread.sleep(sleep);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static void delay() {
+    delay(Duration.ofSeconds(1));
+  }
+
   private Integer task() {
     return TASK_RESULT;
   }
@@ -131,18 +155,16 @@ class VirtualFutureTest {
     return input;
   }
 
+  private Integer taskWithSharedResource(int input, AtomicInteger sharedResource) {
+    delay(Duration.ofMillis(10));
+    sharedResource.addAndGet(input);
+    return input;
+  }
+
   private Set<Long> taskReturningThreadId(Set<Long> threadIds) {
     var set = new HashSet<>(threadIds);
     set.add(Thread.currentThread().threadId());
     return set;
-  }
-
-  private static void delay() {
-    try {
-      Thread.sleep(Duration.ofSeconds(1));
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
   }
 
 }

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+@SuppressWarnings("PMD.UseDiamondOperator")
 public class Success<T> extends Try<T> {
 
   public final T value;

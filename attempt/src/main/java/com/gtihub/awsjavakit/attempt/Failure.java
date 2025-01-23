@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+@SuppressWarnings("PMD.UseDiamondOperator")
 public class Failure<T> extends Try<T> {
 
   private final Exception exception;
