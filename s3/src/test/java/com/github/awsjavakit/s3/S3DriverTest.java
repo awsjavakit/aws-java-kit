@@ -94,7 +94,7 @@ class S3DriverTest {
     s3Driver.insertFile(firstFilePath, firstFileContent);
     s3Driver.insertFile(secondFilePath, secondFileContent);
 
-    s3Driver = new S3Driver(s3Client, "ignored");
+    s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
     List<String> actualContent = s3Driver.getFiles(UnixPath.of(SOME_PATH));
 
     assertThat(actualContent, containsInAnyOrder(firstFileContent, secondFileContent));
@@ -110,9 +110,9 @@ class S3DriverTest {
     s3Driver.insertFile(firstFilePath, randomString());
     s3Driver.insertFile(secondFilePath, randomString());
 
-    var bucketName = "bucketName";
-    s3Driver = new S3Driver(s3Client, bucketName);
-    var folderUri = URI.create(String.format("s3://%s/%s", bucketName, folder));
+
+    s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
+    var folderUri = URI.create(String.format("s3://%s/%s", SAMPLE_BUCKET, folder));
 
     var filePaths = s3Driver.listAllFiles(folderUri);
 
