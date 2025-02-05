@@ -56,7 +56,7 @@ class FakeS3ClientTest {
   }
 
   @Test
-  void putObjectDoesNotRemoveExistingDate() {
+  void putObjectDoesNotRemoveExistingData() {
     var s3Client = new FakeS3Client();
     var content = Map.of(URI.create("s3://someBucket/" + randomString()), randomString(),
       URI.create("s3://someBucket/" + randomString()), randomString());
