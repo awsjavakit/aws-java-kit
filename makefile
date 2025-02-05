@@ -10,10 +10,11 @@ cpt: cp
 
 test: cpt
 	./gradlew test
+	./gradlew spotlessApply
+	
 
 build: test
 	./gradlew build
-	./gradlew spotlessApply
 
 clean:
 	./gradlew clean

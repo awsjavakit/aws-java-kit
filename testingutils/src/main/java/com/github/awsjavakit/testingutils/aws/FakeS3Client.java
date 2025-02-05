@@ -3,19 +3,15 @@ package com.github.awsjavakit.testingutils.aws;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import com.github.awsjavakit.misc.JacocoGenerated;
-import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -36,27 +32,16 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @JacocoGenerated
-@SuppressWarnings({"PMD.CouplingBetweenObjects","PMD.UnusedPrivateMethod"})
+@SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.UnusedPrivateMethod"})
 public class FakeS3Client implements S3Client {
 
   private static final int START_FROM_BEGINNING = 0;
-  private final Map<String, ByteBuffer> filesAndContent;
+  private final Map<String, Map<String, ByteBuffer>> filesAndContent;
   private final List<CopyObjectRequest> copyRequests;
 
-  public FakeS3Client(String... filesInBucket) {
-    this(readResourceFiles(filesInBucket));
-  }
-
-  public FakeS3Client(Map<String, ByteBuffer> filesAndContent) {
-    this.filesAndContent = new LinkedHashMap<>(filesAndContent);
+  public FakeS3Client() {
+    this.filesAndContent = new LinkedHashMap<>();
     this.copyRequests = new ArrayList<>();
-  }
-
-  public static FakeS3Client fromContentsMap(Map<String, InputStream> filesAndContent) {
-    var toByteBuffer = filesAndContent.entrySet().stream()
-      .collect(
-        Collectors.toMap(Entry::getKey, entry -> inputSteamToByteBuffer(entry.getValue())));
-    return new FakeS3Client(toByteBuffer);
   }
 
   //TODO: fix if necessary
@@ -65,7 +50,7 @@ public class FakeS3Client implements S3Client {
   public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
                                      ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
     var filename = getObjectRequest.key();
-    var contents = extractContent(filename).array();
+    var contents = extractContent(getObjectRequest.bucket(),filename).array();
     var response = GetObjectResponse.builder().contentLength((long) contents.length)
       .build();
     return transformResponse(responseTransformer, new ByteArrayInputStream(contents), response);
@@ -79,7 +64,7 @@ public class FakeS3Client implements S3Client {
    */
   @Override
   public ListObjectsResponse listObjects(ListObjectsRequest listObjectsRequest) {
-    var fileKeys = new ArrayList<>(filesAndContent.keySet());
+    var fileKeys = new ArrayList<>(getBucketContents(listObjectsRequest.bucket()).keySet());
 
     var startIndex = calculateStartIndex(fileKeys, listObjectsRequest.marker());
     var excludedEndIndex = calculateEndIndex(fileKeys, listObjectsRequest.marker(),
@@ -94,6 +79,13 @@ public class FakeS3Client implements S3Client {
     return ListObjectsResponse.builder().contents(files)
       .nextMarker(nextStartListingPoint)
       .isTruncated(nonNull(nextStartListingPoint)).build();
+  }
+
+  private Map<String, ByteBuffer> getBucketContents(String bucketName) {
+    if(!filesAndContent.containsKey(bucketName)){
+      throw new IllegalStateException(String.format("Bucket %s is empty",bucketName));
+    }
+    return filesAndContent.get(bucketName);
   }
 
   @Override
@@ -118,17 +110,24 @@ public class FakeS3Client implements S3Client {
   @SuppressWarnings("PMD.CloseResource")
   @Override
   public PutObjectResponse putObject(PutObjectRequest putObjectRequest, RequestBody requestBody) {
-    String path = putObjectRequest.key();
-    InputStream inputStream = requestBody.contentStreamProvider().newStream();
-    this.filesAndContent.put(path, inputSteamToByteBuffer(inputStream));
+    var bucketName = putObjectRequest.bucket();
+    var path = putObjectRequest.key();
+    var content = requestBody.contentStreamProvider().newStream();
+    createBucketEntry(bucketName);
+    this.filesAndContent.get(bucketName).put(path, inputSteamToByteBuffer(content));
     return PutObjectResponse.builder().build();
   }
 
   @Override
   public CopyObjectResponse copyObject(CopyObjectRequest copyObjectRequest) {
+    createBucketEntry(copyObjectRequest.sourceBucket());
+    createBucketEntry(copyObjectRequest.destinationBucket());
     this.copyRequests.add(copyObjectRequest);
-    var contents = this.filesAndContent.get(copyObjectRequest.sourceKey());
-    this.filesAndContent.put(copyObjectRequest.destinationKey(), contents);
+    var contents = getBucketContents(copyObjectRequest.sourceBucket())
+      .get(copyObjectRequest.sourceKey());
+    createBucketEntry(copyObjectRequest.destinationBucket());
+    getBucketContents(copyObjectRequest.destinationBucket())
+      .put(copyObjectRequest.destinationKey(), contents);
     return CopyObjectResponse.builder().build();
   }
 
@@ -144,18 +143,6 @@ public class FakeS3Client implements S3Client {
 
   public List<CopyObjectRequest> getCopyRequests() {
     return copyRequests;
-  }
-
-  private static Map<String, ByteBuffer> readResourceFiles(String... filesInBucket) {
-    List<String> suppliedFilenames = Arrays.asList(filesInBucket);
-    return suppliedFilenames.stream()
-      .map(filename -> new SimpleEntry<>(filename, readFileFromResources(filename)))
-      .collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue));
-  }
-
-  private static ByteBuffer readFileFromResources(String filename) {
-    final var inputStream = IoUtils.inputStreamFromResources(filename);
-    return inputSteamToByteBuffer(inputStream);
   }
 
   private static ByteBuffer inputSteamToByteBuffer(InputStream inputStream) {
@@ -176,6 +163,12 @@ public class FakeS3Client implements S3Client {
       throw new IllegalArgumentException("Marker/ContinuationToken is not valid");
     }
     return indexOfLastFileRead;
+  }
+
+  private void createBucketEntry(String bucketName) {
+    if (!filesAndContent.containsKey(bucketName)) {
+      filesAndContent.put(bucketName, new LinkedHashMap<>());
+    }
   }
 
   private String calculateNestStartListingPoint(List<String> fileKeys,
@@ -216,12 +209,18 @@ public class FakeS3Client implements S3Client {
     throw new IllegalStateException("Start index is out of bounds in FakeS3Client");
   }
 
-  private ByteBuffer extractContent(String filename) {
-    if (filesAndContent.containsKey(filename)) {
-      return filesAndContent.get(filename);
+  private ByteBuffer extractContent(String bucket, String filename) {
+    if (getBucketContents(bucket).containsKey(filename)) {
+      return getBucketContents(bucket).get(filename);
     } else {
-      throw NoSuchKeyException.builder().message("File does not exist:" + filename).build();
+      throw NoSuchKeyException.builder()
+        .message(noSuchKeyErrorMessage(bucket, filename))
+        .build();
     }
+  }
+
+  private static String noSuchKeyErrorMessage(String bucket, String filename) {
+    return String.format("Bucket %s does not contain key %s", bucket, filename);
   }
 
   private <ReturnT> ReturnT transformResponse(

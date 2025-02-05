@@ -1,24 +1,24 @@
 [versions]
-awsSdk2 = { strictly = '2.29.17' }
-junit = { strictly = '5.11.3' }
-assertj = { strictly = '3.26.3' }
-log4j = { strictly = '2.24.1' }
+awsSdk2 = { strictly = '2.30.12' }
+junit = { strictly = '5.11.4' }
+assertj = { strictly = '3.27.3' }
+log4j = { strictly = '2.24.3' }
 slf4j = { require = '2.0.16' }
 lambda-log4j2 = { strictly = '1.6.0' }
-jackson = { strictly = '2.18.1' }
-guava = { strictly = '33.3.1-jre' }
+jackson = { strictly = '2.18.2' }
+guava = { strictly = '33.4.0-jre' }
 apacheCommons = { strictly = '3.17.0' }
-datafaker = { strictly = '2.4.0' }
+datafaker = { strictly = '2.4.2' }
 hamcrest = { strictly = '3.0' }
 hamcrestOptional = { strictly = '1.3.2' }
 hamcrestJackson = { strictly = '1.3.2' }
-wiremock = { strictly = '3.9.2' }
-mockito = { strictly = '5.14.2' }
+wiremock = { strictly = '3.11.0' }
+mockito = { strictly = '5.15.2' }
 awsLambdaEvents = { strictly = '3.14.0' }
 awsLambdaCore = { strictly = '1.2.3' }
 lombok = { strictly = '1.18.36' }
 dynamoDbLocal = { strictly = '2.5.3' }
-resilience4j = {strictly= '2.2.0'}
+resilience4j = {strictly= '2.3.0'}
 
 [libraries]
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
