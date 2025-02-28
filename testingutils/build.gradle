@@ -21,6 +21,7 @@ dependencies {
     implementation libs.aws.eventbridge
     implementation libs.aws.secrets
     implementation libs.aws.firehose
+    implementation libs.aws.lambda
     implementation libs.bundles.json
     implementation libs.bundles.testing
     implementation libs.wiremock
