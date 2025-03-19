@@ -6,17 +6,10 @@ plugins {
 
 dependencies {
 
-  implementation libs.bundles.json
-  implementation libs.bundles.logging
-  implementation libs.aws.cloudwatch
-  implementation project(":attempt")
+  compileOnly libs.aws.cloudwatch
   implementation project(":misc")
+  testImplementation libs.aws.cloudwatch
   testImplementation project(":testingutils")
   testImplementation libs.bundles.testing
-
-
-}
-
-test {
 
 }
