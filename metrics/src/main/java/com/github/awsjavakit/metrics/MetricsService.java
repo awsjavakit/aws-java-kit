@@ -86,7 +86,7 @@ public class MetricsService implements AutoCloseable {
   private MetricDatum createDatapoint(Actor actor, Metric metric,
                                       double metricValue) {
     var dimension = createDimension(actor.name(), metric);
-    return crateDatapoint(metricValue, metric, dimension);
+    return createDatapoint(metricValue, metric, dimension);
   }
 
   private PutMetricDataRequest createRequest() {
@@ -96,7 +96,7 @@ public class MetricsService implements AutoCloseable {
       .build();
   }
 
-  private MetricDatum crateDatapoint(double metricValue, Metric metric, Dimension dimension) {
+  private MetricDatum createDatapoint(double metricValue, Metric metric, Dimension dimension) {
     return MetricDatum.builder()
       .metricName(metric.metricName())
       .dimensions(dimension)
