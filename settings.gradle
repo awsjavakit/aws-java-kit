@@ -18,4 +18,5 @@ include('hamcrest')
 include('logutils')
 include('identifiers')
 include('stepfunctions')
+include('metrics')
 
