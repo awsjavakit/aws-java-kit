@@ -2,9 +2,9 @@ package com.github.awsjavakit.metrics;
 
 import static java.util.Objects.nonNull;
 import java.time.Clock;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.cloudwatch.model.Dimension;
 import software.amazon.awssdk.services.cloudwatch.model.MetricDatum;
@@ -17,16 +17,17 @@ public class MetricsService implements AutoCloseable {
 
   public static final int MAX_REQUEST_SIZE = 90;
 
-  private final ReentrantLock instanceLock = new ReentrantLock();
   private final Clock clock;
   private final CloudWatchClient cloudwatchClient;
   private final String namespace;
-  private List<MetricDatum> metricData;
+  private final AtomicInteger listSize;
+  private Deque<MetricDatum> metricData;
 
   public MetricsService(Clock clock, CloudWatchClient cloudwatchClient, String namespace) {
     this.clock = clock;
     this.cloudwatchClient = cloudwatchClient;
-    this.metricData = new ArrayList<>();
+    this.metricData = new ConcurrentLinkedDeque<>();
+    this.listSize = new AtomicInteger(0);
     this.namespace = namespace;
   }
 
@@ -41,30 +42,23 @@ public class MetricsService implements AutoCloseable {
   }
 
   public void registerMetric(Actor actor, Metric metric, double value) {
-    try {
-      instanceLock.lock();
-      var datum = createDatapoint(actor, metric, value);
-      metricData.add(datum);
-      if (metricData.size() >= MAX_REQUEST_SIZE) {
-        flush();
-      }
-
-    } finally {
-      instanceLock.unlock();
+    var datum = createDatapoint(actor, metric, value);
+    metricData.add(datum);
+    listSize.incrementAndGet();
+    if (listSize.get() >= MAX_REQUEST_SIZE) {
+      flush();
     }
+
   }
 
   public void flush() {
-    try {
-      instanceLock.lock();
-      if (isNotEmpty()) {
-        var request = createRequest();
-        cloudwatchClient.putMetricData(request);
-        metricData = new ArrayList<>();
-      }
-    } finally {
-      instanceLock.unlock();
+    if (isNotEmpty()) {
+      var request = createRequest();
+      cloudwatchClient.putMetricData(request);
+      metricData = new ConcurrentLinkedDeque<>();
+      listSize.set(0);
     }
+
   }
 
   @Override
@@ -80,7 +74,7 @@ public class MetricsService implements AutoCloseable {
   }
 
   private boolean isNotEmpty() {
-    return nonNull(metricData) && !metricData.isEmpty();
+    return nonNull(metricData) && listSize.intValue()>0;
   }
 
   private MetricDatum createDatapoint(Actor actor, Metric metric,
