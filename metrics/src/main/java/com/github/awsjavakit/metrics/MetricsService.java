@@ -1,11 +1,14 @@
 package com.github.awsjavakit.metrics;
 
 import static java.util.Objects.nonNull;
+
 import java.time.Clock;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
@@ -19,7 +22,10 @@ public class MetricsService implements AutoCloseable {
   public static final int NORMAL_RESOLUTION = 60;
 
   public static final int MAX_REQUEST_SIZE = 1000;
-
+  public static final Function<Collection<Double>, Double> SUM = doubles -> doubles.stream()
+    .reduce(Double::sum).orElseThrow();
+  public static final Function<Collection<Double>, Double> AVERAGE = doubles ->
+    SUM.apply(doubles) / doubles.size();
   private final Clock clock;
   private final CloudWatchClient cloudwatchClient;
   private final String namespace;
@@ -39,8 +45,8 @@ public class MetricsService implements AutoCloseable {
   }
 
   public static MetricsService create(Clock clock,
-                                      CloudWatchClient cloudWatchClient,
-                                      String namespace) {
+    CloudWatchClient cloudWatchClient,
+    String namespace) {
     return new MetricsService(clock, cloudWatchClient, namespace);
   }
 
@@ -89,9 +95,12 @@ public class MetricsService implements AutoCloseable {
   }
 
   private Measurement aggregateMeasurementsOfSameMetric(List<Measurement> list) {
-    return list.stream()
-      .reduce((l, r) -> new Measurement(l.actor(), l.metric(), l.value + r.value))
-      .orElseThrow();
+    var actor = list.getFirst().actor();
+    var metric = list.getFirst().metric();
+    var values = list.stream().map(Measurement::value).toList();
+    var aggregatedValue = metric.aggregationFunction().apply(values);
+
+    return new Measurement(actor, metric, aggregatedValue);
   }
 
   private boolean isNotEmpty() {
@@ -112,10 +121,12 @@ public class MetricsService implements AutoCloseable {
     }
   }
 
-  public record Metric(String metricGroup, String metricName, StandardUnit unit) {
+  public record Metric(String metricGroup, String metricName, StandardUnit unit,
+                       Function<Collection<Double>, Double> aggregationFunction) {
 
-    public static Metric of(String metricGroup, String metricName, StandardUnit unit) {
-      return new Metric(metricGroup, metricName, unit);
+    public static Metric of(String metricGroup, String metricName, StandardUnit unit,
+      Function<Collection<Double>, Double> aggregationFunction) {
+      return new Metric(metricGroup, metricName, unit, aggregationFunction);
     }
 
   }
@@ -128,9 +139,9 @@ public class MetricsService implements AutoCloseable {
     }
 
     private MetricDatum createDatapoint(double metricValue,
-                                        Metric metric,
-                                        Dimension dimension,
-                                        Clock clock) {
+      Metric metric,
+      Dimension dimension,
+      Clock clock) {
       return MetricDatum.builder()
         .metricName(metric.metricName())
         .dimensions(dimension)
