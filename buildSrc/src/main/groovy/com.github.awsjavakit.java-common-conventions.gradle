@@ -8,7 +8,7 @@ plugins {
 
 
 group 'io.github.awsjavakit'
-version = '0.24.0'
+version = '0.25.0'
 
 repositories {
     mavenCentral()
@@ -25,7 +25,6 @@ test {
     failFast = true
     useJUnitPlatform {
         excludeTags("online", "long")
-        includeEngines("junit-jupiter")
 
     }
     finalizedBy jacocoTestReport // report is always generated after tests run
