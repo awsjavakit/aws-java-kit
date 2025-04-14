@@ -13,9 +13,9 @@ class ApiGatewayEventTest {
 
   public static final ObjectMapper JSON = new ObjectMapper();
   public static final String SAMPLE_APIGATEWAY_EVENT =
-    IoUtils.stringFromResources(Path.of("apigateway", "aws-proxy-event.json"));
+    IoUtils.stringFromResources(Path.of( "aws-proxy-event.json"));
   public static final String APIGATEWAY_EVENT_WITH_NULL_VALUES =
-    IoUtils.stringFromResources(Path.of("apigateway", "event-with-null-values.json"));
+    IoUtils.stringFromResources(Path.of("event-with-null-values.json"));
 
   @Test
   void shouldParseApiGatewayEventVersion1() throws JsonProcessingException {

@@ -91,7 +91,7 @@ class FakeSqsClientTest {
 
   @Test
   void shouldNotThrowExceptionWhenClosing() {
-    assertDoesNotThrow(() -> client.close());
+    assertDoesNotThrow(client::close);
   }
 
   @Test

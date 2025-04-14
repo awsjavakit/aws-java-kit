@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
 
-public class DynamoTest {
+public class LocalDynamo {
 
   public static final String PARTITION_KEY = "PK";
   public static final String SORT_KEY = "SK";

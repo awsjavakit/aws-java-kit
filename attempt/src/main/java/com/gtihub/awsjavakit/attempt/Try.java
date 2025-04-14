@@ -10,13 +10,14 @@ import java.util.stream.Stream;
  *
  * @param <T> the contained object.
  */
+@SuppressWarnings("PMD.UseDiamondOperator")
 public abstract class Try<T> {
 
   public static final String NULL_ACTION_MESSAGE = "Action cannot be null";
 
   @SuppressWarnings("PMD.ShortMethodName")
   public static <T> Try<T> of(T input) {
-    return new Success<T>(input);
+    return new Success<>(input);
   }
 
   /**
@@ -30,9 +31,9 @@ public abstract class Try<T> {
    */
   public static <S> Try<S> attempt(Callable<S> action) {
     try {
-      return new Success<S>(action.call());
+      return new Success<>(action.call());
     } catch (Exception e) {
-      return new Failure<S>(e);
+      return new Failure<>(e);
     }
   }
 
@@ -52,9 +53,9 @@ public abstract class Try<T> {
     FunctionWithException<T, R, E> fe) {
     return arg -> {
       try {
-        return new Success<R>(fe.apply(arg));
+        return new Success<>(fe.apply(arg));
       } catch (Exception e) {
-        return new Failure<R>(e);
+        return new Failure<>(e);
       }
     };
   }

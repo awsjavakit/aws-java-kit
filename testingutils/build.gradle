@@ -16,15 +16,18 @@ dependencies {
     implementation libs.aws.ssm
     implementation libs.aws.s3
     implementation libs.aws.sqs
+    implementation libs.aws.sns
     implementation libs.aws.cloudwatch
     implementation libs.aws.eventbridge
     implementation libs.aws.secrets
     implementation libs.aws.firehose
+    implementation libs.aws.lambda
     implementation libs.bundles.json
     implementation libs.bundles.testing
+    implementation libs.wiremock
 
+    implementation libs.bundles.logging
     testImplementation project(":apigateway")
     testImplementation project(":secrets")
-    testImplementation libs.wiremock
 
 }

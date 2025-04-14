@@ -2,7 +2,6 @@ package com.github.awsjavakit.s3;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
-
 import com.github.awsjavakit.misc.Environment;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
@@ -15,21 +14,16 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
-import software.amazon.awssdk.http.SdkHttpClient;
-import software.amazon.awssdk.http.apache.ApacheHttpClient;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -38,7 +32,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 //TODO: Address God Class issue
-@SuppressWarnings("PMD.GodClass")
+@SuppressWarnings({"PMD.GodClass", "PMD.CouplingBetweenObjects"})
 public class S3Driver {
 
   public static final String GZIP_ENDING = ".gz";
@@ -59,34 +53,13 @@ public class S3Driver {
   private final S3Client client;
   private final String bucketName;
 
-  @JacocoGenerated
-  public S3Driver(String bucketName) {
-    this(defaultS3Client().build(), bucketName);
-  }
+
 
   public S3Driver(S3Client s3Client, String bucketName) {
     this.client = s3Client;
     this.bucketName = bucketName;
   }
 
-  @JacocoGenerated
-  public static S3Driver fromPermanentCredentialsInEnvironment(String bucketName) {
-    verifyThatRequiredEnvVariablesAreInPlace();
-    S3Client s3Client = defaultS3Client()
-      .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
-      .build();
-    return new S3Driver(s3Client, bucketName);
-  }
-
-  @JacocoGenerated
-  public static S3ClientBuilder defaultS3Client() {
-    Region region = ENVIRONMENT.readEnvOpt(AWS_REGION_ENV_VARIABLE)
-      .map(Region::of)
-      .orElse(Region.EU_WEST_1);
-    return S3Client.builder()
-      .region(region)
-      .httpClient(httpClientForConcurrentQueries());
-  }
 
   /**
    * Inserts the content of the string in the specified location.If the filename is gz, it
@@ -144,6 +117,11 @@ public class S3Driver {
   public String readFile(URI uri) {
     UnixPath filePath = UriWrapper.fromUri(uri).toS3bucketPath();
     return getFile(filePath);
+  }
+
+  public InputStream readFileAsStream(URI uri) {
+    var filePath = UriWrapper.fromUri(uri).toS3bucketPath();
+    return getFileAsStream(filePath);
   }
 
   @JacocoGenerated
@@ -228,10 +206,18 @@ public class S3Driver {
     return response.asString(charset);
   }
 
+  public InputStream getUncompressedFileAsStream(UnixPath file) {
+    return fetchObject(createGetObjectRequest(file)).asInputStream();
+  }
+
   public GZIPInputStream getCompressedFile(UnixPath file) throws IOException {
     GetObjectRequest getObjectRequest = createGetObjectRequest(file);
     ResponseInputStream<GetObjectResponse> response = client.getObject(getObjectRequest);
     return new GZIPInputStream(response);
+  }
+
+  public InputStream getCompressedFileAsStream(UnixPath file) throws IOException {
+    return new GZIPInputStream(client.getObject(createGetObjectRequest(file)));
   }
 
   public String getFile(UnixPath filename, Charset charset) {
@@ -244,25 +230,30 @@ public class S3Driver {
     }
   }
 
+  public InputStream getFileAsStream(UnixPath filename) {
+    if (isCompressed(filename.getLastPathElement())) {
+      return attempt(() -> getCompressedFileAsStream(filename))
+        .orElseThrow();
+    } else {
+      return getUncompressedFileAsStream(filename);
+    }
+  }
+
   public String getFile(UnixPath filename) {
     return getFile(filename, StandardCharsets.UTF_8);
   }
 
-  @JacocoGenerated
-  private static SdkHttpClient httpClientForConcurrentQueries() {
-    return ApacheHttpClient.builder()
-      .useIdleConnectionReaper(true)
-      .maxConnections(MAX_CONNECTIONS)
-      .connectionMaxIdleTime(Duration.ofMinutes(IDLE_TIME))
-      .connectionTimeout(Duration.ofMinutes(TIMEOUT_TIME))
+  public void copyFile(URI sourceUri, URI destinationUri) {
+    var request = CopyObjectRequest.builder()
+      .sourceKey(UriWrapper.fromUri(sourceUri).toS3bucketPath().toString())
+      .sourceBucket(sourceUri.getHost())
+      .destinationKey(UriWrapper.fromUri(destinationUri).toS3bucketPath().toString())
+      .destinationBucket(destinationUri.getHost())
       .build();
+    client.copyObject(request);
   }
 
-  @JacocoGenerated
-  private static void verifyThatRequiredEnvVariablesAreInPlace() {
-    ENVIRONMENT.readEnv(AWS_ACCESS_KEY_ID_ENV_VARIABLE_NAME);
-    ENVIRONMENT.readEnv(AWS_SECRET_ACCESS_KEY_ENV_VARIABLE_NAME);
-  }
+
 
   private UnixPath calculateListingFolder(UnixPath folder) {
     return isNull(folder) || folder.isEmptyPath() || folder.isRoot()
@@ -310,7 +301,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Response fetchNewResultsBatch(UnixPath folder, String listingStartingPoint,
-    int responseSize) {
+                                                     int responseSize) {
     var request = requestForListingFiles(folder, listingStartingPoint, responseSize);
     return client.listObjectsV2(request);
   }
@@ -346,7 +337,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Request requestForListingFiles(UnixPath folder, String startingPoint,
-    int responseSize) {
+                                                      int responseSize) {
     return ListObjectsV2Request.builder()
       .bucket(bucketName)
       .prefix(folder.toString())

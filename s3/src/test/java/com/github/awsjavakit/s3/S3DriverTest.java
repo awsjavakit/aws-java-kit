@@ -94,7 +94,7 @@ class S3DriverTest {
     s3Driver.insertFile(firstFilePath, firstFileContent);
     s3Driver.insertFile(secondFilePath, secondFileContent);
 
-    s3Driver = new S3Driver(s3Client, "ignored");
+    s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
     List<String> actualContent = s3Driver.getFiles(UnixPath.of(SOME_PATH));
 
     assertThat(actualContent, containsInAnyOrder(firstFileContent, secondFileContent));
@@ -110,9 +110,9 @@ class S3DriverTest {
     s3Driver.insertFile(firstFilePath, randomString());
     s3Driver.insertFile(secondFilePath, randomString());
 
-    var bucketName = "bucketName";
-    s3Driver = new S3Driver(s3Client, bucketName);
-    var folderUri = URI.create(String.format("s3://%s/%s", bucketName, folder));
+
+    s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
+    var folderUri = URI.create(String.format("s3://%s/%s", SAMPLE_BUCKET, folder));
 
     var filePaths = s3Driver.listAllFiles(folderUri);
 
@@ -190,6 +190,19 @@ class S3DriverTest {
     URI fileLocation = s3Driver.insertEvent(someFolder, content);
     String retrievedContent = s3Driver.readFile(fileLocation);
     assertThat(retrievedContent, is(equalTo(content)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "uncompressedFileName", "compressedFileName.gz"})
+  void shouldReadFileContentAsStreamBasedOnUri(String path) throws IOException {
+    var fileName = UnixPath.of(path);
+    var expectedContents = randomString();
+    var fileLocation = s3Driver.insertFile(fileName, expectedContents);
+    var streamContent = s3Driver.readFileAsStream(fileLocation);
+    try (var reader = new BufferedReader(new InputStreamReader(streamContent, StandardCharsets.UTF_8))) {
+      var retrievedContent = reader.readLine();
+      assertThat(retrievedContent, is(equalTo(expectedContents)));
+    }
   }
 
   @Test
@@ -288,6 +301,17 @@ class S3DriverTest {
   }
 
   @Test
+  void shouldCopyFileFromS3UriToS3Uri() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    s3Driver.copyFile(sourceUri, destinationUri);
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+  }
+
+  @Test
   void shouldThrowExceptionWhenWrongEncodingHasBeenUsed() {
     var expectedContent = randomString();
     var filename = randomFileName();
@@ -312,6 +336,7 @@ class S3DriverTest {
 
   private static UnixPath constructNestedPath() {
     UnixPath expectedFileName = UnixPath.of(randomFileName());
+
     UnixPath parentFolder = UnixPath.of("some", "nested", "path");
     return parentFolder.addChild(expectedFileName);
   }

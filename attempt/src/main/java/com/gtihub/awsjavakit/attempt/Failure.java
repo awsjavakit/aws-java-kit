@@ -7,6 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+@SuppressWarnings("PMD.UseDiamondOperator")
 public class Failure<T> extends Try<T> {
 
   private final Exception exception;
@@ -38,17 +39,17 @@ public class Failure<T> extends Try<T> {
 
   @Override
   public <S, E extends Exception> Try<S> map(FunctionWithException<T, S, E> action) {
-    return new Failure<S>(exception);
+    return new Failure<>(exception);
   }
 
   @Override
   public <S, E extends Exception> Try<S> flatMap(FunctionWithException<T, Try<S>, E> action) {
-    return new Failure<S>(exception);
+    return new Failure<>(exception);
   }
 
   @Override
   public <E extends Exception> Try<Void> forEach(ConsumerWithException<T, E> consumer) {
-    return new Failure<Void>(exception);
+    return new Failure<>(exception);
   }
 
   @Override
