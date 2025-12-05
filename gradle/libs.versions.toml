@@ -5,7 +5,7 @@ junit-launcher = {strictly = '1.12.2'}
 assertj = { strictly = '3.27.3' }
 log4j = { strictly = '2.24.3' }
 slf4j = { require = '2.0.17' }
-lambda-log4j2 = { strictly = '1.6.0' }
+
 jackson = { strictly = '2.18.3' }
 guava = { strictly = '33.4.7-jre' }
 apacheCommons = { strictly = '3.17.0' }
@@ -25,7 +25,7 @@ resilience4j = { strictly = '2.3.0' }
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
 slf4j = { group = 'org.slf4j', name = 'slf4j-api', version.ref = 'slf4j' }
 slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j2-impl', version.ref = 'log4j' }
-lambda-log4j2 = { group = 'com.amazonaws', name = 'aws-lambda-java-log4j2', version.ref = 'lambda-log4j2' }
+
 
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
 aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', version.ref = 'awsSdk2' }
@@ -75,5 +75,5 @@ resilience4j = { group = 'io.github.resilience4j', name = 'resilience4j-retry', 
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "junit-launcher", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal", 'hamcrest-jackson']
 json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
-logging = ['log4j-core', 'slf4j', 'slf4j-binding', 'lambda-log4j2']
+logging = ['log4j-core', 'slf4j', 'slf4j-binding']
 
