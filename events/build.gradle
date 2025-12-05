@@ -12,6 +12,7 @@ dependencies {
     implementation libs.bundles.logging
     implementation libs.aws.eventbridge
     implementation libs.aws.lambda.events
+    implementation libs.aws.lambda.core
     implementation project(":misc")
     implementation project(":attempt")
     implementation project(":jsonconfig")

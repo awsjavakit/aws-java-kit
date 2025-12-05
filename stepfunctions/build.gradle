@@ -8,6 +8,7 @@ dependencies {
 
     implementation libs.bundles.json
     implementation libs.bundles.logging
+    implementation libs.aws.lambda.core
     implementation project(":attempt")
     implementation project(":misc")
     testImplementation project(":testingutils")
