@@ -1,7 +1,6 @@
 package com.github.awsjavakit.http;
 
-import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
-import com.amazonaws.services.dynamodbv2.local.shared.access.AmazonDynamoDBLocal;
+
 import java.util.Collection;
 import java.util.List;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -11,6 +10,8 @@ import software.amazon.awssdk.services.dynamodb.model.CreateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
 import software.amazon.awssdk.services.dynamodb.model.KeyType;
 import software.amazon.awssdk.services.dynamodb.model.ScalarAttributeType;
+import software.amazon.dynamodb.services.local.embedded.DynamoDBEmbedded;
+import software.amazon.dynamodb.services.local.shared.access.AmazonDynamoDBLocal;
 
 public class LocalDynamo {
 

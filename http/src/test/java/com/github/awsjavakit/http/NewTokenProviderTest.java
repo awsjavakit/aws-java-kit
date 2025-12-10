@@ -67,8 +67,8 @@ class NewTokenProviderTest {
   @Test
   void shouldReportTagWhenErrorOccurs() {
     setupAuthHandshake();
-    var wrongCredentials = new Oauth2Credentials(authCredentials.authEndpointUri(), randomString(),
-      randomString(), authCredentials.tag());
+    var wrongCredentials = new Oauth2Credentials(authCredentials.getAuthEndpointUri(), randomString(),
+      randomString(), authCredentials.getTag());
     var tokenProvider = TokenProvider.defaultProvider(httpClient, wrongCredentials);
     var exception = assertThrows(Exception.class, tokenProvider::fetchToken);
     assertThat(exception.getMessage()).contains(wrongCredentials.getTag());

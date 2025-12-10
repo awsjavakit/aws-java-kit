@@ -68,6 +68,7 @@ public class SecretsReader {
   }
 
   private GetSecretValueResponse fetchSecretFromAws(String secretName) {
+    System.out.println("hello");
     return awsSecretsManager
       .getSecretValue(GetSecretValueRequest.builder().secretId(secretName).build());
   }
