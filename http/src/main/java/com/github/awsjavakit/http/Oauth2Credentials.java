@@ -40,6 +40,7 @@ public final class Oauth2Credentials
    *                        "https://auth.example.com/oauth2/token")
    * @param clientId        the client id (username)
    * @param clientSecret    the client secret (password)
+   * @param tag             an optional tag to identify or categorize these credentials
    * @param tag             a tag for identifying the secret
    *
    */
