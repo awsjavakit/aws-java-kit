@@ -33,8 +33,8 @@ class Oauth2CredentialsTest {
     var clientId = randomString();
     var clientSecret = randomString();
     var tag = randomString();
-    var left = new Oauth2Credentials(uri,clientId,clientSecret,tag);
-    var right = new Oauth2Credentials(uri,clientId,clientSecret,tag);
+    var left = new Oauth2Credentials(uri, clientId, clientSecret, tag);
+    var right = new Oauth2Credentials(uri, clientId, clientSecret, tag);
 
     assertThat(left, is(equalTo(right)));
     assertThat(left.hashCode(), is(equalTo(right.hashCode())));
