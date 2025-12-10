@@ -6,8 +6,8 @@ assertj = { strictly = '3.27.6' }
 log4j = { strictly = '2.25.2' }
 slf4j = { require = '2.0.17' }
 
-jackson = { strictly = '2.19.1' }
-jackson-annotations = { strictly = '2.19.1' }
+jackson = { strictly = '2.20.1' }
+jackson-annotations = { strictly = '2.20' }
 guava = { strictly = '33.5.0-jre' }
 apacheCommons = { strictly = '3.20.0' }
 datafaker = { strictly = '2.5.3' }

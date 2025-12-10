@@ -38,8 +38,6 @@ class Oauth2CredentialsTest {
 
     assertThat(left, is(equalTo(right)));
     assertThat(left.hashCode(), is(equalTo(right.hashCode())));
-    assertThat(left.toString(), is(equalTo(right.toString())));
-
   }
 
 }

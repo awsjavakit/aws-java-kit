@@ -40,6 +40,8 @@ public final class Oauth2Credentials
    *                        "https://auth.example.com/oauth2/token")
    * @param clientId        the client id (username)
    * @param clientSecret    the client secret (password)
+   * @param tag             a tag for identifying the secret
+   *
    */
   public Oauth2Credentials(
     @JsonAlias("serverUri") @JsonProperty("authEndpointUri") URI authEndpointUri,
@@ -110,15 +112,6 @@ public final class Oauth2Credentials
   @Override
   public int hashCode() {
     return Objects.hash(authEndpointUri, clientId, clientSecret, tag);
-  }
-
-  @Override
-  public String toString() {
-    return "Oauth2Credentials[" +
-      "authEndpointUri=" + authEndpointUri + ", " +
-      "clientId=" + clientId + ", " +
-      "clientSecret=" + clientSecret + ", " +
-      "tag=" + tag + ']';
   }
 
 }
