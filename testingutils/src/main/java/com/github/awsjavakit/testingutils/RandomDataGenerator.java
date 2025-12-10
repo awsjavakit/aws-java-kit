@@ -180,7 +180,7 @@ public final class RandomDataGenerator {
    * @return a random {@link Instant} between (1971-02-01:00:00, now)
    */
   public static Instant randomInstant() {
-    return FAKER.timeAndDate().between(Instant.from(BEGINNING_OF_TIME), Instant.from(END_OF_TIME));
+    return FAKER.timeAndDate().between(BEGINNING_OF_TIME, END_OF_TIME);
   }
 
   /**
@@ -190,7 +190,7 @@ public final class RandomDataGenerator {
    * @return a random {@link Instant} between (after, now)
    */
   public static Instant randomInstant(Instant after) {
-    return FAKER.timeAndDate().between(Instant.from(after), Instant.from(END_OF_TIME));
+    return FAKER.timeAndDate().between(after, END_OF_TIME);
   }
 
   /**
