@@ -112,7 +112,7 @@ class DynamoCachedTokenProviderTest extends LocalDynamo {
       dynamoClient, tableName);
     var token = tokenProvider.fetchToken();
     assertThat(tokenProvider.getTag()).isEqualTo(token.tag());
-    assertThat(tokenProvider.getTag()).isEqualTo(credentials.tag());
+    assertThat(tokenProvider.getTag()).isEqualTo(credentials.getTag());
   }
 
   @Test

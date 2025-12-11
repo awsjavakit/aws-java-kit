@@ -11,6 +11,7 @@ import java.util.Base64;
  */
 public interface OAuthCredentialsProvider extends Tagged {
 
+
   String getClientId();
 
   String getClientSecret();

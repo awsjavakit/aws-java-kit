@@ -1,24 +1,25 @@
 [versions]
-awsSdk2 = { strictly = '2.31.21' }
-junit = { strictly = '5.12.2' }
-junit-launcher = {strictly = '1.12.2'}
-assertj = { strictly = '3.27.3' }
-log4j = { strictly = '2.24.3' }
+awsSdk2 = { strictly = '2.40.4' }
+junit = { strictly = '6.0.1' }
+#junit-launcher = {strictly = '1.12.2'}
+assertj = { strictly = '3.27.6' }
+log4j = { strictly = '2.25.2' }
 slf4j = { require = '2.0.17' }
 
-jackson = { strictly = '2.18.3' }
-guava = { strictly = '33.4.7-jre' }
-apacheCommons = { strictly = '3.17.0' }
-datafaker = { strictly = '2.4.2' }
+jackson = { strictly = '2.20.1' }
+jackson-annotations = { strictly = '2.20' }
+guava = { strictly = '33.5.0-jre' }
+apacheCommons = { strictly = '3.20.0' }
+datafaker = { strictly = '2.5.3' }
 hamcrest = { strictly = '3.0' }
 hamcrestOptional = { strictly = '1.3.2' }
 hamcrestJackson = { strictly = '1.3.2' }
-wiremock = { strictly = '3.12.1' }
-mockito = { strictly = '5.17.0' }
-awsLambdaEvents = { strictly = '3.15.0' }
-awsLambdaCore = { strictly = '1.2.3' }
-lombok = { strictly = '1.18.38' }
-dynamoDbLocal = { strictly = '2.6.0' }
+wiremock = { strictly = '3.13.2' }
+mockito = { strictly = '5.21.0' }
+awsLambdaEvents = { strictly = '3.16.1' }
+awsLambdaCore = { strictly = '1.4.0' }
+lombok = { strictly = '1.18.42' }
+dynamoDbLocal = { strictly = '3.1.0' }
 resilience4j = { strictly = '2.3.0' }
 
 [libraries]
@@ -48,7 +49,7 @@ jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', ve
 jackson-datatype-jsr310 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
 jackson-datatype-jdk8 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', version.ref = 'jackson' }
 jackson-databind = { group = 'com.fasterxml.jackson.core', name = 'jackson-databind', version.ref = 'jackson' }
-jackson-annotations = { group = 'com.fasterxml.jackson.core', name = 'jackson-annotations', version.ref = 'jackson' }
+jackson-annotations = { group = 'com.fasterxml.jackson.core', name = 'jackson-annotations', version.ref = 'jackson-annotations' }
 jackson-module-parameter-names = { group = 'com.fasterxml.jackson.module', name = 'jackson-module-parameter-names', version.ref = 'jackson' }
 jackson-time-module = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
 jackson-csv = { group = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-csv', version.ref = 'jackson' }
@@ -57,8 +58,8 @@ guava = { group = 'com.google.guava', name = 'guava', version.ref = 'guava' }
 
 junit-api = { group = 'org.junit.jupiter', name = 'junit-jupiter-api', version.ref = 'junit' }
 junit-engine = { group = 'org.junit.jupiter', name = 'junit-jupiter-engine', version.ref = 'junit' }
-junit-params = { group = 'org.junit.jupiter', name = 'junit-jupiter-params', version = 'junit' }
-junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = 'junit-launcher'}
+junit-params = { group = 'org.junit.jupiter', name = 'junit-jupiter-params', version.ref = 'junit' }
+junit-launcher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = 'junit'}
 assertj = { group = 'org.assertj', name = 'assertj-core', version.ref = 'assertj' }
 commons-lang = { group = 'org.apache.commons', name = 'commons-lang3', version.ref = 'apacheCommons' }
 datafaker = { group = 'net.datafaker', name = 'datafaker', version.ref = 'datafaker' }
@@ -69,7 +70,7 @@ wiremock = { group = 'org.wiremock', name = 'wiremock-standalone', version.ref =
 mockito-core = { group = 'org.mockito', name = 'mockito-core', version.ref = 'mockito' }
 mockito-junit = { group = 'org.mockito', name = 'mockito-junit-jupiter', version.ref = 'mockito' }
 lombok = { group = 'org.projectlombok', name = 'lombok', version.ref = 'lombok' }
-dynamoDbLocal = { group = 'com.amazonaws', name = 'DynamoDBLocal', version.ref = 'dynamoDbLocal' }
+dynamoDbLocal = { group = 'software.amazon.dynamodb', name = 'DynamoDBLocal', version.ref = 'dynamoDbLocal' }
 
 resilience4j = { group = 'io.github.resilience4j', name = 'resilience4j-retry', version.ref = 'resilience4j' }
 [bundles]

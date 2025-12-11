@@ -12,26 +12,47 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
+import java.util.Objects;
 
 /**
  * Structure containing all the necessary information for an OAuth2 authentication handshake with
  * for grant_type "client_credentials".
  *
- * @param authEndpointUri the URI of the authentication endpoint (e.g.
- *                        "https://auth.example.com/oauth2/token")
- * @param clientId        the client id (username)
- * @param clientSecret    the client secret (password)
  */
+
 @JsonTypeInfo(use = Id.NAME, include = As.EXISTING_PROPERTY, property = "type")
 @JsonTypeName(Oauth2Credentials.TYPE)
-public record Oauth2Credentials(
-  @JsonAlias("serverUri") @JsonProperty("authEndpointUri") URI authEndpointUri,
-  @JsonProperty("clientId") String clientId,
-  @JsonProperty("clientSecret") String clientSecret,
-  @JsonProperty("tag") String tag)
+public final class Oauth2Credentials
   implements OAuthCredentialsProvider {
 
   public static final String TYPE = "OAuth2Credentials";
+  @JsonProperty("authEndpointUri")
+  private final URI authEndpointUri;
+  @JsonProperty("clientId")
+  private final String clientId;
+  @JsonProperty("clientSecret")
+  private final String clientSecret;
+  @JsonProperty("tag")
+  private final String tag;
+
+  /**
+   * @param authEndpointUri the URI of the authentication endpoint (e.g.
+   *                        "https://auth.example.com/oauth2/token")
+   * @param clientId        the client id (username)
+   * @param clientSecret    the client secret (password)
+   * @param tag             an optional tag to identify or categorize these credentials
+   *
+   */
+  public Oauth2Credentials(
+    @JsonAlias("serverUri") @JsonProperty("authEndpointUri") URI authEndpointUri,
+    @JsonProperty("clientId") String clientId,
+    @JsonProperty("clientSecret") String clientSecret,
+    @JsonProperty("tag") String tag) {
+    this.authEndpointUri = authEndpointUri;
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.tag = tag;
+  }
 
   public static Oauth2Credentials fromJson(String secretName, ObjectMapper json) {
     return attempt(() -> json.readValue(secretName, Oauth2Credentials.class)).orElseThrow();
@@ -42,30 +63,54 @@ public record Oauth2Credentials(
   }
 
   @Override
-  @JsonIgnore
   public String getClientId() {
-    return clientId();
+    return clientId;
   }
 
   @Override
-  @JsonIgnore
   public String getClientSecret() {
-    return clientSecret();
+    return clientSecret;
   }
 
   @Override
   @JsonIgnore
   public URI getAuthorizationEndpoint() {
-    return authEndpointUri();
+    return getAuthEndpointUri();
   }
 
   @Override
   public String getTag() {
-    return tag();
+    return tag;
   }
 
   @JsonProperty(value = "type", access = Access.READ_ONLY)
   public String getType() {
     return TYPE;
   }
+
+  public URI getAuthEndpointUri() {
+    return authEndpointUri;
+  }
+
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (obj == null || obj.getClass() != this.getClass()) {
+      return false;
+    }
+    var that = (Oauth2Credentials) obj;
+    return Objects.equals(this.authEndpointUri, that.authEndpointUri) &&
+      Objects.equals(this.clientId, that.clientId) &&
+      Objects.equals(this.clientSecret, that.clientSecret) &&
+      Objects.equals(this.tag, that.tag);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(authEndpointUri, clientId, clientSecret, tag);
+  }
+
 }

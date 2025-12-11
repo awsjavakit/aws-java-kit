@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.net.URI;
-import java.sql.Date;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -181,7 +180,7 @@ public final class RandomDataGenerator {
    * @return a random {@link Instant} between (1971-02-01:00:00, now)
    */
   public static Instant randomInstant() {
-    return FAKER.date().between(Date.from(BEGINNING_OF_TIME), Date.from(END_OF_TIME)).toInstant();
+    return FAKER.timeAndDate().between(BEGINNING_OF_TIME, END_OF_TIME);
   }
 
   /**
@@ -191,7 +190,7 @@ public final class RandomDataGenerator {
    * @return a random {@link Instant} between (after, now)
    */
   public static Instant randomInstant(Instant after) {
-    return FAKER.date().between(Date.from(after), Date.from(END_OF_TIME)).toInstant();
+    return FAKER.timeAndDate().between(after, END_OF_TIME);
   }
 
   /**
