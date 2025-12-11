@@ -88,7 +88,6 @@ public final class Oauth2Credentials
     return TYPE;
   }
 
-
   public URI getAuthEndpointUri() {
     return authEndpointUri;
   }
