@@ -207,7 +207,7 @@ public class S3Driver {
   }
 
   public InputStream getUncompressedFileAsStream(UnixPath file) {
-    return fetchObject(createGetObjectRequest(file)).asInputStream();
+    return client.getObject(createGetObjectRequest(file),ResponseTransformer.toInputStream());
   }
 
   public GZIPInputStream getCompressedFile(UnixPath file) throws IOException {
@@ -217,7 +217,7 @@ public class S3Driver {
   }
 
   public InputStream getCompressedFileAsStream(UnixPath file) throws IOException {
-    return new GZIPInputStream(client.getObject(createGetObjectRequest(file)));
+    return new GZIPInputStream(getUncompressedFileAsStream(file));
   }
 
   public String getFile(UnixPath filename, Charset charset) {
