@@ -220,13 +220,12 @@ class S3DriverTest {
 
     var uri = s3Driver.insertFile(UnixPath.of(path), bigFile);
     var stream = s3Driver.readFileAsStream(uri);
-    try (var reader = new BufferedReader(new InputStreamReader(stream))) {
+    try (var reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
       var lines = reader.lines().count();
-      assertThat(lines, is(equalTo(Long.valueOf(expectedLines))));
+      assertThat(lines, is(equalTo((long) expectedLines)));
       assertThat(spiedClient.getResponseTransformerName(),
         is(equalTo(TransformerType.STREAM.getName())));
     }
-
   }
 
   @Test

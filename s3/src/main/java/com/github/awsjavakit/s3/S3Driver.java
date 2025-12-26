@@ -53,13 +53,10 @@ public class S3Driver {
   private final S3Client client;
   private final String bucketName;
 
-
-
   public S3Driver(S3Client s3Client, String bucketName) {
     this.client = s3Client;
     this.bucketName = bucketName;
   }
-
 
   /**
    * Inserts the content of the string in the specified location.If the filename is gz, it
@@ -207,7 +204,7 @@ public class S3Driver {
   }
 
   public InputStream getUncompressedFileAsStream(UnixPath file) {
-    return client.getObject(createGetObjectRequest(file),ResponseTransformer.toInputStream());
+    return client.getObject(createGetObjectRequest(file), ResponseTransformer.toInputStream());
   }
 
   public GZIPInputStream getCompressedFile(UnixPath file) throws IOException {
@@ -252,8 +249,6 @@ public class S3Driver {
       .build();
     client.copyObject(request);
   }
-
-
 
   private UnixPath calculateListingFolder(UnixPath folder) {
     return isNull(folder) || folder.isEmptyPath() || folder.isRoot()
