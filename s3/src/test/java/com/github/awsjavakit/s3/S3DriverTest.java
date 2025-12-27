@@ -367,7 +367,6 @@ class S3DriverTest {
   private String someBigFile(int lines) {
     return IntStream.range(0, lines).boxed()
       .map(ignored -> randomString()).collect(Collectors.joining(System.lineSeparator()));
-
   }
 
   private UnixPath randomPath() {
