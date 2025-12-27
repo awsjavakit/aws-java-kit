@@ -9,7 +9,6 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -24,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import net.datafaker.providers.base.BaseFaker;
@@ -33,8 +33,13 @@ import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.sync.ResponseTransformer;
+import software.amazon.awssdk.core.sync.ResponseTransformer.TransformerType;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 class S3DriverTest {
 
@@ -56,11 +61,11 @@ class S3DriverTest {
 
   @Test
   void shouldReturnListWithAllFilenamesInS3Folder() throws IOException {
-    UnixPath firstPath = UnixPath.of(SOME_PATH).addChild(randomString()).addChild(randomString());
-    UnixPath secondPath = UnixPath.of(SOME_PATH).addChild(randomString()).addChild(randomString());
+    var firstPath = UnixPath.of(SOME_PATH).addChild(randomString()).addChild(randomString());
+    var secondPath = UnixPath.of(SOME_PATH).addChild(randomString()).addChild(randomString());
     s3Driver.insertFile(firstPath, randomString());
     s3Driver.insertFile(secondPath, randomString());
-    List<UnixPath> files = s3Driver.listAllFiles(UnixPath.of(SOME_PATH));
+    var files = s3Driver.listAllFiles(UnixPath.of(SOME_PATH));
     assertThat(files, containsInAnyOrder(firstPath, secondPath));
   }
 
@@ -109,7 +114,6 @@ class S3DriverTest {
     final var secondFilePath = UnixPath.of(folder, randomFileName());
     s3Driver.insertFile(firstFilePath, randomString());
     s3Driver.insertFile(secondFilePath, randomString());
-
 
     s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
     var folderUri = URI.create(String.format("s3://%s/%s", SAMPLE_BUCKET, folder));
@@ -193,15 +197,34 @@ class S3DriverTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = { "uncompressedFileName", "compressedFileName.gz"})
+  @ValueSource(strings = {"uncompressedFileName", "compressedFileName.gz"})
   void shouldReadFileContentAsStreamBasedOnUri(String path) throws IOException {
     var fileName = UnixPath.of(path);
     var expectedContents = randomString();
     var fileLocation = s3Driver.insertFile(fileName, expectedContents);
     var streamContent = s3Driver.readFileAsStream(fileLocation);
-    try (var reader = new BufferedReader(new InputStreamReader(streamContent, StandardCharsets.UTF_8))) {
+    try (var reader = new BufferedReader(
+      new InputStreamReader(streamContent, StandardCharsets.UTF_8))) {
       var retrievedContent = reader.readLine();
       assertThat(retrievedContent, is(equalTo(expectedContents)));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"uncompressedFileName", "compressedFileName.gz"})
+  void shouldBeAbleToReadFileLargerThanAvailableMemoryAsAStream(String path) throws IOException {
+    var expectedLines = 100;
+    var bigFile = someBigFile(expectedLines);
+    var spiedClient = new ReportTransformerS3Client(new FakeS3Client());
+    s3Driver = new S3Driver(spiedClient, "someBucket");
+
+    var uri = s3Driver.insertFile(UnixPath.of(path), bigFile);
+    var stream = s3Driver.readFileAsStream(uri);
+    try (var reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+      var lines = reader.lines().count();
+      assertThat(lines, is(equalTo((long) expectedLines)));
+      assertThat(spiedClient.getResponseTransformerName(),
+        is(equalTo(TransformerType.STREAM.getName())));
     }
   }
 
@@ -341,6 +364,11 @@ class S3DriverTest {
     return parentFolder.addChild(expectedFileName);
   }
 
+  private String someBigFile(int lines) {
+    return IntStream.range(0, lines).boxed()
+      .map(ignored -> randomString()).collect(Collectors.joining(System.lineSeparator()));
+  }
+
   private UnixPath randomPath() {
     return UnixPath.of(randomString(), randomString());
   }
@@ -356,5 +384,41 @@ class S3DriverTest {
 
   private String longText() {
     return FAKER.lorem().paragraph(10);
+  }
+
+  private static class ReportTransformerS3Client implements S3Client {
+
+    private final S3Client s3Client;
+    private String responseTransformerName;
+
+    public ReportTransformerS3Client(S3Client s3Client) {
+      this.s3Client = s3Client;
+    }
+
+    @Override
+    public String serviceName() {
+      return "ReportingS3Client";
+    }
+
+    @Override
+    public void close() {
+      //NO-OP
+    }
+
+    @Override
+    public PutObjectResponse putObject(PutObjectRequest putObjectRequest, RequestBody requestBody) {
+      return s3Client.putObject(putObjectRequest, requestBody);
+    }
+
+    @Override
+    public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
+                                       ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
+      this.responseTransformerName = responseTransformer.name();
+      return s3Client.getObject(getObjectRequest, responseTransformer);
+    }
+
+    public String getResponseTransformerName() {
+      return responseTransformerName;
+    }
   }
 }
