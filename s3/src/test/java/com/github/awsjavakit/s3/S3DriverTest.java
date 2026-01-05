@@ -164,7 +164,7 @@ class S3DriverTest {
     InputStream inputStream = IoUtils.stringToStream(expectedContent);
 
     UnixPath somePath = UnixPath.of(randomString());
-    URI storedFile=s3Driver.insertFile(somePath, inputStream);
+    URI storedFile = s3Driver.insertFile(somePath, inputStream);
     String actualContent = s3Driver.readFile(storedFile);
     assertThat(actualContent, is(equalTo(expectedContent)));
   }
@@ -399,7 +399,8 @@ class S3DriverTest {
 
   private File writeToCompressedFile(String expectedContent) throws IOException {
     var tempFile = Files.createTempFile("testing", "temp");
-    try (var writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tempFile, StandardOpenOption.CREATE))))) {
+    try (var writer = new BufferedWriter(new OutputStreamWriter(
+      new GZIPOutputStream(Files.newOutputStream(tempFile, StandardOpenOption.CREATE))))) {
       writer.write(expectedContent);
       writer.flush();
     }

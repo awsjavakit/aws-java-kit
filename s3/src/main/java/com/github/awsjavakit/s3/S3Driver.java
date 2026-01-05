@@ -52,7 +52,6 @@ public class S3Driver {
     this.bucketName = bucketName;
   }
 
-
   /**
    * Inserts the content of the string in the specified location.If the filename is gz, it
    * compresses the contents.
@@ -80,7 +79,6 @@ public class S3Driver {
     client.putObject(newPutObjectRequest(fullPath), createRequestBody(content));
     return s3BucketUri().addChild(fullPath).getUri();
   }
-
 
   /**
    * Method for creating event bodies in S3 bucket.
@@ -291,6 +289,7 @@ public class S3Driver {
     return RequestBody.fromFile(input);
 
   }
+
   private RequestBody createRequestBody(InputStream input) throws IOException {
     var bytes = IoUtils.inputStreamToBytes(input);
     return RequestBody.fromBytes(bytes);
