@@ -14,18 +14,24 @@ import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.aws.FakeS3Client;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.UncheckedIOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import net.datafaker.providers.base.BaseFaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,8 +164,26 @@ class S3DriverTest {
     InputStream inputStream = IoUtils.stringToStream(expectedContent);
 
     UnixPath somePath = UnixPath.of(randomString());
-    s3Driver.insertFile(somePath, inputStream);
-    String actualContent = s3Driver.getFile(somePath);
+    URI storedFile=s3Driver.insertFile(somePath, inputStream);
+    String actualContent = s3Driver.readFile(storedFile);
+    assertThat(actualContent, is(equalTo(expectedContent)));
+  }
+
+  @Test
+  void shouldWriteFileFromDiskToS3() throws IOException {
+    var expectedContent = longText();
+    var file = writeToFile(expectedContent);
+    var fileUri = s3Driver.insertFile(UnixPath.of("some", "path"), file);
+    var actualContent = s3Driver.readFile(fileUri);
+    assertThat(actualContent, is(equalTo(expectedContent)));
+  }
+
+  @Test
+  void shouldWriteCompressedFileFromDiskToS3() throws IOException {
+    var expectedContent = longText();
+    var file = writeToCompressedFile(expectedContent);
+    var fileUri = s3Driver.insertFile(UnixPath.of("some", "path.gz"), file);
+    var actualContent = s3Driver.readFile(fileUri);
     assertThat(actualContent, is(equalTo(expectedContent)));
   }
 
@@ -362,6 +386,24 @@ class S3DriverTest {
 
     UnixPath parentFolder = UnixPath.of("some", "nested", "path");
     return parentFolder.addChild(expectedFileName);
+  }
+
+  private File writeToFile(String expectedContent) throws IOException {
+    var tempFile = Files.createTempFile("testing", "temp");
+    try (var writer = Files.newBufferedWriter(tempFile)) {
+      writer.write(expectedContent);
+      writer.flush();
+    }
+    return tempFile.toFile();
+  }
+
+  private File writeToCompressedFile(String expectedContent) throws IOException {
+    var tempFile = Files.createTempFile("testing", "temp");
+    try (var writer = new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(tempFile, StandardOpenOption.CREATE))))) {
+      writer.write(expectedContent);
+      writer.flush();
+    }
+    return tempFile.toFile();
   }
 
   private String someBigFile(int lines) {

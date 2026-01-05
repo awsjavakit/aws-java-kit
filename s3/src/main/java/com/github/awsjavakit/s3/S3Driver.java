@@ -2,12 +2,12 @@ package com.github.awsjavakit.s3;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
-import com.github.awsjavakit.misc.Environment;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,20 +36,14 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 public class S3Driver {
 
   public static final String GZIP_ENDING = ".gz";
-  public static final String AWS_ACCESS_KEY_ID_ENV_VARIABLE_NAME = "AWS_ACCESS_KEY_ID";
-  public static final String AWS_SECRET_ACCESS_KEY_ENV_VARIABLE_NAME = "AWS_SECRET_ACCESS_KEY";
-  public static final int MAX_CONNECTIONS = 10_000;
   public static final String LINE_SEPARATOR = System.lineSeparator();
-  public static final String AWS_REGION_ENV_VARIABLE = "AWS_REGION";
+
   public static final String DOUBLE_BACKSLASH = "\\\\\\\\";
   public static final String SINGLE_BACKSLASH = "\\\\";
   public static final String UNIX_SEPARATOR = "/";
   public static final int REMOVE_ROOT = 1;
   public static final int MAX_RESPONSE_SIZE_FOR_S3_LISTING = 1000;
   public static final String S3_SCHEME = "s3";
-  public static final int IDLE_TIME = 30;
-  public static final int TIMEOUT_TIME = 30;
-  private static final Environment ENVIRONMENT = new Environment();
   private final S3Client client;
   private final String bucketName;
 
@@ -58,11 +52,12 @@ public class S3Driver {
     this.bucketName = bucketName;
   }
 
+
   /**
    * Inserts the content of the string in the specified location.If the filename is gz, it
    * compresses the contents.
    *
-   * @param fullPath the Location path of the item (without the bucketname)
+   * @param fullPath the Location path of the item (without the bucket name)
    * @param content  The data we want to store
    * @return URI for the S3 object
    * @throws IOException when compression fails.
@@ -80,6 +75,12 @@ public class S3Driver {
     client.putObject(newPutObjectRequest(fullPath), createRequestBody(content));
     return s3BucketUri().addChild(fullPath).getUri();
   }
+
+  public URI insertFile(UnixPath fullPath, File content) {
+    client.putObject(newPutObjectRequest(fullPath), createRequestBody(content));
+    return s3BucketUri().addChild(fullPath).getUri();
+  }
+
 
   /**
    * Method for creating event bodies in S3 bucket.
@@ -286,6 +287,10 @@ public class S3Driver {
       : unixPath;
   }
 
+  private RequestBody createRequestBody(File input) {
+    return RequestBody.fromFile(input);
+
+  }
   private RequestBody createRequestBody(InputStream input) throws IOException {
     var bytes = IoUtils.inputStreamToBytes(input);
     return RequestBody.fromBytes(bytes);

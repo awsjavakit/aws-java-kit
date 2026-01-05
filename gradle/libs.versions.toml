@@ -31,6 +31,7 @@ slf4j-binding = { group = 'org.apache.logging.log4j', name = 'log4j-slf4j2-impl'
 aws-apigateway = { group = 'software.amazon.awssdk', name = 'apigateway', version.ref = 'awsSdk2' }
 aws-secrets = { group = 'software.amazon.awssdk', name = 'secretsmanager', version.ref = 'awsSdk2' }
 aws-s3 = { group = 'software.amazon.awssdk', name = 's3', version.ref = 'awsSdk2' }
+aws-s3transfermanager= { group = 'software.amazon.awssdk', name = 's3-transfer-manager', version.ref = 'awsSdk2' }
 aws-firehose = { group = 'software.amazon.awssdk', name = 'firehose', version.ref = 'awsSdk2' }
 aws-lambda = { group = 'software.amazon.awssdk', name = 'lambda', version.ref = 'awsSdk2' }
 aws-eventbridge = { group = 'software.amazon.awssdk', name = 'eventbridge', version.ref = 'awsSdk2' }

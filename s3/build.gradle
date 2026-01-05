@@ -8,6 +8,7 @@ dependencies {
     implementation libs.aws.secrets
     implementation libs.bundles.json
     implementation libs.aws.s3
+    implementation libs.aws.s3transfermanager
 
     implementation project(":attempt")
     implementation project(":misc")
