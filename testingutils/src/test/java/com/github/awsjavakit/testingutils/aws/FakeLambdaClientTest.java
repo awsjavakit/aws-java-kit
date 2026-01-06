@@ -1,5 +1,6 @@
 package com.github.awsjavakit.testingutils.aws;
 
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
@@ -21,7 +22,7 @@ class FakeLambdaClientTest {
 
   @Test
   void shouldInvokeSubmittedFunction() {
-    var handler = new FakeLambdaClient<>(FakeLambdaClientTest::someFunction, SampleInput.class,
+    var client = new FakeLambdaClient<>(FakeLambdaClientTest::someFunction, SampleInput.class,
       JSON);
     var input = new SampleInput(randomString());
     var expectedOutput = someFunction(input);
@@ -30,7 +31,7 @@ class FakeLambdaClientTest {
       .payload(SdkBytes.fromUtf8String(toJson(input)))
       .build();
 
-    var response = handler.invoke(invokeRequest).payload().asUtf8String();
+    var response = client.invoke(invokeRequest).payload().asUtf8String();
     var parsed = fromJson(response, SampleOutput.class);
     assertThat(parsed).isEqualTo(expectedOutput);
   }
@@ -39,7 +40,7 @@ class FakeLambdaClientTest {
   @NullAndEmptySource
   @ValueSource(strings = {"", " "})
   void shouldThrowExceptionWhenLambdaNameIsNotSpecified(String functionName) {
-    var handler = new FakeLambdaClient<>(FakeLambdaClientTest::someFunction, SampleInput.class,
+    var client = new FakeLambdaClient<>(FakeLambdaClientTest::someFunction, SampleInput.class,
       JSON);
 
     var invokeRequest = InvokeRequest.builder()
@@ -47,8 +48,25 @@ class FakeLambdaClientTest {
       .functionName(functionName)
       .build();
     var exception = assertThrows(IllegalArgumentException.class,
-      () -> handler.invoke(invokeRequest));
+      () -> client.invoke(invokeRequest));
     assertThat(exception.getMessage()).contains("Function name cannot be blank");
+  }
+
+  @Test
+  void shouldReturnNumberOfInvocations() {
+    var client = new FakeLambdaClient<>(FakeLambdaClientTest::someFunction, SampleInput.class,
+      JSON);
+    var input = new SampleInput(randomString());
+    var invokeRequest = InvokeRequest.builder()
+      .functionName(randomString())
+      .payload(SdkBytes.fromUtf8String(toJson(input)))
+      .build();
+    var repetitions = 2 + randomInteger(10);
+    for (var rep = 0; rep < repetitions; rep++) {
+      client.invoke(invokeRequest);
+    }
+    assertThat(client.getInvocations()).isEqualTo(repetitions);
+
   }
 
   private static SampleOutput someFunction(SampleInput input) {
