@@ -10,23 +10,41 @@ dependencies {
     implementation project(":attempt")
     implementation project(":misc")
 
-    implementation libs.aws.lambda.events
-    implementation libs.aws.lambda.core
-    implementation libs.aws.apigateway
-    implementation libs.aws.ssm
-    implementation libs.aws.s3
-    implementation libs.aws.sqs
-    implementation libs.aws.sns
-    implementation libs.aws.cloudwatch
-    implementation libs.aws.eventbridge
-    implementation libs.aws.secrets
-    implementation libs.aws.firehose
-    implementation libs.aws.lambda
-    implementation libs.bundles.json
-    implementation libs.bundles.testing
-    implementation libs.wiremock
+    compileOnly  libs.aws.lambda.events
+    compileOnly libs.aws.lambda.core
+    compileOnly libs.aws.apigateway
+    compileOnly libs.aws.ssm
+    compileOnly libs.aws.s3
+    compileOnly libs.aws.sqs
+    compileOnly libs.aws.sns
+    compileOnly libs.aws.cloudwatch
+    compileOnly libs.aws.eventbridge
+    compileOnly libs.aws.secrets
+    compileOnly libs.aws.firehose
+    compileOnly libs.aws.lambda
+    compileOnly libs.bundles.json
+    compileOnly libs.bundles.testing
+    compileOnly libs.wiremock
+    compileOnly libs.bundles.logging
 
-    implementation libs.bundles.logging
+
+    testImplementation libs.aws.lambda.events
+    testImplementation libs.aws.lambda.core
+    testImplementation libs.aws.apigateway
+    testImplementation libs.aws.ssm
+    testImplementation libs.aws.s3
+    testImplementation libs.aws.sqs
+    testImplementation libs.aws.sns
+    testImplementation libs.aws.cloudwatch
+    testImplementation libs.aws.eventbridge
+    testImplementation libs.aws.secrets
+    testImplementation libs.aws.firehose
+    testImplementation libs.aws.lambda
+    testImplementation libs.bundles.json
+    testImplementation libs.bundles.testing
+    testImplementation libs.wiremock
+    testImplementation libs.bundles.logging
+
     testImplementation project(":apigateway")
     testImplementation project(":secrets")
 
