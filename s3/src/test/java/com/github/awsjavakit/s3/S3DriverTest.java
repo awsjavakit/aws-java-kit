@@ -389,22 +389,24 @@ class S3DriverTest {
   }
 
   private File writeToFile(String expectedContent) throws IOException {
-    var tempFile = Files.createTempFile("testing", "temp");
-    try (var writer = Files.newBufferedWriter(tempFile)) {
+    var tempFile = Files.createTempFile("testing", "temp").toAbsolutePath().toFile();
+    tempFile.deleteOnExit();
+    try (var writer = Files.newBufferedWriter(tempFile.toPath(),StandardOpenOption.CREATE)) {
       writer.write(expectedContent);
       writer.flush();
     }
-    return tempFile.toFile();
+    return tempFile;
   }
 
   private File writeToCompressedFile(String expectedContent) throws IOException {
-    var tempFile = Files.createTempFile("testing", "temp");
+    var tempFile = Files.createTempFile("testing", "temp").toAbsolutePath().toFile();
+    tempFile.deleteOnExit();
     try (var writer = new BufferedWriter(new OutputStreamWriter(
-      new GZIPOutputStream(Files.newOutputStream(tempFile, StandardOpenOption.CREATE))))) {
+      new GZIPOutputStream(Files.newOutputStream(tempFile.toPath(), StandardOpenOption.CREATE))))) {
       writer.write(expectedContent);
       writer.flush();
     }
-    return tempFile.toFile();
+    return tempFile;
   }
 
   private String someBigFile(int lines) {
