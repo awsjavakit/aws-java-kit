@@ -8,7 +8,7 @@ plugins {
 
 
 group 'io.github.awsjavakit'
-version = '0.28.0'
+version = '0.29.0'
 
 repositories {
     mavenCentral()
@@ -93,11 +93,7 @@ tasks.withType(Checkstyle) {
 
 spotless{
   java {
-    eclipse().configFile("java_codestyle.xml")
     removeUnusedImports()
-    trimTrailingWhitespace()
-    endWithNewline()
   }
-
 }
 
