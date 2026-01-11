@@ -8,6 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +24,8 @@ import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -37,11 +41,19 @@ public class FakeS3Client implements S3Client {
 
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, Map<String, ByteBuffer>> filesAndContent;
+  private final Map<String, Map<String, Instant>> lastModified;
   private final List<CopyObjectRequest> copyRequests;
+  private final Clock clock;
 
   public FakeS3Client() {
+    this(Clock.systemDefaultZone());
+  }
+
+  public FakeS3Client(Clock clock) {
     this.filesAndContent = new LinkedHashMap<>();
+    this.lastModified = new LinkedHashMap<>();
     this.copyRequests = new ArrayList<>();
+    this.clock = clock;
   }
 
   //TODO: fix if necessary
@@ -50,7 +62,7 @@ public class FakeS3Client implements S3Client {
   public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
                                      ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
     var filename = getObjectRequest.key();
-    var contents = extractContent(getObjectRequest.bucket(),filename).array();
+    var contents = extractContent(getObjectRequest.bucket(), filename).array();
     var response = GetObjectResponse.builder().contentLength((long) contents.length)
       .build();
     return transformResponse(responseTransformer, new ByteArrayInputStream(contents), response);
@@ -81,13 +93,6 @@ public class FakeS3Client implements S3Client {
       .isTruncated(nonNull(nextStartListingPoint)).build();
   }
 
-  private Map<String, ByteBuffer> getBucketContents(String bucketName) {
-    if(!filesAndContent.containsKey(bucketName)){
-      throw new IllegalStateException(String.format("Bucket %s is empty",bucketName));
-    }
-    return filesAndContent.get(bucketName);
-  }
-
   @Override
   public ListObjectsV2Response listObjectsV2(ListObjectsV2Request v2Request) {
     var oldRequest = ListObjectsRequest.builder()
@@ -106,6 +111,21 @@ public class FakeS3Client implements S3Client {
       .build();
   }
 
+  @Override
+  public HeadObjectResponse headObject(HeadObjectRequest headObjectRequest) {
+    var bucket = headObjectRequest.bucket();
+    var key = headObjectRequest.key();
+    failIfFileDoesNotExist(bucket, key);
+
+    var lastModified = Optional.ofNullable(this.lastModified.get(bucket))
+      .map(lastMod -> lastMod.get(key))
+      .orElse(null);
+
+    return HeadObjectResponse.builder()
+      .lastModified(lastModified)
+      .build();
+  }
+
   //TODO: fix if necessary
   @SuppressWarnings("PMD.CloseResource")
   @Override
@@ -115,6 +135,7 @@ public class FakeS3Client implements S3Client {
     var content = requestBody.contentStreamProvider().newStream();
     createBucketEntry(bucketName);
     this.filesAndContent.get(bucketName).put(path, inputSteamToByteBuffer(content));
+    this.lastModified.get(bucketName).put(path, clock.instant());
     return PutObjectResponse.builder().build();
   }
 
@@ -128,6 +149,11 @@ public class FakeS3Client implements S3Client {
     createBucketEntry(copyObjectRequest.destinationBucket());
     getBucketContents(copyObjectRequest.destinationBucket())
       .put(copyObjectRequest.destinationKey(), contents);
+
+    // Mirror AWS behavior loosely: destination has a new last modified timestamp.
+    lastModified.get(copyObjectRequest.destinationBucket())
+      .put(copyObjectRequest.destinationKey(), clock.instant());
+
     return CopyObjectResponse.builder().build();
   }
 
@@ -165,9 +191,27 @@ public class FakeS3Client implements S3Client {
     return indexOfLastFileRead;
   }
 
+  private static String noSuchKeyErrorMessage(String bucket, String filename) {
+    return String.format("Bucket %s does not contain key %s", bucket, filename);
+  }
+
+  private Map<String, ByteBuffer> getBucketContents(String bucketName) {
+    if (!filesAndContent.containsKey(bucketName)) {
+      throw new IllegalStateException(String.format("Bucket %s is empty", bucketName));
+    }
+    return filesAndContent.get(bucketName);
+  }
+
+  private void failIfFileDoesNotExist(String bucket, String key) {
+    extractContent(bucket, key);
+  }
+
   private void createBucketEntry(String bucketName) {
     if (!filesAndContent.containsKey(bucketName)) {
       filesAndContent.put(bucketName, new LinkedHashMap<>());
+    }
+    if (!lastModified.containsKey(bucketName)) {
+      lastModified.put(bucketName, new LinkedHashMap<>());
     }
   }
 
@@ -217,10 +261,6 @@ public class FakeS3Client implements S3Client {
         .message(noSuchKeyErrorMessage(bucket, filename))
         .build();
     }
-  }
-
-  private static String noSuchKeyErrorMessage(String bucket, String filename) {
-    return String.format("Bucket %s does not contain key %s", bucket, filename);
   }
 
   private <ReturnT> ReturnT transformResponse(
