@@ -210,11 +210,11 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var firstBucket = "bucket1";
     var secondBucket = "bucket2";
-    var firstUri = new UriWrapper("s3",firstBucket).addChild(path).getUri();
+    var firstUri = new UriWrapper("s3", firstBucket).addChild(path).getUri();
     var secondUri = new UriWrapper("s3", secondBucket).addChild(path).getUri();
 
-    putObject(client,firstUri,firstFileContent);
-    putObject(client,secondUri,secondFileContent);
+    putObject(client, firstUri, firstFileContent);
+    putObject(client, secondUri, secondFileContent);
 
     var firstActualContent = getObject(client, firstUri).asUtf8String();
     var secondActualContent = getObject(client, secondUri).asUtf8String();
@@ -228,7 +228,7 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var exception = assertThrows(IllegalStateException.class,
       () -> getObject(client, URI.create(SOME_BUCKET_URI)));
-    assertThat(exception.getMessage(),containsString(SOME_BUCKET));
+    assertThat(exception.getMessage(), containsString(SOME_BUCKET));
   }
 
   @Test
@@ -236,10 +236,10 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var existingFile = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
     var nonExistingFile = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
-    putObject(client,existingFile,randomString());
+    putObject(client, existingFile, randomString());
     var exception = assertThrows(NoSuchKeyException.class,
-      () -> getObject(client,nonExistingFile));
-    assertThat(exception.getMessage(),containsString(SOME_BUCKET));
+      () -> getObject(client, nonExistingFile));
+    assertThat(exception.getMessage(), containsString(SOME_BUCKET));
   }
 
   @Test
@@ -271,7 +271,6 @@ class FakeS3ClientTest {
     var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
     putObject(client, uri, randomString());
 
-
     var headRequest = HeadObjectRequest.builder()
       .bucket(uri.getHost())
       .key(extractKey(uri))
@@ -279,7 +278,7 @@ class FakeS3ClientTest {
     var firstResponse = client.headObject(headRequest);
     assertThat(firstResponse.lastModified(), is(equalTo(firstTime)));
 
-    putObject(client,uri,randomString());
+    putObject(client, uri, randomString());
     var secondResponse = client.headObject(headRequest);
     assertThat(secondResponse.lastModified(), is(equalTo(secondTime)));
   }
@@ -372,8 +371,9 @@ class FakeS3ClientTest {
   @Test
   void shouldThrowExceptionWhenHeadObjectCalledOnNonExistentFile() {
     var client = new FakeS3Client();
-    var fileJustForTheBucketNotToBeEmpty = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
-    putObject(client,fileJustForTheBucketNotToBeEmpty, randomString());
+    var fileJustForTheBucketNotToBeEmpty = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    putObject(client, fileJustForTheBucketNotToBeEmpty, randomString());
     var nonExistentUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
 
     var headRequest = HeadObjectRequest.builder()
