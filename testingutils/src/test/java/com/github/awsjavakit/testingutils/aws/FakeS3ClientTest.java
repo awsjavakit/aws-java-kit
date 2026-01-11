@@ -1,5 +1,6 @@
 package com.github.awsjavakit.testingutils.aws;
 
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -10,11 +11,16 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import com.github.awsjavakit.misc.SingletonCollector;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +34,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -203,11 +210,11 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var firstBucket = "bucket1";
     var secondBucket = "bucket2";
-    var firstUri = new UriWrapper("s3",firstBucket).addChild(path).getUri();
+    var firstUri = new UriWrapper("s3", firstBucket).addChild(path).getUri();
     var secondUri = new UriWrapper("s3", secondBucket).addChild(path).getUri();
 
-    putObject(client,firstUri,firstFileContent);
-    putObject(client,secondUri,secondFileContent);
+    putObject(client, firstUri, firstFileContent);
+    putObject(client, secondUri, secondFileContent);
 
     var firstActualContent = getObject(client, firstUri).asUtf8String();
     var secondActualContent = getObject(client, secondUri).asUtf8String();
@@ -221,7 +228,7 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var exception = assertThrows(IllegalStateException.class,
       () -> getObject(client, URI.create(SOME_BUCKET_URI)));
-    assertThat(exception.getMessage(),containsString(SOME_BUCKET));
+    assertThat(exception.getMessage(), containsString(SOME_BUCKET));
   }
 
   @Test
@@ -229,13 +236,152 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var existingFile = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
     var nonExistingFile = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
-    putObject(client,existingFile,randomString());
+    putObject(client, existingFile, randomString());
     var exception = assertThrows(NoSuchKeyException.class,
-      () -> getObject(client,nonExistingFile));
-    assertThat(exception.getMessage(),containsString(SOME_BUCKET));
+      () -> getObject(client, nonExistingFile));
+    assertThat(exception.getMessage(), containsString(SOME_BUCKET));
   }
 
+  @Test
+  void shouldReturnLastModifiedTimestampWhenFileIsInserted() {
+    var fixedTime = randomInstant();
+    var fixedClock = Clock.fixed(fixedTime, ZoneId.systemDefault());
+    var client = new FakeS3Client(fixedClock);
 
+    var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+    putObject(client, uri, randomString());
+
+    var headRequest = HeadObjectRequest.builder()
+      .bucket(uri.getHost())
+      .key(extractKey(uri))
+      .build();
+    var response = client.headObject(headRequest);
+
+    assertThat(response.lastModified(), is(equalTo(fixedTime)));
+  }
+
+  @Test
+  void shouldUpdateLastModifiedTimestampWhenFileIsOverwritten() {
+    var firstTime = randomInstant();
+    var secondTime = randomInstant(firstTime);
+    var clock = mock(Clock.class);
+    when(clock.instant()).thenReturn(firstTime).thenReturn(secondTime);
+    var client = new FakeS3Client(clock);
+
+    var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+    putObject(client, uri, randomString());
+
+    var headRequest = HeadObjectRequest.builder()
+      .bucket(uri.getHost())
+      .key(extractKey(uri))
+      .build();
+    var firstResponse = client.headObject(headRequest);
+    assertThat(firstResponse.lastModified(), is(equalTo(firstTime)));
+
+    putObject(client, uri, randomString());
+    var secondResponse = client.headObject(headRequest);
+    assertThat(secondResponse.lastModified(), is(equalTo(secondTime)));
+  }
+
+  @Test
+  void shouldSetLastModifiedOnCopiedFile() {
+    var firstTime = randomInstant();
+    var secondTime = randomInstant(firstTime);
+    var clock = mock(Clock.class);
+    when(clock.instant()).thenReturn(firstTime).thenReturn(secondTime);
+    var client = new FakeS3Client(clock);
+
+    var bucket = SOME_BUCKET;
+    var sourceUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+    var destUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+
+    putObject(client, sourceUri, randomString());
+
+    var copyRequest = CopyObjectRequest.builder()
+      .sourceBucket(bucket)
+      .sourceKey(extractKey(sourceUri))
+      .destinationBucket(bucket)
+      .destinationKey(extractKey(destUri))
+      .build();
+    client.copyObject(copyRequest);
+
+    var headRequest = HeadObjectRequest.builder()
+      .bucket(bucket)
+      .key(extractKey(destUri))
+      .build();
+    var response = client.headObject(headRequest);
+
+    assertThat(response.lastModified(), is(equalTo(secondTime)));
+  }
+
+  @Test
+  void shouldUseDifferentTimestampsForFilesPutAtDifferentTimes() {
+    var firstTime = Instant.parse("2026-01-11T10:00:00Z");
+    var secondTime = Instant.parse("2026-01-11T11:00:00Z");
+
+    var firstClock = Clock.fixed(firstTime, ZoneId.of("UTC"));
+    var firstClient = new FakeS3Client(firstClock);
+
+    var firstUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild("file1.txt").getUri();
+    putObject(firstClient, firstUri, "content1");
+
+    var secondClock = Clock.fixed(secondTime, ZoneId.of("UTC"));
+    var secondClient = new FakeS3Client(secondClock);
+
+    var secondUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild("file2.txt").getUri();
+    putObject(secondClient, secondUri, "content2");
+
+    var firstHeadRequest = HeadObjectRequest.builder()
+      .bucket(SOME_BUCKET)
+      .key(extractKey(firstUri))
+      .build();
+    var firstResponse = firstClient.headObject(firstHeadRequest);
+
+    var secondHeadRequest = HeadObjectRequest.builder()
+      .bucket(SOME_BUCKET)
+      .key(extractKey(secondUri))
+      .build();
+    var secondResponse = secondClient.headObject(secondHeadRequest);
+
+    assertThat(firstResponse.lastModified(), is(equalTo(firstTime)));
+    assertThat(secondResponse.lastModified(), is(equalTo(secondTime)));
+  }
+
+  @Test
+  void shouldUseSystemClockByDefaultWhenNoClockProvided() {
+    var client = new FakeS3Client();
+    var beforeInsertion = Instant.now();
+
+    var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+    putObject(client, uri, randomString());
+
+    var afterInsertion = Instant.now();
+
+    var headRequest = HeadObjectRequest.builder()
+      .bucket(uri.getHost())
+      .key(extractKey(uri))
+      .build();
+    var response = client.headObject(headRequest);
+
+    assertThat(response.lastModified(), is(not(nullValue())));
+    assertThat(response.lastModified().isAfter(beforeInsertion.minusSeconds(1)), is(true));
+    assertThat(response.lastModified().isBefore(afterInsertion.plusSeconds(1)), is(true));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenHeadObjectCalledOnNonExistentFile() {
+    var client = new FakeS3Client();
+    var fileJustForTheBucketNotToBeEmpty = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    putObject(client, fileJustForTheBucketNotToBeEmpty, randomString());
+    var nonExistentUri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+
+    var headRequest = HeadObjectRequest.builder()
+      .bucket(nonExistentUri.getHost())
+      .key(extractKey(nonExistentUri))
+      .build();
+    assertThrows(NoSuchKeyException.class, () -> client.headObject(headRequest));
+  }
 
   private static ListObjectsRequest createListObjectsRequest(String bucket,
                                                              UnixPath folder,

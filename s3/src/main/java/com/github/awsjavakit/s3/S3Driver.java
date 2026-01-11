@@ -14,6 +14,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -118,6 +120,18 @@ public class S3Driver {
   public InputStream readFileAsStream(URI uri) {
     var filePath = UriWrapper.fromUri(uri).toS3bucketPath();
     return getFileAsStream(filePath);
+  }
+
+  /**
+   * Returns the last modified timestamp of the given S3 object.
+   *
+   * @param fileUri the S3 URI to the file. The host must be equal to the bucket name of the S3 driver
+   * @return the object's last modified timestamp.
+   */
+  public Instant lastModified(URI fileUri) {
+    var filePath = UriWrapper.fromUri(fileUri).toS3bucketPath();
+    var response = client.headObject(createHeadObjectRequest(filePath));
+    return response.lastModified();
   }
 
   @JacocoGenerated
@@ -323,6 +337,13 @@ public class S3Driver {
 
   private GetObjectRequest createGetObjectRequest(UnixPath file) {
     return GetObjectRequest.builder()
+      .bucket(bucketName)
+      .key(file.toString())
+      .build();
+  }
+
+  private HeadObjectRequest createHeadObjectRequest(UnixPath file) {
+    return HeadObjectRequest.builder()
       .bucket(bucketName)
       .key(file.toString())
       .build();

@@ -1,14 +1,18 @@
 package com.github.awsjavakit.s3;
 
 import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
+import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -25,6 +29,8 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,6 +50,7 @@ import software.amazon.awssdk.core.sync.ResponseTransformer.TransformerType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -373,6 +380,62 @@ class S3DriverTest {
     assertThrows(UncheckedIOException.class, action);
   }
 
+  @Test
+  void shouldReturnLastModifiedTimestampWhenFileExists() throws IOException {
+    var content = randomString();
+    var fileUri = s3Driver.insertFile(randomPath(), content);
+
+    var lastModified = s3Driver.lastModified(fileUri);
+
+    assertThat(lastModified, is(not(equalTo(null))));
+  }
+
+  @Test
+  void shouldReturnUpdatedLastModifiedWhenFileIsOverwritten() throws IOException {
+    var clock = mock(Clock.class);
+    var firstInstant = randomInstant();
+    var secondInstant = randomInstant(firstInstant);
+    when(clock.instant()).thenReturn(firstInstant).thenReturn(secondInstant);
+    s3Client = new FakeS3Client(clock);
+    s3Driver = new S3Driver(s3Client, SAMPLE_BUCKET);
+    var filePath = randomPath();
+    var firstContent = randomString();
+    var fileUri = s3Driver.insertFile(filePath, firstContent);
+    var firstModified = s3Driver.lastModified(fileUri);
+
+    var secondContent = randomString();
+    s3Driver.insertFile(filePath, secondContent);
+    var secondModified = s3Driver.lastModified(fileUri);
+
+    assertThat(firstModified, is(equalTo(firstInstant)));
+    assertThat(secondModified, is(equalTo(secondInstant)));
+  }
+
+  @Test
+  void shouldReturnLastModifiedForCopiedFile() throws IOException {
+    var minTimestamp = Instant.now();
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri = UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath())
+      .getUri();
+
+    s3Driver.copyFile(sourceUri, destinationUri);
+    var lastModified = s3Driver.lastModified(destinationUri);
+
+    assertThat(lastModified, is(greaterThanOrEqualTo(minTimestamp)));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenLastModifiedCalledOnNonExistentFile() throws IOException {
+    s3Driver.insertFile(UnixPath.of(randomString()),randomString());
+    var nonExistentUri = UriWrapper.fromUri("s3://" + SAMPLE_BUCKET)
+      .addChild(randomPath())
+      .getUri();
+
+    Executable action = () -> s3Driver.lastModified(nonExistentUri);
+    assertThrows(NoSuchKeyException.class, action);
+  }
+
   private static String randomFileName() {
     return FAKER.file().fileName();
   }
@@ -391,7 +454,7 @@ class S3DriverTest {
   private File writeToFile(String expectedContent) throws IOException {
     var tempFile = Files.createTempFile("testing", "temp").toAbsolutePath().toFile();
     tempFile.deleteOnExit();
-    try (var writer = Files.newBufferedWriter(tempFile.toPath(),StandardOpenOption.CREATE)) {
+    try (var writer = Files.newBufferedWriter(tempFile.toPath(), StandardOpenOption.CREATE)) {
       writer.write(expectedContent);
       writer.flush();
     }
