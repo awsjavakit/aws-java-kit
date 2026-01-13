@@ -128,7 +128,7 @@ public class S3Driver {
    * @param fileUri the S3 URI to the file. The host must be equal to the bucket name of the S3 driver
    * @return the object's last modified timestamp.
    */
-  public Instant lastModified(URI fileUri) {
+  public Instant getLastModified(URI fileUri) {
     var filePath = UriWrapper.fromUri(fileUri).toS3bucketPath();
     var response = client.headObject(createHeadObjectRequest(filePath));
     return response.lastModified();

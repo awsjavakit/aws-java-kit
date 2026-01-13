@@ -385,7 +385,7 @@ class S3DriverTest {
     var content = randomString();
     var fileUri = s3Driver.insertFile(randomPath(), content);
 
-    var lastModified = s3Driver.lastModified(fileUri);
+    var lastModified = s3Driver.getLastModified(fileUri);
 
     assertThat(lastModified, is(not(equalTo(null))));
   }
@@ -401,11 +401,11 @@ class S3DriverTest {
     var filePath = randomPath();
     var firstContent = randomString();
     var fileUri = s3Driver.insertFile(filePath, firstContent);
-    var firstModified = s3Driver.lastModified(fileUri);
+    var firstModified = s3Driver.getLastModified(fileUri);
 
     var secondContent = randomString();
     s3Driver.insertFile(filePath, secondContent);
-    var secondModified = s3Driver.lastModified(fileUri);
+    var secondModified = s3Driver.getLastModified(fileUri);
 
     assertThat(firstModified, is(equalTo(firstInstant)));
     assertThat(secondModified, is(equalTo(secondInstant)));
@@ -420,7 +420,7 @@ class S3DriverTest {
       .getUri();
 
     s3Driver.copyFile(sourceUri, destinationUri);
-    var lastModified = s3Driver.lastModified(destinationUri);
+    var lastModified = s3Driver.getLastModified(destinationUri);
 
     assertThat(lastModified, is(greaterThanOrEqualTo(minTimestamp)));
   }
@@ -432,7 +432,7 @@ class S3DriverTest {
       .addChild(randomPath())
       .getUri();
 
-    Executable action = () -> s3Driver.lastModified(nonExistentUri);
+    Executable action = () -> s3Driver.getLastModified(nonExistentUri);
     assertThrows(NoSuchKeyException.class, action);
   }
 
