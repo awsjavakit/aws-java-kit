@@ -32,6 +32,8 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.Tag;
+import software.amazon.awssdk.services.s3.model.Tagging;
 
 //TODO: Address God Class issue
 @SuppressWarnings({"PMD.GodClass", "PMD.CouplingBetweenObjects"})
@@ -253,12 +255,13 @@ public class S3Driver {
     return getFile(filename, StandardCharsets.UTF_8);
   }
 
-  public void copyFile(URI sourceUri, URI destinationUri) {
+  public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
     var request = CopyObjectRequest.builder()
       .sourceKey(UriWrapper.fromUri(sourceUri).toS3bucketPath().toString())
       .sourceBucket(sourceUri.getHost())
       .destinationKey(UriWrapper.fromUri(destinationUri).toS3bucketPath().toString())
       .destinationBucket(destinationUri.getHost())
+      .tagging(Tagging.builder().tagSet(tags).build())
       .build();
     client.copyObject(request);
   }
