@@ -528,7 +528,6 @@ class FakeS3ClientTest {
     var putObjectRequest = PutObjectRequest.builder()
       .bucket(s3Uri.getHost())
       .key(extractKey(s3Uri))
-      .tagging("asuhfoari")
       .build();
 
     fakeS3Client.putObject(putObjectRequest,
