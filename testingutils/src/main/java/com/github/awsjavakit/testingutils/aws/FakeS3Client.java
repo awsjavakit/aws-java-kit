@@ -2,6 +2,7 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
@@ -11,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,8 @@ import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.CopyObjectResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
@@ -33,7 +37,10 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectTaggingRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectTaggingResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.Tag;
 
 @JacocoGenerated
 @SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.UnusedPrivateMethod"})
@@ -42,6 +49,7 @@ public class FakeS3Client implements S3Client {
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, Map<String, ByteBuffer>> filesAndContent;
   private final Map<String, Map<String, Instant>> lastModified;
+  private final Map<String, Map<String, List<Tag>>> tagStore;
   private final List<CopyObjectRequest> copyRequests;
   private final Clock clock;
 
@@ -54,13 +62,14 @@ public class FakeS3Client implements S3Client {
     this.lastModified = new LinkedHashMap<>();
     this.copyRequests = new ArrayList<>();
     this.clock = clock;
+    this.tagStore = new LinkedHashMap<>();
   }
 
   //TODO: fix if necessary
   @SuppressWarnings("PMD.CloseResource")
   @Override
   public <ReturnT> ReturnT getObject(GetObjectRequest getObjectRequest,
-                                     ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
+    ResponseTransformer<GetObjectResponse, ReturnT> responseTransformer) {
     var filename = getObjectRequest.key();
     var contents = extractContent(getObjectRequest.bucket(), filename).array();
     var response = GetObjectResponse.builder().contentLength((long) contents.length)
@@ -167,6 +176,28 @@ public class FakeS3Client implements S3Client {
     //NO-OP;
   }
 
+  @Override
+  public PutObjectTaggingResponse putObjectTagging(PutObjectTaggingRequest putObjectTaggingRequest) {
+    var bucket = putObjectTaggingRequest.bucket();
+    var key = putObjectTaggingRequest.key();
+    var tags = putObjectTaggingRequest.tagging().tagSet();
+    tagStore.computeIfAbsent(bucket, b -> new HashMap<>())
+      .put(key, tags);
+    return PutObjectTaggingResponse.builder()
+      .versionId(putObjectTaggingRequest.versionId())
+      .build();
+  }
+
+  @Override
+  public GetObjectTaggingResponse getObjectTagging(GetObjectTaggingRequest getObjectTaggingRequest) {
+    var tags = Optional.ofNullable(tagStore.get(getObjectTaggingRequest.bucket()))
+      .map(bucketTags -> bucketTags.get(getObjectTaggingRequest.key()))
+      .orElse(List.of());
+    return GetObjectTaggingResponse.builder()
+      .tagSet(tags)
+      .build();
+  }
+
   public List<CopyObjectRequest> getCopyRequests() {
     return copyRequests;
   }
@@ -216,14 +247,14 @@ public class FakeS3Client implements S3Client {
   }
 
   private String calculateNestStartListingPoint(List<String> fileKeys,
-                                                int excludedEndIndex) {
+    int excludedEndIndex) {
     return excludedEndIndex >= fileKeys.size()
       ? null
       : fileKeys.get(excludedEndIndex - 1);
   }
 
   private boolean filePathIsInSpecifiedParentFolder(String filePathString,
-                                                    ListObjectsRequest listObjectsRequest) {
+    ListObjectsRequest listObjectsRequest) {
     var filePath = UnixPath.of(filePathString).removeRoot();
     var parentFolder = Optional.of(listObjectsRequest)
       .map(ListObjectsRequest::prefix)

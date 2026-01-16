@@ -3,6 +3,7 @@ package com.github.awsjavakit.testingutils.aws;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.nullValue;
@@ -34,13 +35,17 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
+import software.amazon.awssdk.services.s3.model.Tag;
+import software.amazon.awssdk.services.s3.model.Tagging;
 
 class FakeS3ClientTest {
 
@@ -348,6 +353,26 @@ class FakeS3ClientTest {
   }
 
   @Test
+  void shouldBeAbleToAddAndProvideObjectTags() {
+    var client = new FakeS3Client();
+    var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
+    putObject(client, uri, randomString());
+    var tag = Tag.builder().key(randomString()).value(randomString()).build();
+    var expectedTags = List.of(tag);
+    client.putObjectTagging(PutObjectTaggingRequest.builder()
+        .bucket(uri.getHost())
+        .key(extractKey(uri))
+        .tagging(Tagging.builder().tagSet(tag).build())
+      .build());
+
+    var retrievedTags = client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(uri.getHost())
+      .key(extractKey(uri))
+      .build()).tagSet();
+    assertThat(retrievedTags, containsInAnyOrder(expectedTags.toArray()));
+  }
+
+  @Test
   void shouldUseSystemClockByDefaultWhenNoClockProvided() {
     var client = new FakeS3Client();
     var beforeInsertion = Instant.now();
@@ -503,6 +528,7 @@ class FakeS3ClientTest {
     var putObjectRequest = PutObjectRequest.builder()
       .bucket(s3Uri.getHost())
       .key(extractKey(s3Uri))
+      .tagging("asuhfoari")
       .build();
 
     fakeS3Client.putObject(putObjectRequest,
