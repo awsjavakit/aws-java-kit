@@ -13,6 +13,7 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -50,9 +51,11 @@ import software.amazon.awssdk.core.sync.ResponseTransformer.TransformerType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.Tag;
 
 class S3DriverTest {
 
@@ -363,6 +366,26 @@ class S3DriverTest {
     s3Driver.copyFile(sourceUri, destinationUri);
     var destinationContent = s3Driver.readFile(destinationUri);
     assertThat(destinationContent, is(equalTo(sourceContent)));
+  }
+
+  @Test
+  void shouldBeAbleToCopyFileFromS3UriToS3UriWithTags() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var tag = Tag.builder().key(randomString()).value(randomString()).build();
+    var tag2 = Tag.builder().key(randomString()).value(randomString()).build();
+    s3Driver.copyFile(sourceUri, destinationUri, tag, tag2);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+        .bucket(destinationUri.getHost())
+        .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
   }
 
   @Test

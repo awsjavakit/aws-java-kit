@@ -12,6 +12,8 @@ import java.nio.ByteBuffer;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,11 +43,14 @@ import software.amazon.awssdk.services.s3.model.PutObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectTaggingResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.Tag;
+import software.amazon.awssdk.services.s3.model.Tagging;
 
 @JacocoGenerated
 @SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.UnusedPrivateMethod"})
 public class FakeS3Client implements S3Client {
 
+  public static final String TAG_SEPARATOR_CHAR = "&";
+  public static final String TAG_KEY_VALUE_SEPARATOR = "=";
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, Map<String, ByteBuffer>> filesAndContent;
   private final Map<String, Map<String, Instant>> lastModified;
@@ -65,6 +70,26 @@ public class FakeS3Client implements S3Client {
     this.tagStore = new LinkedHashMap<>();
   }
 
+  @Override
+  public CopyObjectResponse copyObject(CopyObjectRequest copyObjectRequest) {
+    createBucketEntry(copyObjectRequest.sourceBucket());
+    createBucketEntry(copyObjectRequest.destinationBucket());
+    this.copyRequests.add(copyObjectRequest);
+    var contents = getBucketContents(copyObjectRequest.sourceBucket())
+      .get(copyObjectRequest.sourceKey());
+    createBucketEntry(copyObjectRequest.destinationBucket());
+    getBucketContents(copyObjectRequest.destinationBucket())
+      .put(copyObjectRequest.destinationKey(), contents);
+
+    // Mirror AWS behavior loosely: destination has a new last modified timestamp.
+    lastModified.get(copyObjectRequest.destinationBucket())
+      .put(copyObjectRequest.destinationKey(), clock.instant());
+
+    addTagsToCopiedObject(copyObjectRequest);
+
+    return CopyObjectResponse.builder().build();
+  }
+
   //TODO: fix if necessary
   @SuppressWarnings("PMD.CloseResource")
   @Override
@@ -75,6 +100,32 @@ public class FakeS3Client implements S3Client {
     var response = GetObjectResponse.builder().contentLength((long) contents.length)
       .build();
     return transformResponse(responseTransformer, new ByteArrayInputStream(contents), response);
+  }
+
+  @Override
+  public GetObjectTaggingResponse getObjectTagging(
+    GetObjectTaggingRequest getObjectTaggingRequest) {
+    var tags = Optional.ofNullable(tagStore.get(getObjectTaggingRequest.bucket()))
+      .map(bucketTags -> bucketTags.get(getObjectTaggingRequest.key()))
+      .orElse(List.of());
+    return GetObjectTaggingResponse.builder()
+      .tagSet(tags)
+      .build();
+  }
+
+  @Override
+  public HeadObjectResponse headObject(HeadObjectRequest headObjectRequest) {
+    var bucket = headObjectRequest.bucket();
+    var key = headObjectRequest.key();
+    failIfFileDoesNotExist(bucket, key);
+
+    var lastModified = Optional.ofNullable(this.lastModified.get(bucket))
+      .map(lastMod -> lastMod.get(key))
+      .orElse(null);
+
+    return HeadObjectResponse.builder()
+      .lastModified(lastModified)
+      .build();
   }
 
   /**
@@ -120,21 +171,6 @@ public class FakeS3Client implements S3Client {
       .build();
   }
 
-  @Override
-  public HeadObjectResponse headObject(HeadObjectRequest headObjectRequest) {
-    var bucket = headObjectRequest.bucket();
-    var key = headObjectRequest.key();
-    failIfFileDoesNotExist(bucket, key);
-
-    var lastModified = Optional.ofNullable(this.lastModified.get(bucket))
-      .map(lastMod -> lastMod.get(key))
-      .orElse(null);
-
-    return HeadObjectResponse.builder()
-      .lastModified(lastModified)
-      .build();
-  }
-
   //TODO: fix if necessary
   @SuppressWarnings("PMD.CloseResource")
   @Override
@@ -149,21 +185,16 @@ public class FakeS3Client implements S3Client {
   }
 
   @Override
-  public CopyObjectResponse copyObject(CopyObjectRequest copyObjectRequest) {
-    createBucketEntry(copyObjectRequest.sourceBucket());
-    createBucketEntry(copyObjectRequest.destinationBucket());
-    this.copyRequests.add(copyObjectRequest);
-    var contents = getBucketContents(copyObjectRequest.sourceBucket())
-      .get(copyObjectRequest.sourceKey());
-    createBucketEntry(copyObjectRequest.destinationBucket());
-    getBucketContents(copyObjectRequest.destinationBucket())
-      .put(copyObjectRequest.destinationKey(), contents);
-
-    // Mirror AWS behavior loosely: destination has a new last modified timestamp.
-    lastModified.get(copyObjectRequest.destinationBucket())
-      .put(copyObjectRequest.destinationKey(), clock.instant());
-
-    return CopyObjectResponse.builder().build();
+  public PutObjectTaggingResponse putObjectTagging(
+    PutObjectTaggingRequest putObjectTaggingRequest) {
+    var bucket = putObjectTaggingRequest.bucket();
+    var key = putObjectTaggingRequest.key();
+    var tags = putObjectTaggingRequest.tagging().tagSet();
+    tagStore.computeIfAbsent(bucket, b -> new HashMap<>())
+      .put(key, tags);
+    return PutObjectTaggingResponse.builder()
+      .versionId(putObjectTaggingRequest.versionId())
+      .build();
   }
 
   @Override
@@ -176,30 +207,18 @@ public class FakeS3Client implements S3Client {
     //NO-OP;
   }
 
-  @Override
-  public PutObjectTaggingResponse putObjectTagging(PutObjectTaggingRequest putObjectTaggingRequest) {
-    var bucket = putObjectTaggingRequest.bucket();
-    var key = putObjectTaggingRequest.key();
-    var tags = putObjectTaggingRequest.tagging().tagSet();
-    tagStore.computeIfAbsent(bucket, b -> new HashMap<>())
-      .put(key, tags);
-    return PutObjectTaggingResponse.builder()
-      .versionId(putObjectTaggingRequest.versionId())
-      .build();
-  }
-
-  @Override
-  public GetObjectTaggingResponse getObjectTagging(GetObjectTaggingRequest getObjectTaggingRequest) {
-    var tags = Optional.ofNullable(tagStore.get(getObjectTaggingRequest.bucket()))
-      .map(bucketTags -> bucketTags.get(getObjectTaggingRequest.key()))
-      .orElse(List.of());
-    return GetObjectTaggingResponse.builder()
-      .tagSet(tags)
-      .build();
-  }
-
   public List<CopyObjectRequest> getCopyRequests() {
     return copyRequests;
+  }
+
+  private static List<Tag> extractTagsList(String stringTags) {
+    return Optional.ofNullable(stringTags)
+      .map(tagsString -> Arrays.stream(tagsString.split(TAG_SEPARATOR_CHAR))
+        .filter(tag -> !tag.isEmpty())
+        .map(s -> s.split(TAG_KEY_VALUE_SEPARATOR))
+        .map(arr -> Tag.builder().key(arr[0]).value(arr[1]).build())
+        .toList())
+      .orElse(Collections.emptyList());
   }
 
   private static ByteBuffer inputSteamToByteBuffer(InputStream inputStream) {
@@ -224,6 +243,15 @@ public class FakeS3Client implements S3Client {
 
   private static String noSuchKeyErrorMessage(String bucket, String filename) {
     return String.format("Bucket %s does not contain key %s", bucket, filename);
+  }
+
+  private void addTagsToCopiedObject(CopyObjectRequest copyObjectRequest) {
+    var tagList = extractTagsList(copyObjectRequest.tagging());
+    putObjectTagging(PutObjectTaggingRequest.builder()
+      .bucket(copyObjectRequest.destinationBucket())
+      .key(copyObjectRequest.destinationKey())
+      .tagging(Tagging.builder().tagSet(tagList).build())
+      .build());
   }
 
   private Map<String, ByteBuffer> getBucketContents(String bucketName) {
