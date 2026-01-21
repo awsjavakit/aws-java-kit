@@ -255,15 +255,36 @@ public class S3Driver {
     return getFile(filename, StandardCharsets.UTF_8);
   }
 
+  /**
+   * Copies a file from source to destination. Both URIs must be S3 URIs.
+   * @param sourceUri the uri of the source file
+   * @param destinationUri the uri of the destination file
+   * @param tags optional tags to add to the copied file,may be null or empty.
+   */
   public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
-    var request = CopyObjectRequest.builder()
+    var requestBuilder = createBasicCopyRequest(sourceUri, destinationUri);
+    var request = addTagsInCopyRequest(requestBuilder, tags).build();
+    client.copyObject(request);
+  }
+
+  private static CopyObjectRequest.Builder addTagsInCopyRequest(
+    CopyObjectRequest.Builder requestBuilder, Tag... tags) {
+    if (isEmpty(tags)) {
+      return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
+    }
+    return requestBuilder;
+  }
+
+  private static boolean isEmpty(Tag... tags) {
+    return tags != null && tags.length > 0;
+  }
+
+  private static CopyObjectRequest.Builder createBasicCopyRequest(URI sourceUri, URI destinationUri) {
+    return CopyObjectRequest.builder()
       .sourceKey(UriWrapper.fromUri(sourceUri).toS3bucketPath().toString())
       .sourceBucket(sourceUri.getHost())
       .destinationKey(UriWrapper.fromUri(destinationUri).toS3bucketPath().toString())
-      .destinationBucket(destinationUri.getHost())
-      .tagging(Tagging.builder().tagSet(tags).build())
-      .build();
-    client.copyObject(request);
+      .destinationBucket(destinationUri.getHost());
   }
 
   private UnixPath calculateListingFolder(UnixPath folder) {

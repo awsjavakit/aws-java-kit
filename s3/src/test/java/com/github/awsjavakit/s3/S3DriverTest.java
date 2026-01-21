@@ -4,6 +4,7 @@ import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -369,7 +370,7 @@ class S3DriverTest {
   }
 
   @Test
-  void shouldBeAbleToCopyFileFromS3UriToS3UriWithTags() throws IOException {
+  void shouldCopyFileFromS3UriToS3UriWithTags() throws IOException {
     var sourceContent = randomString();
     var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
     var destinationUri =
@@ -386,6 +387,24 @@ class S3DriverTest {
         .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
       .build()).tagSet();
     assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
+  }
+
+  @Test
+  void shouldNotSetTagsWhenCopyingWithNoTagsParameterProvided() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    s3Driver.copyFile(sourceUri, destinationUri);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(destinationUri.getHost())
+      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, is(empty()));
   }
 
   @Test
