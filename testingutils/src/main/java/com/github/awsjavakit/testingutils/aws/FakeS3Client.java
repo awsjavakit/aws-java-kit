@@ -77,7 +77,6 @@ public class FakeS3Client implements S3Client {
     this.copyRequests.add(copyObjectRequest);
     var contents = getBucketContents(copyObjectRequest.sourceBucket())
       .get(copyObjectRequest.sourceKey());
-    createBucketEntry(copyObjectRequest.destinationBucket());
     getBucketContents(copyObjectRequest.destinationBucket())
       .put(copyObjectRequest.destinationKey(), contents);
 
