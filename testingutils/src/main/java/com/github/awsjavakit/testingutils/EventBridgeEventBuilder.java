@@ -10,7 +10,7 @@ import com.github.awsjavakit.eventbridge.models.AwsEventBridgeDetail;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.io.InputStream;
 import java.util.List;
 import software.amazon.awssdk.regions.Region;

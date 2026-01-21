@@ -4,7 +4,7 @@ import static com.github.awsjavakit.http.HttpConstants.HttpHeaderValues.APPLICAT
 import static com.github.awsjavakit.http.HttpConstants.HttpHeaders.AUTHORIZATION;
 import static com.github.awsjavakit.http.HttpConstants.HttpHeaders.CONTENT_TYPE;
 import static com.github.awsjavakit.http.JsonConfig.fromJson;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.github.awsjavakit.http.token.OAuthTokenEntry;
 import com.github.awsjavakit.http.token.OAuthTokenResponse;

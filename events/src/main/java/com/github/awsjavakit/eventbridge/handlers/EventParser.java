@@ -1,13 +1,13 @@
 package com.github.awsjavakit.eventbridge.handlers;
 
 import static com.github.awsjavakit.misc.exceptions.ExceptionUtils.stackTraceInSingleLine;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
-import com.gtihub.awsjavakit.attempt.Failure;
+import com.github.awsjavakit.attempt.Failure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,7 +1,7 @@
 package com.github.awsjavakit.attempt;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -9,7 +9,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.gtihub.awsjavakit.attempt.Try;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;

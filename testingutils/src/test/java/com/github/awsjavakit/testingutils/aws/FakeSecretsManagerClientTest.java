@@ -1,7 +1,7 @@
 package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static com.spotify.hamcrest.jackson.JsonMatchers.jsonObject;
 import static com.spotify.hamcrest.jackson.JsonMatchers.jsonText;
 import static org.hamcrest.MatcherAssert.assertThat;
