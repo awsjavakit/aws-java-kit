@@ -2,6 +2,7 @@ package com.github.awsjavakit.s3;
 
 import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
+import static java.util.Objects.nonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
@@ -34,6 +35,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -45,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
@@ -69,6 +72,18 @@ class S3DriverTest {
   private static final String SOME_PATH = randomString();
   private S3Driver s3Driver;
   private S3Client s3Client;
+
+  public static Stream<List<Tag>> emptyAndNullTags() {
+    return Stream.of(
+      null,
+      Collections.emptyList(),
+      List.of(Tag.builder().key("").value("").build()),
+      List.of(Tag.builder().key("").value(randomString()).build()),
+      List.of(Tag.builder().key(randomString()).value("").build()),
+      List.of(Tag.builder().key(null).value(null).build()),
+      List.of(Tag.builder().key(null).value(randomString()).build()),
+      List.of(Tag.builder().key(randomString()).value(null).build()));
+  }
 
   @BeforeEach
   public void init() {
@@ -396,6 +411,25 @@ class S3DriverTest {
     var destinationUri =
       UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
     s3Driver.copyFile(sourceUri, destinationUri);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(destinationUri.getHost())
+      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, is(empty()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("emptyAndNullTags")
+  void shouldNotSetTagsWhenCopyingWithNonValidTagsProvided(List<Tag> tags) throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    s3Driver.copyFile(sourceUri, destinationUri, nonNull(tags)? tags.toArray(Tag[]::new) : null);
 
     var destinationContent = s3Driver.readFile(destinationUri);
     assertThat(destinationContent, is(equalTo(sourceContent)));

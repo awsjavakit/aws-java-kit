@@ -2,6 +2,8 @@ package com.github.awsjavakit.s3;
 
 import static com.gtihub.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
@@ -18,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -269,13 +272,20 @@ public class S3Driver {
 
   private static CopyObjectRequest.Builder addTagsInCopyRequest(
     CopyObjectRequest.Builder requestBuilder, Tag... tags) {
-    if (isEmpty(tags)) {
-      return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
+    if (isNotEmpty(tags)) {
+      return requestBuilder.tagging(Tagging.builder().tagSet(validTagSet(tags)).build());
     }
     return requestBuilder;
   }
 
-  private static boolean isEmpty(Tag... tags) {
+  private static Tag[] validTagSet(Tag... tags) {
+    return Stream.of(tags)
+      .filter(t -> nonNull(t.key()) && nonNull(t.value()))
+      .filter(t -> !t.key().isEmpty() && !t.value().isEmpty())
+      .toList().toArray(Tag[]::new);
+  }
+
+  private static boolean isNotEmpty(Tag... tags) {
     return tags != null && tags.length > 0;
   }
 
