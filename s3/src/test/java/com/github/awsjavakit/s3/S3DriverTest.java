@@ -429,7 +429,7 @@ class S3DriverTest {
     var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
     var destinationUri =
       UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
-    s3Driver.copyFile(sourceUri, destinationUri, nonNull(tags)? tags.toArray(Tag[]::new) : null);
+    s3Driver.copyFile(sourceUri, destinationUri, nonNull(tags) ? tags.toArray(Tag[]::new) : null);
 
     var destinationContent = s3Driver.readFile(destinationUri);
     assertThat(destinationContent, is(equalTo(sourceContent)));

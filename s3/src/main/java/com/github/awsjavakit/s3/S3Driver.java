@@ -262,7 +262,7 @@ public class S3Driver {
    * Copies a file from source to destination. Both URIs must be S3 URIs.
    * @param sourceUri the uri of the source file
    * @param destinationUri the uri of the destination file
-   * @param tags optional tags to add to the copied file,may be null or empty.
+   * @param tags optional tags to add to the copied file, may be null or empty.
    */
   public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
     var requestBuilder = createBasicCopyRequest(sourceUri, destinationUri);
@@ -282,7 +282,7 @@ public class S3Driver {
     return Stream.of(tags)
       .filter(t -> nonNull(t.key()) && nonNull(t.value()))
       .filter(t -> !t.key().isEmpty() && !t.value().isEmpty())
-      .toList().toArray(Tag[]::new);
+      .toArray(Tag[]::new);
   }
 
   private static boolean isNotEmpty(Tag... tags) {
