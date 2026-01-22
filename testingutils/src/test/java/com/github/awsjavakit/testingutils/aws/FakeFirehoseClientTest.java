@@ -2,7 +2,7 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.SingletonCollector;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;

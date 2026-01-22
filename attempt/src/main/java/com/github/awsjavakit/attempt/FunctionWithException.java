@@ -1,4 +1,4 @@
-package com.gtihub.awsjavakit.attempt;
+package com.github.awsjavakit.attempt;
 
 @FunctionalInterface
 public interface FunctionWithException<T, R, E extends Exception> {

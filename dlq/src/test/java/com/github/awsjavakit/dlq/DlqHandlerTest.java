@@ -2,7 +2,7 @@ package com.github.awsjavakit.dlq;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.core.Is.is;
@@ -13,7 +13,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.testingutils.aws.FakeFirehoseClient;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;

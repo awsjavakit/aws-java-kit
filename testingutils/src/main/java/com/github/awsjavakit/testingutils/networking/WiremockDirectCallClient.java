@@ -1,7 +1,7 @@
 package com.github.awsjavakit.testingutils.networking;
 
 import static com.github.awsjavakit.testingutils.networking.HeadersUtils.javaHeadersToWiremockHeaders;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.tomakehurst.wiremock.direct.DirectCallHttpServer;
 import com.github.tomakehurst.wiremock.http.FormParameter;

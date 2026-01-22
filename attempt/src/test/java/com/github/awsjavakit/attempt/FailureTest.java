@@ -8,8 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.gtihub.awsjavakit.attempt.Failure;
-import com.gtihub.awsjavakit.attempt.Try;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.gtihub.awsjavakit.attempt;
+package com.github.awsjavakit.attempt;
 
 import static java.util.Objects.isNull;
 

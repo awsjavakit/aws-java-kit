@@ -1,6 +1,6 @@
 package com.github.awsjavakit.testingutils.aws;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.StringUtils;

@@ -1,8 +1,8 @@
 package com.github.awsjavakit.http;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.gtihub.awsjavakit.attempt.FunctionWithException;
+import com.github.awsjavakit.attempt.FunctionWithException;
 import java.time.Duration;
 
 @FunctionalInterface

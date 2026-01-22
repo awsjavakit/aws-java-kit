@@ -1,4 +1,4 @@
-package com.gtihub.awsjavakit.attempt;
+package com.github.awsjavakit.attempt;
 
 import java.util.Objects;
 import java.util.Optional;

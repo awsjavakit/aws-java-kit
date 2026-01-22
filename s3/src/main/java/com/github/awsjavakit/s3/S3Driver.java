@@ -1,6 +1,6 @@
 package com.github.awsjavakit.s3;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.ioutils.IoUtils;

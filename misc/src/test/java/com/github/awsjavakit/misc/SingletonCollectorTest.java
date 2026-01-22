@@ -7,9 +7,9 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.gtihub.awsjavakit.attempt.Failure;
-import com.gtihub.awsjavakit.attempt.Success;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Failure;
+import com.github.awsjavakit.attempt.Success;
+import com.github.awsjavakit.attempt.Try;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;

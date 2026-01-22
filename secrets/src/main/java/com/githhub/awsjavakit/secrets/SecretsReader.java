@@ -1,11 +1,11 @@
 package com.githhub.awsjavakit.secrets;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.gtihub.awsjavakit.attempt.Failure;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Failure;
+import com.github.awsjavakit.attempt.Try;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;

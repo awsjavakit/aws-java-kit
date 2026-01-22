@@ -1,9 +1,9 @@
 package com.github.awsjavakit.misc.virtualfuture;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;

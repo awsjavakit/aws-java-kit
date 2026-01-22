@@ -1,8 +1,8 @@
 package com.github.awsjavakit.misc;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
