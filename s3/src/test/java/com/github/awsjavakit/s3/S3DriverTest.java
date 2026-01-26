@@ -7,7 +7,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -36,7 +35,6 @@ import java.nio.file.StandardOpenOption;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -76,8 +74,6 @@ class S3DriverTest {
 
   public static Stream<List<Tag>> emptyAndNullTags() {
     return Stream.of(
-      null,
-      Collections.emptyList(),
       List.of(Tag.builder().key("").value("").build()),
       List.of(Tag.builder().key("").value(randomString()).build()),
       List.of(Tag.builder().key(randomString()).value("").build()),
@@ -405,6 +401,20 @@ class S3DriverTest {
     assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
   }
 
+
+  @Test
+  void shouldFailWheTryingToInjectInvalidTags() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var tag = Tag.builder().key(randomString()).value(randomString()).build();
+    var invalidKey = " ";
+    var tag2 = Tag.builder().key(invalidKey).value(randomString()).build();
+    assertThrows(Exception.class,()->s3Driver.copyFile(sourceUri, destinationUri, tag, tag2));
+
+  }
+
   @Test
   void shouldNotSetTagsWhenCopyingWithNoTagsParameterProvided() throws IOException {
     var sourceContent = randomString();
@@ -425,42 +435,14 @@ class S3DriverTest {
 
   @ParameterizedTest
   @MethodSource("emptyAndNullTags")
-  void shouldNotSetTagsWhenCopyingWithNonValidTagsProvided(List<Tag> tags) throws IOException {
+  void shouldThrowErrorWhenAtLeastOneTagIsInvalid(List<Tag> tags) throws IOException {
     var sourceContent = randomString();
     var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
     var destinationUri =
       UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
-    s3Driver.copyFile(sourceUri, destinationUri, nonNull(tags) ? tags.toArray(Tag[]::new) : null);
-
-    var destinationContent = s3Driver.readFile(destinationUri);
-    assertThat(destinationContent, is(equalTo(sourceContent)));
-
-    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
-      .bucket(destinationUri.getHost())
-      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
-      .build()).tagSet();
-    assertThat(tagsFromCopiedFile, is(empty()));
-  }
-
-  @Test
-  void shouldTakeIntoConsiderationOnlyValidTagsWhenCopyingFile() throws IOException {
-    var sourceContent = randomString();
-    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
-    var destinationUri = UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
-    var nonValidTag = Tag.builder().key("").value("").build();
-    var validTag = Tag.builder().key(randomString()).value(randomString()).build();
-    var tags = List.of(nonValidTag, validTag).toArray(Tag[]::new);
-    s3Driver.copyFile(sourceUri, destinationUri, tags);
-
-    var destinationContent = s3Driver.readFile(destinationUri);
-    assertThat(destinationContent, is(equalTo(sourceContent)));
-
-    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
-      .bucket(destinationUri.getHost())
-      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
-      .build()).tagSet();
-    assertThat(tagsFromCopiedFile, hasSize(1));
-    assertThat(tagsFromCopiedFile.getFirst(), is(equalTo(validTag)));
+    var tagArray = nonNull(tags) ? tags.toArray(Tag[]::new) : null;
+    Executable action = () -> s3Driver.copyFile(sourceUri, destinationUri, tagArray);
+    assertThrows(IllegalTagException.class, action);
   }
 
   @Test

@@ -2,9 +2,9 @@ package com.github.awsjavakit.s3;
 
 import static com.github.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 import com.github.awsjavakit.misc.JacocoGenerated;
+import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -17,10 +17,12 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -130,7 +132,8 @@ public class S3Driver {
   /**
    * Returns the last modified timestamp of the given S3 object.
    *
-   * @param fileUri the S3 URI to the file. The host must be equal to the bucket name of the S3 driver
+   * @param fileUri the S3 URI to the file. The host must be equal to the bucket name of the S3
+   *                driver
    * @return the object's last modified timestamp.
    */
   public Instant lastModified(URI fileUri) {
@@ -260,36 +263,45 @@ public class S3Driver {
 
   /**
    * Copies a file from source to destination. Both URIs must be S3 URIs.
-   * @param sourceUri the uri of the source file
+   *
+   * @param sourceUri      the uri of the source file
    * @param destinationUri the uri of the destination file
-   * @param tags optional tags to add to the copied file, may be null or empty.
+   * @param tags           optional tags to add to the copied file, may be null or empty.
    */
   public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
     var requestBuilder = createBasicCopyRequest(sourceUri, destinationUri);
-    var request = addTagsInCopyRequest(requestBuilder, tags).build();
+    var validTags = validTagSet(tags);
+    var request = addTagsInCopyRequest(requestBuilder, validTags).build();
     client.copyObject(request);
   }
 
   private static CopyObjectRequest.Builder addTagsInCopyRequest(
-    CopyObjectRequest.Builder requestBuilder, Tag... tags) {
-    if (isNotEmpty(tags)) {
-      return requestBuilder.tagging(Tagging.builder().tagSet(validTagSet(tags)).build());
+    CopyObjectRequest.Builder requestBuilder, Collection<Tag> tags) {
+    if (!tags.isEmpty()) {
+      return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
     }
     return requestBuilder;
   }
 
-  private static Tag[] validTagSet(Tag... tags) {
-    return Stream.of(tags)
-      .filter(tag -> nonNull(tag.key()) && nonNull(tag.value()))
-      .filter(tag -> !tag.key().isEmpty() && !tag.value().isEmpty())
-      .toArray(Tag[]::new);
+  private static List<Tag> validTagSet(Tag... tags) {
+    return
+      Optional.ofNullable(tags)
+        .stream()
+        .flatMap(t -> Arrays.stream(t).sequential())
+        .map(tag -> validTag(tag))
+        .filter(tag -> !tag.key().isEmpty() && !tag.value().isEmpty())
+        .toList();
   }
 
-  private static boolean isNotEmpty(Tag... tags) {
-    return tags != null && tags.length > 0;
-  }
+  private static Tag validTag(Tag tag) {
+    if (StringUtils.isBlank(tag.key()) || StringUtils.isBlank(tag.value())) {
+      throw new IllegalTagException(tag.toString());
+    }
+    return tag;
 
-  private static CopyObjectRequest.Builder createBasicCopyRequest(URI sourceUri, URI destinationUri) {
+  }
+  private static CopyObjectRequest.Builder createBasicCopyRequest(URI sourceUri,
+    URI destinationUri) {
     return CopyObjectRequest.builder()
       .sourceKey(UriWrapper.fromUri(sourceUri).toS3bucketPath().toString())
       .sourceBucket(sourceUri.getHost())
@@ -299,8 +311,8 @@ public class S3Driver {
 
   private UnixPath calculateListingFolder(UnixPath folder) {
     return isNull(folder) || folder.isEmptyPath() || folder.isRoot()
-      ? UnixPath.EMPTY_PATH
-      : folder;
+           ? UnixPath.EMPTY_PATH
+           : folder;
   }
 
   private UriWrapper s3BucketUri() {
@@ -329,8 +341,8 @@ public class S3Driver {
       .replaceAll(DOUBLE_BACKSLASH, UNIX_SEPARATOR)
       .replaceAll(SINGLE_BACKSLASH, UNIX_SEPARATOR);
     return unixPath.startsWith(UNIX_SEPARATOR)
-      ? unixPath.substring(REMOVE_ROOT)
-      : unixPath;
+           ? unixPath.substring(REMOVE_ROOT)
+           : unixPath;
   }
 
   private RequestBody createRequestBody(File input) {
@@ -348,7 +360,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Response fetchNewResultsBatch(UnixPath folder, String listingStartingPoint,
-                                                     int responseSize) {
+    int responseSize) {
     var request = requestForListingFiles(folder, listingStartingPoint, responseSize);
     return client.listObjectsV2(request);
   }
@@ -391,7 +403,7 @@ public class S3Driver {
   }
 
   private ListObjectsV2Request requestForListingFiles(UnixPath folder, String startingPoint,
-                                                      int responseSize) {
+    int responseSize) {
     return ListObjectsV2Request.builder()
       .bucket(bucketName)
       .prefix(folder.toString())
