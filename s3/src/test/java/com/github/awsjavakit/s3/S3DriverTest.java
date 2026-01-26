@@ -2,8 +2,10 @@ package com.github.awsjavakit.s3;
 
 import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
+import static java.util.Objects.nonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
@@ -13,6 +15,7 @@ import static org.hamcrest.core.StringStartsWith.startsWith;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -43,6 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.sync.ResponseTransformer;
@@ -50,9 +54,11 @@ import software.amazon.awssdk.core.sync.ResponseTransformer.TransformerType;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.Tag;
 
 class S3DriverTest {
 
@@ -65,6 +71,18 @@ class S3DriverTest {
   private static final String SOME_PATH = randomString();
   private S3Driver s3Driver;
   private S3Client s3Client;
+
+  public static Stream<List<Tag>> emptyAndNullTags() {
+    return Stream.of(
+      List.of(Tag.builder().key("").value("").build()),
+      List.of(Tag.builder().key("").value(randomString()).build()),
+      List.of(Tag.builder().key(randomString()).value("").build()),
+      List.of(Tag.builder().key(null).value(null).build()),
+      List.of(Tag.builder().key(null).value(randomString()).build()),
+      List.of(Tag.builder().key(randomString()).value(null).build()),
+      List.of(Tag.builder().key(randomString()).value(randomString()).build(),
+        Tag.builder().key("").value("").build()));
+  }
 
   @BeforeEach
   public void init() {
@@ -363,6 +381,56 @@ class S3DriverTest {
     s3Driver.copyFile(sourceUri, destinationUri);
     var destinationContent = s3Driver.readFile(destinationUri);
     assertThat(destinationContent, is(equalTo(sourceContent)));
+  }
+
+  @Test
+  void shouldCopyFileFromS3UriToS3UriWithTags() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var tag = Tag.builder().key(randomString()).value(randomString()).build();
+    var tag2 = Tag.builder().key(randomString()).value(randomString()).build();
+    s3Driver.copyFile(sourceUri, destinationUri, tag, tag2);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+        .bucket(destinationUri.getHost())
+        .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
+  }
+
+  @Test
+  void shouldNotSetTagsWhenCopyingWithNoTagsParameterProvided() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    s3Driver.copyFile(sourceUri, destinationUri);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(destinationUri.getHost())
+      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, is(empty()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("emptyAndNullTags")
+  void shouldThrowErrorWhenAtLeastOneTagIsInvalid(List<Tag> tags) throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var tagArray = nonNull(tags) ? tags.toArray(Tag[]::new) : null;
+    Executable action = () -> s3Driver.copyFile(sourceUri, destinationUri, tagArray);
+    assertThrows(IllegalTagException.class, action);
   }
 
   @Test
