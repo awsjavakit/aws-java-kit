@@ -3,7 +3,7 @@ package com.github.awsjavakit.stepfunctions.lambda;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;

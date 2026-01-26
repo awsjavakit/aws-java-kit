@@ -1,11 +1,11 @@
 package com.github.awsjavakit.misc.paths;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.isNull;
 
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.StringUtils;
-import com.gtihub.awsjavakit.attempt.Try;
+import com.github.awsjavakit.attempt.Try;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;

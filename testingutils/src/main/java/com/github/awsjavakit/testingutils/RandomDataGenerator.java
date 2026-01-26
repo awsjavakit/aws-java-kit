@@ -1,6 +1,6 @@
 package com.github.awsjavakit.testingutils;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

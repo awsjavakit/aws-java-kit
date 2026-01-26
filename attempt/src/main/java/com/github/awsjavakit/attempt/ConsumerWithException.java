@@ -1,4 +1,4 @@
-package com.gtihub.awsjavakit.attempt;
+package com.github.awsjavakit.attempt;
 
 @FunctionalInterface
 public interface ConsumerWithException<T, E extends Exception> {

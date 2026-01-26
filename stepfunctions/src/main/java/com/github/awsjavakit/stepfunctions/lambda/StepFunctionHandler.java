@@ -1,6 +1,6 @@
 package com.github.awsjavakit.stepfunctions.lambda;
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;

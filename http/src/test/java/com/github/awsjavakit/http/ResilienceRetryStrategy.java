@@ -1,6 +1,6 @@
 package com.github.awsjavakit.http;
 
-import com.gtihub.awsjavakit.attempt.FunctionWithException;
+import com.github.awsjavakit.attempt.FunctionWithException;
 import io.github.resilience4j.retry.RetryConfig;
 import io.github.resilience4j.retry.RetryRegistry;
 import java.time.Duration;

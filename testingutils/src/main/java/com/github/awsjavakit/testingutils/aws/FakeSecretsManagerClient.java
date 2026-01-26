@@ -4,7 +4,7 @@ package com.github.awsjavakit.testingutils.aws;
  * Copied from https://github.com/BIBSYSDEV/nva-commons.
  */
 
-import static com.gtihub.awsjavakit.attempt.Try.attempt;
+import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
