@@ -277,19 +277,18 @@ public class S3Driver {
 
   private static CopyObjectRequest.Builder addTagsInCopyRequest(
     CopyObjectRequest.Builder requestBuilder, Collection<Tag> tags) {
-    if (!tags.isEmpty()) {
-      return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
+    if (tags.isEmpty()) {
+      return requestBuilder;
     }
-    return requestBuilder;
+    return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
   }
 
   private static List<Tag> validTagSet(Tag... tags) {
     return
       Optional.ofNullable(tags)
         .stream()
-        .flatMap(t -> Arrays.stream(t).sequential())
-        .map(tag -> validTag(tag))
-        .filter(tag -> !tag.key().isEmpty() && !tag.value().isEmpty())
+        .flatMap(tag -> Arrays.stream(tag).sequential())
+        .map(S3Driver::validTag)
         .toList();
   }
 
@@ -298,8 +297,8 @@ public class S3Driver {
       throw new IllegalTagException(tag.toString());
     }
     return tag;
-
   }
+
   private static CopyObjectRequest.Builder createBasicCopyRequest(URI sourceUri,
     URI destinationUri) {
     return CopyObjectRequest.builder()

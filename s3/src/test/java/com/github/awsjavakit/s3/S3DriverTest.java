@@ -79,7 +79,9 @@ class S3DriverTest {
       List.of(Tag.builder().key(randomString()).value("").build()),
       List.of(Tag.builder().key(null).value(null).build()),
       List.of(Tag.builder().key(null).value(randomString()).build()),
-      List.of(Tag.builder().key(randomString()).value(null).build()));
+      List.of(Tag.builder().key(randomString()).value(null).build()),
+      List.of(Tag.builder().key(randomString()).value(randomString()).build(),
+        Tag.builder().key("").value("").build()));
   }
 
   @BeforeEach
@@ -399,20 +401,6 @@ class S3DriverTest {
         .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
       .build()).tagSet();
     assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
-  }
-
-
-  @Test
-  void shouldFailWheTryingToInjectInvalidTags() throws IOException {
-    var sourceContent = randomString();
-    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
-    var destinationUri =
-      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
-    var tag = Tag.builder().key(randomString()).value(randomString()).build();
-    var invalidKey = " ";
-    var tag2 = Tag.builder().key(invalidKey).value(randomString()).build();
-    assertThrows(Exception.class,()->s3Driver.copyFile(sourceUri, destinationUri, tag, tag2));
-
   }
 
   @Test
