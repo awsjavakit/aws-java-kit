@@ -7,6 +7,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -439,6 +440,27 @@ class S3DriverTest {
       .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
       .build()).tagSet();
     assertThat(tagsFromCopiedFile, is(empty()));
+  }
+
+  @Test
+  void shouldTakeIntoConsiderationOnlyValidTagsWhenCopyingFile() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri = UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var nonValidTag = Tag.builder().key("").value("").build();
+    var validTag = Tag.builder().key(randomString()).value(randomString()).build();
+    var tags = List.of(nonValidTag, validTag).toArray(Tag[]::new);
+    s3Driver.copyFile(sourceUri, destinationUri, tags);
+
+    var destinationContent = s3Driver.readFile(destinationUri);
+    assertThat(destinationContent, is(equalTo(sourceContent)));
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(destinationUri.getHost())
+      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet();
+    assertThat(tagsFromCopiedFile, hasSize(1));
+    assertThat(tagsFromCopiedFile.getFirst(), is(equalTo(validTag)));
   }
 
   @Test

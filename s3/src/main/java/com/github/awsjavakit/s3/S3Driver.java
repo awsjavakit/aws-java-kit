@@ -280,8 +280,8 @@ public class S3Driver {
 
   private static Tag[] validTagSet(Tag... tags) {
     return Stream.of(tags)
-      .filter(t -> nonNull(t.key()) && nonNull(t.value()))
-      .filter(t -> !t.key().isEmpty() && !t.value().isEmpty())
+      .filter(tag -> nonNull(tag.key()) && nonNull(tag.value()))
+      .filter(tag -> !tag.key().isEmpty() && !tag.value().isEmpty())
       .toArray(Tag[]::new);
   }
 
