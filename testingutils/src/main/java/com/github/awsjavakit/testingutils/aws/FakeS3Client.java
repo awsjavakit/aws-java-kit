@@ -49,7 +49,7 @@ import software.amazon.awssdk.services.s3.model.Tagging;
 @SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.UnusedPrivateMethod"})
 public class FakeS3Client implements S3Client {
 
-  public static final String TAG_SEPARATOR_CHAR = "&";
+  public static final String TAG_SEPARATOR = "&";
   public static final String TAG_KEY_VALUE_SEPARATOR = "=";
   private static final int START_FROM_BEGINNING = 0;
   private final Map<String, Map<String, ByteBuffer>> filesAndContent;
@@ -212,7 +212,7 @@ public class FakeS3Client implements S3Client {
 
   private static List<Tag> extractTagsList(String stringTags) {
     return Optional.ofNullable(stringTags)
-      .map(tagsString -> Arrays.stream(tagsString.split(TAG_SEPARATOR_CHAR))
+      .map(tagsString -> Arrays.stream(tagsString.split(TAG_SEPARATOR))
         .filter(tag -> !tag.isEmpty())
         .map(s -> s.split(TAG_KEY_VALUE_SEPARATOR))
         .map(arr -> Tag.builder().key(arr[0]).value(arr[1]).build())
