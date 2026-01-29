@@ -31,7 +31,7 @@ public  class FakeAsyncLambdaClient<I, O> implements LambdaAsyncClient {
   @JacocoGenerated
   @Override
   public String serviceName() {
-    return "FakeLambdaClient";
+    return "FakeAsyncLambdaClient";
   }
 
   @JacocoGenerated
