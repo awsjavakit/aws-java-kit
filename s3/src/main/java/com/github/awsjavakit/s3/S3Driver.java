@@ -39,6 +39,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.Tag;
 import software.amazon.awssdk.services.s3.model.Tagging;
+import software.amazon.awssdk.services.s3.model.TaggingDirective;
 
 //TODO: Address God Class issue
 @SuppressWarnings({"PMD.GodClass", "PMD.CouplingBetweenObjects"})
@@ -266,7 +267,7 @@ public class S3Driver {
    *
    * @param sourceUri      the uri of the source file
    * @param destinationUri the uri of the destination file
-   * @param tags           optional tags to add to the copied file, may be null or empty.
+   * @param tags           optional tags to replace existing tags to the copied file, may be null or empty.
    */
   public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
     var requestBuilder = createBasicCopyRequest(sourceUri, destinationUri);
@@ -280,7 +281,8 @@ public class S3Driver {
     if (tags.isEmpty()) {
       return requestBuilder;
     }
-    return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
+    return requestBuilder.tagging(Tagging.builder().tagSet(tags).build())
+      .taggingDirective(TaggingDirective.REPLACE);
   }
 
   private static List<Tag> validTagSet(Tag... tags) {
