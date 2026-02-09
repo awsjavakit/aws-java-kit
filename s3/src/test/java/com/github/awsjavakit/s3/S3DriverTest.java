@@ -1,5 +1,6 @@
 package com.github.awsjavakit.s3;
 
+import static com.github.awsjavakit.attempt.Try.attempt;
 import static com.github.awsjavakit.s3.S3Driver.S3_SCHEME;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static java.util.Objects.nonNull;
@@ -7,6 +8,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
@@ -401,6 +403,26 @@ class S3DriverTest {
         .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
       .build()).tagSet();
     assertThat(tagsFromCopiedFile, containsInAnyOrder(tag, tag2));
+  }
+
+  @Test
+  void shouldCopyFileFromS3UriToS3UriWithInstantTags() throws IOException {
+    var sourceContent = randomString();
+    var sourceUri = s3Driver.insertFile(randomPath(), sourceContent);
+    var destinationUri =
+      UriWrapper.fromUri("s3://" + SAMPLE_BUCKET).addChild(randomPath()).getUri();
+    var instantValue = randomInstant();
+    var tag = Tag.builder().key(randomString()).value(instantValue.toString()).build();
+    s3Driver.copyFile(sourceUri, destinationUri, tag);
+
+    var tagsFromCopiedFile = s3Client.getObjectTagging(GetObjectTaggingRequest.builder()
+      .bucket(destinationUri.getHost())
+      .key(UriWrapper.fromUri(destinationUri.getPath()).toS3bucketPath().toString())
+      .build()).tagSet().stream()
+      .map(t -> attempt(() -> java.net.URLDecoder.decode(t.value(), "UTF-8")).orElseThrow())
+      .toList();
+    assertThat(tagsFromCopiedFile, hasSize(1));
+    assertThat(tagsFromCopiedFile.getFirst(), is(equalTo(instantValue.toString())));
   }
 
   @Test

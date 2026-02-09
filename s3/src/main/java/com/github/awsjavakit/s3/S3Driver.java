@@ -39,6 +39,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.Tag;
 import software.amazon.awssdk.services.s3.model.Tagging;
+import software.amazon.awssdk.services.s3.model.TaggingDirective;
 
 //TODO: Address God Class issue
 @SuppressWarnings({"PMD.GodClass", "PMD.CouplingBetweenObjects"})
@@ -280,7 +281,8 @@ public class S3Driver {
     if (tags.isEmpty()) {
       return requestBuilder;
     }
-    return requestBuilder.tagging(Tagging.builder().tagSet(tags).build());
+    return requestBuilder.tagging(Tagging.builder().tagSet(tags).build())
+      .taggingDirective(TaggingDirective.REPLACE);
   }
 
   private static List<Tag> validTagSet(Tag... tags) {
