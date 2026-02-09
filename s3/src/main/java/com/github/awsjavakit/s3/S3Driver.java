@@ -267,7 +267,7 @@ public class S3Driver {
    *
    * @param sourceUri      the uri of the source file
    * @param destinationUri the uri of the destination file
-   * @param tags           optional tags to add to the copied file, may be null or empty.
+   * @param tags           optional tags to replace existing tags to the copied file, may be null or empty.
    */
   public void copyFile(URI sourceUri, URI destinationUri, Tag... tags) {
     var requestBuilder = createBasicCopyRequest(sourceUri, destinationUri);
