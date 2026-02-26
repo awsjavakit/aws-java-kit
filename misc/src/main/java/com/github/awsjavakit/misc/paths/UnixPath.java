@@ -39,8 +39,8 @@ public final class UnixPath {
     List<String> pathElementsList = addRootIfPresentInOriginalPath(pathElements, path)
       .collect(Collectors.toList());
     return pathIsEmpty(pathElementsList)
-      ? EMPTY_PATH
-      : new UnixPath(pathElementsList);
+           ? EMPTY_PATH
+           : new UnixPath(pathElementsList);
   }
 
   @JsonCreator
@@ -54,8 +54,8 @@ public final class UnixPath {
 
   public Optional<UnixPath> getParent() {
     return path.size() > 1
-      ? Optional.of(new UnixPath(path.subList(0, lastPathElementIndex())))
-      : Optional.empty();
+           ? Optional.of(slice(0, lastPathElementIndex()))
+           : Optional.empty();
   }
 
   @JacocoGenerated
@@ -115,18 +115,30 @@ public final class UnixPath {
 
   public UnixPath addRoot() {
     return isAbsolute()
-      ? this
-      : ROOT_PATH.addChild(this);
+           ? this
+           : ROOT_PATH.addChild(this);
   }
 
   public UnixPath removeRoot() {
     return isAbsolute()
-      ? new UnixPath(this.path.subList(1, path.size()))
-      : this;
+           ? new UnixPath(this.path.subList(1, path.size()))
+           : this;
   }
 
   public boolean isEmptyPath() {
     return pathIsEmpty(path);
+  }
+
+  public UnixPath subPath(int fromInclusive, int toExclusive) {
+    return this.removeRoot().slice(fromInclusive,toExclusive);
+  }
+
+  private UnixPath slice(int fromInclusive, int toExclusive) {
+    return new UnixPath(path.subList(fromInclusive, toExclusive));
+  }
+
+  public int size() {
+    return this.isAbsolute() ? path.size() - 1 : path.size();
   }
 
   private static Stream<String> prependRoot(Stream<String> pathElements) {
