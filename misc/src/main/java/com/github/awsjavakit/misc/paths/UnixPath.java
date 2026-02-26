@@ -54,7 +54,7 @@ public final class UnixPath {
 
   public Optional<UnixPath> getParent() {
     return path.size() > 1
-           ? Optional.of(new UnixPath(path.subList(0, lastPathElementIndex())))
+           ? Optional.of(slice(0, lastPathElementIndex()))
            : Optional.empty();
   }
 
@@ -130,27 +130,15 @@ public final class UnixPath {
   }
 
   public UnixPath subPath(int fromInclusive, int toExclusive) {
-    var to = Math.min(toExclusive, size());
-    if (this.isAbsolute()) {
-      return sliceAbsolutePath(fromInclusive, to);
-    }
-    return new UnixPath(path.subList(fromInclusive, to));
+    return this.removeRoot().slice(fromInclusive,toExclusive);
   }
 
-  private UnixPath sliceAbsolutePath(int fromInclusive, int to) {
-    var subPath = this.removeRoot().subPath(fromInclusive, to);
-    if (subPathShouldBeAbsolute(fromInclusive)) {
-      return subPath.addRoot();
-    }
-    return subPath;
+  private UnixPath slice(int fromInclusive, int toExclusive) {
+    return new UnixPath(path.subList(fromInclusive, toExclusive));
   }
 
   public int size() {
     return this.isAbsolute() ? path.size() - 1 : path.size();
-  }
-
-  private static boolean subPathShouldBeAbsolute(int fromInclusive) {
-    return fromInclusive == 0;
   }
 
   private static Stream<String> prependRoot(Stream<String> pathElements) {
@@ -177,11 +165,11 @@ public final class UnixPath {
       .filter(Objects::nonNull);
   }
 
-  //composite path element is an element of the form /folder1/folder2
-
   private static String[] splitCompositePathElements(String pathElement) {
     return pathElement.split(PATH_DELIMITER);
   }
+
+  //composite path element is an element of the form /folder1/folder2
 
   private static Stream<String> addRootIfPresentInOriginalPath(Stream<String> pathElements,
     String... path) {
