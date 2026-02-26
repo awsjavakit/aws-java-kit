@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.NonNull;
 
 /**
  * Class for manipulating Unix-like paths. Provides a standard way to add children to the paths so
@@ -54,7 +55,7 @@ public final class UnixPath {
 
   public Optional<UnixPath> getParent() {
     return path.size() > 1
-           ? Optional.of(new UnixPath(path.subList(0, lastPathElementIndex())))
+           ? Optional.of(sliceNonAbsolutePath(0, lastPathElementIndex()))
            : Optional.empty();
   }
 
@@ -130,27 +131,19 @@ public final class UnixPath {
   }
 
   public UnixPath subPath(int fromInclusive, int toExclusive) {
-    var to = Math.min(toExclusive, size());
+
     if (this.isAbsolute()) {
-      return sliceAbsolutePath(fromInclusive, to);
+      return sliceAbsolutePath(fromInclusive, toExclusive);
     }
-    return new UnixPath(path.subList(fromInclusive, to));
+    return sliceNonAbsolutePath(fromInclusive, toExclusive);
   }
 
-  private UnixPath sliceAbsolutePath(int fromInclusive, int to) {
-    var subPath = this.removeRoot().subPath(fromInclusive, to);
-    if (subPathShouldBeAbsolute(fromInclusive)) {
-      return subPath.addRoot();
-    }
-    return subPath;
+  private @NonNull UnixPath sliceNonAbsolutePath(int fromInclusive, int toExclusive) {
+    return new UnixPath(path.subList(fromInclusive, toExclusive));
   }
 
   public int size() {
     return this.isAbsolute() ? path.size() - 1 : path.size();
-  }
-
-  private static boolean subPathShouldBeAbsolute(int fromInclusive) {
-    return fromInclusive == 0;
   }
 
   private static Stream<String> prependRoot(Stream<String> pathElements) {
@@ -177,11 +170,11 @@ public final class UnixPath {
       .filter(Objects::nonNull);
   }
 
-  //composite path element is an element of the form /folder1/folder2
-
   private static String[] splitCompositePathElements(String pathElement) {
     return pathElement.split(PATH_DELIMITER);
   }
+
+  //composite path element is an element of the form /folder1/folder2
 
   private static Stream<String> addRootIfPresentInOriginalPath(Stream<String> pathElements,
     String... path) {
@@ -194,6 +187,11 @@ public final class UnixPath {
 
   private static boolean pathIsEmpty(List<String> path) {
     return Objects.isNull(path) || path.isEmpty();
+  }
+
+  private UnixPath sliceAbsolutePath(int fromInclusive, int to) {
+
+    return this.removeRoot().subPath(fromInclusive, to);
   }
 
   private String getPathElementByIndex(int index) {

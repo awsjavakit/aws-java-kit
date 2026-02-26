@@ -9,6 +9,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsSame.sameInstance;
 import static org.hamcrest.text.IsEmptyString.emptyString;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -291,12 +292,11 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldSliceAbsolutePaths() {
+  void shouldSliceAbsolutePathsAndRemoveRootFromSubPath() {
 
     var path = UnixPath.fromString("/a/b/c/d/e");
-
     var subPath = path.subPath(0, 2);
-    var expectedPath = UnixPath.of("/a/b");
+    var expectedPath = UnixPath.of("a/b");
     assertThat(subPath, is(equalTo(expectedPath)));
 
     subPath = path.subPath(1, path.size());
@@ -307,8 +307,23 @@ class UnixPathTest {
     expectedPath = UnixPath.of("b/c");
     assertThat(subPath, is(equalTo(expectedPath)));
 
-    assertThat(path.subPath(0, path.size()), is(equalTo(path)));
+    assertThat(path.subPath(0, path.size()), is(equalTo(path.removeRoot())));
 
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0,10", "10,11"})
+  void shouldThrowExceptionWhenSliceIndicesAreOutOfBounds(String fromIndex, String toIndex) {
+    var path = UnixPath.fromString("/a/b/c");
+    int from = Integer.parseInt(fromIndex);
+    int to = Integer.parseInt(toIndex);
+    assertThrows(IndexOutOfBoundsException.class, () -> path.subPath(from, to));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenFromIndexIsLargerThanToIndex() {
+    var path = UnixPath.fromString("/a/b/c");
+    assertThrows(IllegalArgumentException.class, () -> path.subPath(2, 1));
   }
 
   private static final class ClassWithUnixPath {
