@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Class for manipulating Unix-like paths. Provides a standard way to add children to the paths so
@@ -55,7 +54,7 @@ public final class UnixPath {
 
   public Optional<UnixPath> getParent() {
     return path.size() > 1
-           ? Optional.of(sliceNonAbsolutePath(0, lastPathElementIndex()))
+           ? Optional.of(slice(0, lastPathElementIndex()))
            : Optional.empty();
   }
 
@@ -131,14 +130,10 @@ public final class UnixPath {
   }
 
   public UnixPath subPath(int fromInclusive, int toExclusive) {
-
-    if (this.isAbsolute()) {
-      return sliceAbsolutePath(fromInclusive, toExclusive);
-    }
-    return sliceNonAbsolutePath(fromInclusive, toExclusive);
+    return this.removeRoot().slice(fromInclusive,toExclusive);
   }
 
-  private @NonNull UnixPath sliceNonAbsolutePath(int fromInclusive, int toExclusive) {
+  private UnixPath slice(int fromInclusive, int toExclusive) {
     return new UnixPath(path.subList(fromInclusive, toExclusive));
   }
 
@@ -187,11 +182,6 @@ public final class UnixPath {
 
   private static boolean pathIsEmpty(List<String> path) {
     return Objects.isNull(path) || path.isEmpty();
-  }
-
-  private UnixPath sliceAbsolutePath(int fromInclusive, int to) {
-
-    return this.removeRoot().subPath(fromInclusive, to);
   }
 
   private String getPathElementByIndex(int index) {
