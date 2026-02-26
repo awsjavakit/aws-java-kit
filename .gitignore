@@ -898,4 +898,7 @@ FodyWeavers.xsd
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
+# Claude Code
+.claude/
+
 # End of https://www.toptal.com/developers/gitignore/api/gradle,maven,windows,linux,macos,osx,intellij+all,visualstudio,visualstudiocode,eclipse,java,python,git

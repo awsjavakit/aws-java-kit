@@ -38,6 +38,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -60,8 +61,11 @@ import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.Tag;
+import software.amazon.awssdk.services.s3.model.Tagging;
 
+@SuppressWarnings("PMD.CouplingBetweenObjects")
 class S3DriverTest {
 
   public static final int LARGE_NUMBER_OF_INPUTS = 10_000;
@@ -524,6 +528,24 @@ class S3DriverTest {
 
     Executable action = () -> s3Driver.lastModified(nonExistentUri);
     assertThrows(NoSuchKeyException.class, action);
+  }
+
+  @Test
+  void shouldReadTagFromFile() throws IOException {
+     var someFile = s3Driver.insertFile(randomPath(),randomString());
+    var  tagKey = randomString();
+    var  tagValue= randomString();
+    var tag = Tagging.builder()
+      .tagSet(Tag.builder().key(tagKey).value(tagValue).build())
+      .build();
+    var putTagRequest = PutObjectTaggingRequest.builder().bucket(someFile.getHost())
+      .key(UriWrapper.fromUri(someFile).toS3bucketPath().toString())
+      .tagging(tag)
+      .build();
+    s3Client.putObjectTagging(putTagRequest);
+    Map<String,String> tags = s3Driver.getTags(someFile);
+    assertThat(tags.entrySet(),containsInAnyOrder(Map.entry(tagKey,tagValue)));
+
   }
 
   private static String randomFileName() {
