@@ -270,6 +270,47 @@ class UnixPathTest {
     assertThat(actualPath, is(equalTo(expectedPath)));
   }
 
+  @Test
+  void shouldSliceNonAbsolutePaths() {
+
+    var path = UnixPath.fromString("a/b/c/d/e");
+
+    var subPath = path.subPath(0, 2);
+    var expectedPath = UnixPath.of("a/b");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    subPath = path.subPath(1, path.size());
+    expectedPath = UnixPath.of("b/c/d/e");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    subPath = path.subPath(1, 3);
+    expectedPath = UnixPath.of("b/c");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    assertThat(path.subPath(0, path.size()), is(equalTo(path)));
+  }
+
+  @Test
+  void shouldSliceAbsolutePaths() {
+
+    var path = UnixPath.fromString("/a/b/c/d/e");
+
+    var subPath = path.subPath(0, 2);
+    var expectedPath = UnixPath.of("/a/b");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    subPath = path.subPath(1, path.size());
+    expectedPath = UnixPath.of("b/c/d/e");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    subPath = path.subPath(1, 3);
+    expectedPath = UnixPath.of("b/c");
+    assertThat(subPath, is(equalTo(expectedPath)));
+
+    assertThat(path.subPath(0, path.size()), is(equalTo(path)));
+
+  }
+
   private static final class ClassWithUnixPath {
 
     private UnixPath field;
