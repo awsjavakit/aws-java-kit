@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.GetObjectTaggingRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
@@ -141,6 +143,24 @@ public class S3Driver {
     var filePath = UriWrapper.fromUri(fileUri).toS3bucketPath();
     var response = client.headObject(createHeadObjectRequest(filePath));
     return response.lastModified();
+  }
+
+  /**
+   * Returns the tags associated with the given S3 object.
+   *
+   * @param fileUri the S3 URI to the file. The host must be equal to the bucket name of the S3
+   *                driver
+   * @return a map of tag keys to tag values.
+   */
+  public Map<String, String> getTags(URI fileUri) {
+    var filePath = UriWrapper.fromUri(fileUri).toS3bucketPath();
+    var request = GetObjectTaggingRequest.builder()
+        .bucket(bucketName)
+        .key(filePath.toString())
+        .build();
+    var response = client.getObjectTagging(request);
+    return response.tagSet().stream()
+        .collect(Collectors.toMap(Tag::key,Tag::value));
   }
 
   @JacocoGenerated
