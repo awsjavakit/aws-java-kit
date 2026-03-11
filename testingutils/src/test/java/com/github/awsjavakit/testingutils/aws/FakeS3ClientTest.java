@@ -357,7 +357,7 @@ class FakeS3ClientTest {
     var client = new FakeS3Client();
     var uri = UriWrapper.fromUri(SOME_BUCKET_URI).addChild(randomString()).getUri();
     putObject(client, uri, randomString());
-    var tag = Tag.builder().key(randomString()).value(randomString()).build();
+    var tag = randomTag();
     var expectedTags = List.of(tag);
     client.putObjectTagging(PutObjectTaggingRequest.builder()
         .bucket(uri.getHost())
@@ -406,6 +406,77 @@ class FakeS3ClientTest {
       .key(extractKey(nonExistentUri))
       .build();
     assertThrows(NoSuchKeyException.class, () -> client.headObject(headRequest));
+  }
+
+
+  @Test
+  void shouldAddSuppliedTagsWhenCopyingAnObject(){
+      var client = new FakeS3Client();
+    var toBeCopied = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var destination = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var content= randomString();
+    var tags = List.of(randomTag(),randomTag());
+    putObject(client,toBeCopied,content);
+
+    var copyObject = CopyObjectRequest.builder()
+      .tagging(Tagging.builder().tagSet(tags).build())
+      .sourceBucket(SOME_BUCKET)
+      .destinationBucket(SOME_BUCKET)
+      .sourceKey(UriWrapper.fromUri(toBeCopied).toS3bucketPath().toString())
+      .destinationKey(UriWrapper.fromUri(destination).toS3bucketPath().toString())
+      .build();
+
+    client.copyObject(copyObject);
+
+    var getTagsRequest = GetObjectTaggingRequest.builder()
+      .bucket(SOME_BUCKET)
+      .key(UriWrapper.fromUri(destination).toS3bucketPath().toString())
+      .build();
+    var result= client.getObjectTagging(getTagsRequest);
+    var actualTags=result.tagSet();
+
+    assertThat(actualTags,containsInAnyOrder(tags.toArray(Tag[]::new)));
+
+
+  }
+
+  @Test
+  void shouldDecodeObjectTagsWhenGettingTags(){
+    var client = new FakeS3Client();
+    var toBeCopied = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var destination = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var content= randomString();
+    var urlEncoddedTags = List.of(Tag.builder().key(randomString()).value(randomInstant().toString()).build());
+    putObject(client,toBeCopied,content);
+
+    var copyObject = CopyObjectRequest.builder()
+      .tagging(Tagging.builder().tagSet(urlEncoddedTags).build())
+      .sourceBucket(SOME_BUCKET)
+      .destinationBucket(SOME_BUCKET)
+      .sourceKey(UriWrapper.fromUri(toBeCopied).toS3bucketPath().toString())
+      .destinationKey(UriWrapper.fromUri(destination).toS3bucketPath().toString())
+      .build();
+
+    client.copyObject(copyObject);
+
+    var getTagsRequest = GetObjectTaggingRequest.builder()
+      .bucket(SOME_BUCKET)
+      .key(UriWrapper.fromUri(destination).toS3bucketPath().toString())
+      .build();
+    var result= client.getObjectTagging(getTagsRequest);
+    var actualTags=result.tagSet();
+
+    assertThat(actualTags,containsInAnyOrder(urlEncoddedTags.toArray(Tag[]::new)));
+
+
+  }
+
+  private static Tag randomTag() {
+    return Tag.builder().key(randomString()).value(randomString()).build();
   }
 
   private static ListObjectsRequest createListObjectsRequest(String bucket,

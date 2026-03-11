@@ -543,7 +543,7 @@ class S3DriverTest {
       .tagging(tag)
       .build();
     s3Client.putObjectTagging(putTagRequest);
-    Map<String,String> tags = s3Driver.getTags(someFile);
+    var tags = s3Driver.getTags(someFile);
     assertThat(tags.entrySet(),containsInAnyOrder(Map.entry(tagKey,tagValue)));
 
   }

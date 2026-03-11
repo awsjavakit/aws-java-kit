@@ -44,6 +44,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectTaggingResponse;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.Tag;
 import software.amazon.awssdk.services.s3.model.Tagging;
+import software.amazon.awssdk.utils.http.SdkHttpUtils;
 
 @JacocoGenerated
 @SuppressWarnings({"PMD.CouplingBetweenObjects", "PMD.UnusedPrivateMethod"})
@@ -216,8 +217,16 @@ public class FakeS3Client implements S3Client {
         .filter(tag -> !tag.isEmpty())
         .map(s -> s.split(TAG_KEY_VALUE_SEPARATOR))
         .map(arr -> Tag.builder().key(arr[0]).value(arr[1]).build())
+        .map(FakeS3Client::undoUrlEncodingOfTags)
         .toList())
       .orElse(Collections.emptyList());
+  }
+
+  private static Tag undoUrlEncodingOfTags(Tag tag) {
+    return Tag.builder()
+      .key(SdkHttpUtils.urlDecode(tag.key()))
+      .value(SdkHttpUtils.urlDecode(tag.value()))
+      .build();
   }
 
   private static ByteBuffer inputSteamToByteBuffer(InputStream inputStream) {
@@ -276,8 +285,8 @@ public class FakeS3Client implements S3Client {
   private String calculateNestStartListingPoint(List<String> fileKeys,
     int excludedEndIndex) {
     return excludedEndIndex >= fileKeys.size()
-      ? null
-      : fileKeys.get(excludedEndIndex - 1);
+           ? null
+           : fileKeys.get(excludedEndIndex - 1);
   }
 
   private boolean filePathIsInSpecifiedParentFolder(String filePathString,
