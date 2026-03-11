@@ -14,6 +14,7 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
 import com.github.awsjavakit.misc.SingletonCollector;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import com.github.awsjavakit.misc.paths.UriWrapper;
@@ -360,9 +361,9 @@ class FakeS3ClientTest {
     var tag = randomTag();
     var expectedTags = List.of(tag);
     client.putObjectTagging(PutObjectTaggingRequest.builder()
-        .bucket(uri.getHost())
-        .key(extractKey(uri))
-        .tagging(Tagging.builder().tagSet(tag).build())
+      .bucket(uri.getHost())
+      .key(extractKey(uri))
+      .tagging(Tagging.builder().tagSet(tag).build())
       .build());
 
     var retrievedTags = client.getObjectTagging(GetObjectTaggingRequest.builder()
@@ -408,53 +409,54 @@ class FakeS3ClientTest {
     assertThrows(NoSuchKeyException.class, () -> client.headObject(headRequest));
   }
 
-
   @Test
-  void shouldAddSuppliedTagsWhenCopyingAnObject(){
-      var client = new FakeS3Client();
-    var toBeCopied = UriWrapper.fromUri(SOME_BUCKET_URI)
-      .addChild(randomString()).getUri();
-    var destination = UriWrapper.fromUri(SOME_BUCKET_URI)
-      .addChild(randomString()).getUri();
-    var content= randomString();
-    var tags = List.of(randomTag(),randomTag());
-    putObject(client,toBeCopied,content);
-
-    var copyObject = CopyObjectRequest.builder()
-      .tagging(Tagging.builder().tagSet(tags).build())
-      .sourceBucket(SOME_BUCKET)
-      .destinationBucket(SOME_BUCKET)
-      .sourceKey(UriWrapper.fromUri(toBeCopied).toS3bucketPath().toString())
-      .destinationKey(UriWrapper.fromUri(destination).toS3bucketPath().toString())
-      .build();
-
-    client.copyObject(copyObject);
-
-    var getTagsRequest = GetObjectTaggingRequest.builder()
-      .bucket(SOME_BUCKET)
-      .key(UriWrapper.fromUri(destination).toS3bucketPath().toString())
-      .build();
-    var result= client.getObjectTagging(getTagsRequest);
-    var actualTags=result.tagSet();
-
-    assertThat(actualTags,containsInAnyOrder(tags.toArray(Tag[]::new)));
-
-
-  }
-
-  @Test
-  void shouldDecodeObjectTagsWhenGettingTags(){
+  void shouldAddSuppliedTagsWhenCopyingAnObject() {
     var client = new FakeS3Client();
     var toBeCopied = UriWrapper.fromUri(SOME_BUCKET_URI)
       .addChild(randomString()).getUri();
     var destination = UriWrapper.fromUri(SOME_BUCKET_URI)
       .addChild(randomString()).getUri();
-    var content= randomString();
-    var urlEncoddedTags = List.of(Tag.builder().key(randomString()).value(randomInstant().toString()).build());
-    putObject(client,toBeCopied,content);
+    var content = randomString();
+    var tags = List.of(randomTag(), randomTag());
+    putObject(client, toBeCopied, content);
 
     var copyObject = CopyObjectRequest.builder()
-      .tagging(Tagging.builder().tagSet(urlEncoddedTags).build())
+      .tagging(Tagging.builder().tagSet(tags).build())
+      .sourceBucket(SOME_BUCKET)
+      .destinationBucket(SOME_BUCKET)
+      .sourceKey(extractKey(toBeCopied))
+      .destinationKey(extractKey(destination))
+      .build();
+
+    client.copyObject(copyObject);
+
+    var getTagsRequest = GetObjectTaggingRequest.builder()
+      .bucket(SOME_BUCKET)
+      .key(extractKey(destination))
+      .build();
+    var result = client.getObjectTagging(getTagsRequest);
+    var actualTags = result.tagSet();
+
+    assertThat(actualTags, containsInAnyOrder(tags.toArray(Tag[]::new)));
+
+  }
+
+  @Test
+  void shouldDecodeObjectTagsWhenGettingTags() {
+    var client = new FakeS3Client();
+    var toBeCopied = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var destination = UriWrapper.fromUri(SOME_BUCKET_URI)
+      .addChild(randomString()).getUri();
+    var content = randomString();
+    var urlEncodedTags = List.of(Tag.builder()
+      .key(randomString())
+      .value(randomInstant().toString())
+      .build());
+    putObject(client, toBeCopied, content);
+
+    var copyObject = CopyObjectRequest.builder()
+      .tagging(Tagging.builder().tagSet(urlEncodedTags).build())
       .sourceBucket(SOME_BUCKET)
       .destinationBucket(SOME_BUCKET)
       .sourceKey(UriWrapper.fromUri(toBeCopied).toS3bucketPath().toString())
@@ -467,11 +469,10 @@ class FakeS3ClientTest {
       .bucket(SOME_BUCKET)
       .key(UriWrapper.fromUri(destination).toS3bucketPath().toString())
       .build();
-    var result= client.getObjectTagging(getTagsRequest);
-    var actualTags=result.tagSet();
+    var result = client.getObjectTagging(getTagsRequest);
+    var actualTags = result.tagSet();
 
-    assertThat(actualTags,containsInAnyOrder(urlEncoddedTags.toArray(Tag[]::new)));
-
+    assertThat(actualTags, containsInAnyOrder(urlEncodedTags.toArray(Tag[]::new)));
 
   }
 
@@ -480,9 +481,9 @@ class FakeS3ClientTest {
   }
 
   private static ListObjectsRequest createListObjectsRequest(String bucket,
-                                                             UnixPath folder,
-                                                             int pageSize,
-                                                             String listingStartPoint) {
+    UnixPath folder,
+    int pageSize,
+    String listingStartPoint) {
     return ListObjectsRequest.builder()
       .bucket(bucket)
       .prefix(folder.toString())
@@ -496,8 +497,8 @@ class FakeS3ClientTest {
   }
 
   private static UnixPath insertFileToS3UnderSubfolder(S3Client s3Client,
-                                                       String bucket,
-                                                       UnixPath subfolder) {
+    String bucket,
+    UnixPath subfolder) {
     var filePath = subfolder.addChild(randomString()).addChild(randomString());
     var putRequest = insertFileToS3(bucket, filePath);
     s3Client.putObject(putRequest, RequestBody.fromBytes(randomString().getBytes()));
@@ -519,8 +520,8 @@ class FakeS3ClientTest {
   }
 
   private static List<String> fetchAllExpectedFilesUsingPagination(FakeS3Client s3Client,
-                                                                   String bucket,
-                                                                   UnixPath expectedFolder) {
+    String bucket,
+    UnixPath expectedFolder) {
     final int smallPage = 3;
 
     var listObjectRequest =
@@ -549,10 +550,10 @@ class FakeS3ClientTest {
   }
 
   private void createAMixOfExpectedAndUnexpectedFiles(FakeS3Client s3Client,
-                                                      String bucket,
-                                                      UnixPath expectedFolder,
-                                                      UnixPath unexpectedFolder,
-                                                      int numberOfExpectedFiles) {
+    String bucket,
+    UnixPath expectedFolder,
+    UnixPath unexpectedFolder,
+    int numberOfExpectedFiles) {
 
     for (int counter = 0; counter < numberOfExpectedFiles; counter++) {
       insertFileToS3UnderSubfolder(s3Client, bucket, expectedFolder);
@@ -570,7 +571,7 @@ class FakeS3ClientTest {
   }
 
   private ListObjectsRequest insertFilesToBucketInOrder(List<String> sampleFilenames,
-                                                        FakeS3Client s3Client) {
+    FakeS3Client s3Client) {
     for (var filename : sampleFilenames) {
       putObject(s3Client, URI.create(SOME_BUCKET_URI + "/" + filename), randomString());
     }
