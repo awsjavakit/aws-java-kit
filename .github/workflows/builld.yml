@@ -32,3 +32,94 @@ jobs:
           cache: 'gradle'
       - name: build
         run: ./gradlew build
+  build-jdk-26:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '26'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-macos-jdk-17:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-macos-jdk-21:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-macos-jdk-26:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '26'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-windows-jdk-17:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-windows-jdk-21:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '21'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
+  build-windows-jdk-26:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: java-setup
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '26'
+          cache: 'gradle'
+      - name: build
+        run: ./gradlew build
