@@ -6,8 +6,13 @@ on:
       - main
 
 jobs:
-  build-jdk-17:
-    runs-on: ubuntu-22.04
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-latest, windows-latest]
+        java-version: ['17', '21']
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -15,20 +20,11 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'corretto'
-          java-version: '17'
+          java-version: ${{ matrix.java-version }}
           cache: 'gradle'
-      - name: build
+      - name: build (unix)
+        if: runner.os != 'Windows'
         run: ./gradlew build
-  build-jdk-21:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: java-setup
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'corretto'
-          java-version: '21'
-          cache: 'gradle'
-      - name: build
-        run: ./gradlew build
+      - name: build (windows)
+        if: runner.os == 'Windows'
+        run: ./gradlew.bat build
