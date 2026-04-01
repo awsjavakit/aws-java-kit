@@ -4,7 +4,7 @@ import static com.github.awsjavakit.misc.exceptions.ExceptionUtils.stackTraceInS
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.io.BufferedWriter;

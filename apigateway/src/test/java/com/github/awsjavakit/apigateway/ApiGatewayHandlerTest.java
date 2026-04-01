@@ -4,7 +4,7 @@ import static java.util.Calendar.YEAR;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.observers.BodyObserver;
 import com.github.awsjavakit.apigateway.observers.InputObserver;
 import com.github.awsjavakit.testingutils.ApiGatewayRequestBuilder;

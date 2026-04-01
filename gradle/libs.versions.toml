@@ -1,13 +1,13 @@
 [versions]
-awsSdk2 = { strictly = '2.40.4' }
-junit = { strictly = '6.0.1' }
+awsSdk2 = { strictly = '2.42.23' }
+junit = { strictly = '6.0.3' }
 #junit-launcher = {strictly = '1.12.2'}
-assertj = { strictly = '3.27.6' }
-log4j = { strictly = '2.25.2' }
+assertj = { strictly = '3.27.7' }
+log4j = { strictly = '2.25.4' }
 slf4j = { require = '2.0.17' }
 
-jackson = { strictly = '2.20.1' }
-jackson-annotations = { strictly = '2.20' }
+jackson = { strictly = '3.1.1' }
+jackson-annotations = { strictly = '2.21' }
 guava = { strictly = '33.5.0-jre' }
 apacheCommons = { strictly = '3.20.0' }
 datafaker = { strictly = '2.5.3' }
@@ -15,12 +15,12 @@ hamcrest = { strictly = '3.0' }
 hamcrestOptional = { strictly = '1.3.2' }
 hamcrestJackson = { strictly = '1.3.2' }
 wiremock = { strictly = '3.13.2' }
-mockito = { strictly = '5.21.0' }
+mockito = { strictly = '5.23.0' }
 awsLambdaEvents = { strictly = '3.16.1' }
 awsLambdaCore = { strictly = '1.4.0' }
-lombok = { strictly = '1.18.42' }
-dynamoDbLocal = { strictly = '3.1.0' }
-resilience4j = { strictly = '2.3.0' }
+lombok = { strictly = '1.18.44' }
+dynamoDbLocal = { strictly = '3.3.0' }
+resilience4j = { strictly = '2.4.0' }
 
 [libraries]
 log4j-core = { group = 'org.apache.logging.log4j', name = 'log4j-core', version.ref = 'log4j' }
@@ -46,14 +46,9 @@ aws-transfer = { group = 'software.amazon.awssdk', name = 'transfer', version.re
 aws-lambda-events = { group = 'com.amazonaws', name = 'aws-lambda-java-events', version.ref = 'awsLambdaEvents' }
 aws-lambda-core = { group = 'com.amazonaws', name = 'aws-lambda-java-core', version.ref = 'awsLambdaCore' }
 
-jackson-core = { group = 'com.fasterxml.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
-jackson-datatype-jsr310 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
-jackson-datatype-jdk8 = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jdk8', version.ref = 'jackson' }
-jackson-databind = { group = 'com.fasterxml.jackson.core', name = 'jackson-databind', version.ref = 'jackson' }
+jackson-core = { group = 'tools.jackson.core', name = 'jackson-core', version.ref = 'jackson' }
+jackson-databind = { group = 'tools.jackson.core', name = 'jackson-databind', version.ref = 'jackson' }
 jackson-annotations = { group = 'com.fasterxml.jackson.core', name = 'jackson-annotations', version.ref = 'jackson-annotations' }
-jackson-module-parameter-names = { group = 'com.fasterxml.jackson.module', name = 'jackson-module-parameter-names', version.ref = 'jackson' }
-jackson-time-module = { group = 'com.fasterxml.jackson.datatype', name = 'jackson-datatype-jsr310', version.ref = 'jackson' }
-jackson-csv = { group = 'com.fasterxml.jackson.dataformat', name = 'jackson-dataformat-csv', version.ref = 'jackson' }
 
 guava = { group = 'com.google.guava', name = 'guava', version.ref = 'guava' }
 
@@ -76,6 +71,6 @@ dynamoDbLocal = { group = 'software.amazon.dynamodb', name = 'DynamoDBLocal', ve
 resilience4j = { group = 'io.github.resilience4j', name = 'resilience4j-retry', version.ref = 'resilience4j' }
 [bundles]
 testing = ["junit-api", "junit-engine", "junit-params", "junit-launcher", "assertj", "commons-lang", "datafaker", "hamcrest", "hamcrest-optional", "mockito-core", "mockito-junit", "dynamoDbLocal", 'hamcrest-jackson']
-json = ['jackson-core', 'jackson-datatype-jdk8', 'jackson-databind', 'jackson-annotations', "jackson-datatype-jsr310"]
+json = ['jackson-core', 'jackson-databind', 'jackson-annotations']
 logging = ['log4j-core', 'slf4j', 'slf4j-binding']
 

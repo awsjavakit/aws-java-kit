@@ -31,6 +31,6 @@ public record OAuthTokenEntry(
   }
 
   public boolean hasExpired() {
-    return Instant.now().isAfter(expiration);
+    return !Instant.now().isBefore(expiration);
   }
 }

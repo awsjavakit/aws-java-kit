@@ -2,7 +2,7 @@ package com.github.awsjavakit.apigateway;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.bodyparsing.BodyParser;
 import com.github.awsjavakit.apigateway.exception.ApiGatewayException;
 import com.github.awsjavakit.apigateway.responses.ResponseProvider;

@@ -5,12 +5,11 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 class GatewayResponseTest {
 
@@ -25,7 +24,7 @@ class GatewayResponseTest {
   }
 
   @Test
-  void shouldReturnBodyAsIsWhenBodyIsString() throws JsonProcessingException {
+  void shouldReturnBodyAsIsWhenBodyIsString() {
     var body = randomString();
     var response = GatewayResponse.create(body, randomInteger(), randomMap(), JSON);
     var responseJsonString = response.toJsonString();

@@ -4,7 +4,6 @@ import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.StringUtils;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.io.BufferedWriter;
@@ -12,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import tools.jackson.databind.ObjectMapper;
 
 public abstract class StepFunctionHandler<I, O> implements RequestStreamHandler {
 

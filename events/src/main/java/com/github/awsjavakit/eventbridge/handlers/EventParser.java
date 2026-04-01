@@ -3,13 +3,14 @@ package com.github.awsjavakit.eventbridge.handlers;
 import static com.github.awsjavakit.misc.exceptions.ExceptionUtils.stackTraceInSingleLine;
 import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.attempt.Failure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 
 public class EventParser<I> {
 
@@ -46,14 +47,13 @@ public class EventParser<I> {
     return attempt(() -> parseJson(nestedParameterClasses)).orElseThrow(this::handleParsingError);
   }
 
-  private AwsEventBridgeEvent<I> parseJson(Class<I> iclass) throws JsonProcessingException {
-    JavaType javaType =
+  private AwsEventBridgeEvent<I> parseJson(Class<I> iclass)  {
+    var javaType =
       objectMapper.getTypeFactory().constructParametricType(AwsEventBridgeEvent.class, iclass);
     return objectMapper.readValue(input, javaType);
   }
 
-  private AwsEventBridgeEvent<?> parseJson(Class<?>... nestedClasses)
-    throws JsonProcessingException {
+  private AwsEventBridgeEvent<?> parseJson(Class<?>... nestedClasses) {
     JavaType nestedJavaTypes = nestedGenericTypesToJavaType(nestedClasses);
     JavaType eventBridgeJavaType = constructAwsEventBridgeDataTypeWithAllNestedTypes(
       nestedJavaTypes);

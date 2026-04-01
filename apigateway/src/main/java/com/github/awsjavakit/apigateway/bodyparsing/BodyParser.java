@@ -1,6 +1,6 @@
 package com.github.awsjavakit.apigateway.bodyparsing;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public interface BodyParser<I> {
 

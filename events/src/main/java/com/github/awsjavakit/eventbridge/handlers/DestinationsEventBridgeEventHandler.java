@@ -1,7 +1,7 @@
 package com.github.awsjavakit.eventbridge.handlers;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeDetail;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 

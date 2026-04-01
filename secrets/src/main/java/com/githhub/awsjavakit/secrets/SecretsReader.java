@@ -2,8 +2,8 @@ package com.githhub.awsjavakit.secrets;
 
 import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.attempt.Failure;
 import com.github.awsjavakit.attempt.Try;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;

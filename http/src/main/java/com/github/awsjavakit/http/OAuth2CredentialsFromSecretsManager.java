@@ -2,7 +2,7 @@ package com.github.awsjavakit.http;
 
 import static java.util.Objects.isNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.githhub.awsjavakit.secrets.SecretsReader;
 import java.net.URI;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;

@@ -9,8 +9,7 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import com.github.awsjavakit.eventbridge.handlers.SampleEventDetail;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.nio.file.Path;
@@ -22,7 +21,7 @@ class AwsEventBridgeEventTest {
     Path.of("validEventBridgeEvent.json"));
 
   @Test
-  void objectMapperReturnsAwsEverBridgeDetailObjectForValidJson() throws JsonProcessingException {
+  void objectMapperReturnsAwsEverBridgeDetailObjectForValidJson() {
     var event = parseEvent();
     assertThat(event, is(not(nullValue())));
     assertThat(event,
@@ -31,27 +30,25 @@ class AwsEventBridgeEventTest {
   }
 
   @Test
-  void equalsReturnsTrueForEquivalentFields() throws JsonProcessingException {
+  void equalsReturnsTrueForEquivalentFields() {
     var left = parseEvent();
     var right = parseEvent();
     assertThat(left, is(equalTo(right)));
   }
 
   @Test
-  void shouldReturnValidJsonStringAsStringRepresentation() throws JsonProcessingException {
+  void shouldReturnValidJsonStringAsStringRepresentation() {
     var expected = parseEvent();
     var actual = parseEvent(expected.toString());
     assertThat(actual.toString(), is(equalTo(expected.toString())));
   }
 
-  private AwsEventBridgeEvent<SampleEventDetail> parseEvent()
-    throws JsonProcessingException {
+  private AwsEventBridgeEvent<SampleEventDetail> parseEvent(){
 
     return parseEvent(EVENT_JSON);
   }
 
-  private AwsEventBridgeEvent<SampleEventDetail> parseEvent(String eventString)
-    throws JsonProcessingException {
+  private AwsEventBridgeEvent<SampleEventDetail> parseEvent(String eventString) {
     TypeReference<AwsEventBridgeEvent<SampleEventDetail>> detailTypeReference =
       new TypeReference<>() {
       };
