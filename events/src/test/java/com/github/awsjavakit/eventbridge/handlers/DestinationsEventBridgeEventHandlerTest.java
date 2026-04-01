@@ -6,7 +6,6 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.annotation.JsonInclude.Value;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;
 import tools.jackson.core.JsonPointer;
 
 import tools.jackson.databind.JsonNode;
@@ -49,7 +48,7 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
   }
 
   @Test
-  public void handleRequestAcceptsValidEvent() throws JsonProcessingException {
+  public void handleRequestAcceptsValidEvent()  {
     DestinationsHandlerTestClass handler = new DestinationsHandlerTestClass(JSON);
     InputStream requestInput = IoUtils.stringToStream(VALID_AWS_EVENT_BRIDGE_EVENT);
     handler.handleRequest(requestInput, outputStream, context);
@@ -59,8 +58,7 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
   }
 
   @Test
-  public void handleRequestSerializesObjectsWithoutOmittingEmptyValuesWhenSuchMapperHasBeenSet()
-    throws JsonProcessingException {
+  public void handleRequestSerializesObjectsWithoutOmittingEmptyValuesWhenSuchMapperHasBeenSet() {
     final InputStream input = IoUtils.stringToStream(VALID_AWS_EVENT_BRIDGE_EVENT);
     DestinationsHandlerTestClass handler = new DestinationsHandlerTestClass(
       JSON_INCLUDING_EMPTY_VALUES);
@@ -71,8 +69,7 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
   }
 
   @Test
-  public void handleRequestSerializesObjectsOmittingEmptyValuesWhenSuchMapperHasBeenSet()
-    throws JsonProcessingException {
+  public void handleRequestSerializesObjectsOmittingEmptyValuesWhenSuchMapperHasBeenSet() {
     final InputStream input = IoUtils.stringToStream(VALID_AWS_EVENT_BRIDGE_EVENT);
 
     DestinationsHandlerTestClass handler = new DestinationsHandlerTestClass(
@@ -87,14 +84,12 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
     return JsonMapper.builder();
   }
 
-  private SampleEventDetail extractInputFromValidAwsEventBridgeEvent(String awsEventBridgeEvent)
-    throws JsonProcessingException {
+  private SampleEventDetail extractInputFromValidAwsEventBridgeEvent(String awsEventBridgeEvent) {
     JsonNode inputNode = extractResponseObjectFromAwsEventBridgeEvent(awsEventBridgeEvent);
     return JSON.convertValue(inputNode, SampleEventDetail.class);
   }
 
-  private ObjectNode extractResponseObjectFromAwsEventBridgeEvent(String awsEventBridgeEvent)
-    throws JsonProcessingException {
+  private ObjectNode extractResponseObjectFromAwsEventBridgeEvent(String awsEventBridgeEvent) {
     ObjectNode tree = (ObjectNode) JSON.readTree(awsEventBridgeEvent);
     return (ObjectNode) tree.at(RESPONSE_PAYLOAD_POINTER);
   }

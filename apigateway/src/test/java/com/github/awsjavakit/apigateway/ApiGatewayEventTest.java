@@ -3,7 +3,6 @@ package com.github.awsjavakit.apigateway;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
 import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.nio.file.Path;
@@ -18,7 +17,7 @@ class ApiGatewayEventTest {
     IoUtils.stringFromResources(Path.of("event-with-null-values.json"));
 
   @Test
-  void shouldParseApiGatewayEventVersion1() throws JsonProcessingException {
+  void shouldParseApiGatewayEventVersion1() {
     var json = JSON.readTree(SAMPLE_APIGATEWAY_EVENT);
     var parsedEvent = JSON.readValue(SAMPLE_APIGATEWAY_EVENT, ApiGatewayEvent.class);
     var reserializedEvent = JSON.writeValueAsString(parsedEvent);

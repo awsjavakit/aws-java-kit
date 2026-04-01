@@ -5,7 +5,6 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomStrin
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,8 +21,7 @@ class OAuthTokenResponseTest {
     .build();
 
   @Test
-  void shouldAcceptEntryWithOtherFieldsEvenWhenJsonIsConfiguredOtherWise()
-    throws JsonProcessingException {
+  void shouldAcceptEntryWithOtherFieldsEvenWhenJsonIsConfiguredOtherWise() {
     var accessToken = randomString();
     var validityPeriod = (long) randomInteger();
     var json = entryWithUnknownFields(accessToken, validityPeriod);
@@ -35,8 +33,7 @@ class OAuthTokenResponseTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"access_token", "expires_in"})
-  void shouldThrowExceptionWhenRequiredFieldIsMissing(String missingField)
-    throws JsonProcessingException {
+  void shouldThrowExceptionWhenRequiredFieldIsMissing(String missingField) {
     var accessToken = randomString();
     var validityPeriod = (long) randomInteger();
     var json = entryWithMissingFields(accessToken, validityPeriod, missingField);
@@ -46,8 +43,7 @@ class OAuthTokenResponseTest {
 
   }
 
-  private static String entryWithUnknownFields(String accessToken, long validityPeriod)
-    throws JsonProcessingException {
+  private static String entryWithUnknownFields(String accessToken, long validityPeriod) {
     var entry = JSON.createObjectNode();
     entry.put("access_token", accessToken);
     entry.put("expires_in", validityPeriod);
@@ -57,7 +53,7 @@ class OAuthTokenResponseTest {
 
   private String entryWithMissingFields(String accessToken,
     long validityPeriod,
-    String missingField) throws JsonProcessingException {
+    String missingField) {
     var entry = JSON.createObjectNode();
     entry.put("access_token", accessToken);
     entry.put("expires_in", validityPeriod);

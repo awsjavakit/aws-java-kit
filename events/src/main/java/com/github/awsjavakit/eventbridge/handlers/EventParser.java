@@ -8,7 +8,7 @@ import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.attempt.Failure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;
+
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
 
@@ -53,8 +53,7 @@ public class EventParser<I> {
     return objectMapper.readValue(input, javaType);
   }
 
-  private AwsEventBridgeEvent<?> parseJson(Class<?>... nestedClasses)
-    throws JsonProcessingException {
+  private AwsEventBridgeEvent<?> parseJson(Class<?>... nestedClasses) {
     JavaType nestedJavaTypes = nestedGenericTypesToJavaType(nestedClasses);
     JavaType eventBridgeJavaType = constructAwsEventBridgeDataTypeWithAllNestedTypes(
       nestedJavaTypes);

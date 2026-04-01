@@ -12,10 +12,6 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -25,6 +21,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 class UnixPathTest {
 
@@ -205,7 +204,7 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldSerializesUnixPathAsString() throws JsonProcessingException {
+  void shouldSerializesUnixPathAsString()  {
     String unixPath = "/some/folder";
 
     ClassWithUnixPath classWithUnixPath = new ClassWithUnixPath();
@@ -220,8 +219,7 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldDeserializeValidUnixPath()
-    throws JsonProcessingException {
+  void shouldDeserializeValidUnixPath(){
     String expectedPath = "/some/folder";
     ObjectNode json = JSON.createObjectNode();
     json.put(ClassWithUnixPath.fieldName(), expectedPath);

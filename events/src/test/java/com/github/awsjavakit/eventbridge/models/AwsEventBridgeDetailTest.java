@@ -10,7 +10,6 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
 import tools.jackson.core.type.TypeReference;
 import com.github.awsjavakit.eventbridge.handlers.SampleEventDetail;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
@@ -24,7 +23,7 @@ class AwsEventBridgeDetailTest {
     Path.of("validEventBridgeDetailSample.json"));
 
   @Test
-  void objectMapperReturnsAwsEverBridgeDetailObjectForValidJson() throws JsonProcessingException {
+  void objectMapperReturnsAwsEverBridgeDetailObjectForValidJson()  {
     var detail = parseSampleEventDetail();
     assertThat(detail, is(not(nullValue())));
     var emptyFields = propertyNamesOfEmptyFields(RESPONSE_PAYLOAD_FIELD);
@@ -32,15 +31,14 @@ class AwsEventBridgeDetailTest {
   }
 
   @Test
-  void copyCreatesEqualObject() throws JsonProcessingException {
+  void copyCreatesEqualObject()  {
     var original = parseSampleEventDetail();
     var copy = original.copy().build();
     assertThat(copy, is(equalTo(original)));
     assertThat(copy, is(not(sameInstance(original))));
   }
 
-  private AwsEventBridgeDetail<SampleEventDetail> parseSampleEventDetail()
-    throws JsonProcessingException {
+  private AwsEventBridgeDetail<SampleEventDetail> parseSampleEventDetail() {
     TypeReference<AwsEventBridgeDetail<SampleEventDetail>> detailTypeReference = new TypeReference<>() {
     };
     return JSON.readValue(SAMPLE_EVENT_DETAIL, detailTypeReference);

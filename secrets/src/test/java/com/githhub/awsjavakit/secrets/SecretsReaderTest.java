@@ -10,7 +10,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+	
 import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -106,8 +106,7 @@ class SecretsReaderTest {
     return new SecretsReader(secretsManager, JSON);
   }
 
-  private GetSecretValueResponse provideGetSecretValueResult(InvocationOnMock invocation)
-    throws JsonProcessingException {
+  private GetSecretValueResponse provideGetSecretValueResult(InvocationOnMock invocation) {
     String providedSecretName = getSecretNameFromRequest(invocation);
 
     switch (providedSecretName) {
@@ -139,7 +138,7 @@ class SecretsReaderTest {
       .build();
   }
 
-  private String createSecretJsonObject() throws JsonProcessingException {
+  private String createSecretJsonObject()  {
     var secret = Map.of(SECRET_KEY, SECRET_VALUE);
     return JSON.writeValueAsString(secret);
   }

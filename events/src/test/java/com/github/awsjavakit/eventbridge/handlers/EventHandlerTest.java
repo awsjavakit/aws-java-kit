@@ -10,10 +10,6 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
-import tools.jackson.databind.JavaType;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.logutils.LogUtils;
 import com.github.awsjavakit.logutils.TestAppender;
@@ -26,6 +22,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 public class EventHandlerTest extends AbstractEventHandlerTest {
 
@@ -43,7 +42,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
   }
 
   @Test
-  public void handleRequestAcceptsValidEvent() throws JsonProcessingException {
+  public void handleRequestAcceptsValidEvent() {
     EventHandlerTestClass handler = new EventHandlerTestClass();
     final InputStream input = sampleInputStream(AWS_EVENT_BRIDGE_EVENT);
     handler.handleRequest(input, outputStream, context);
@@ -73,8 +72,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
   }
 
   @Test
-  public void handleRequestSerializesObjectsWithoutOmittingEmptyValuesWhenSuchMapperHasBeenSet()
-    throws JsonProcessingException {
+  public void handleRequestSerializesObjectsWithoutOmittingEmptyValuesWhenSuchMapperHasBeenSet() {
     final InputStream input = sampleInputStream(AWS_EVENT_BRIDGE_EVENT);
     EventHandlerTestClass handler = new EventHandlerTestClass(JSON);
     ObjectNode objectNode = sendEventAndCollectOutputAsJsonObject(input, handler);
@@ -82,8 +80,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
   }
 
   private ObjectNode sendEventAndCollectOutputAsJsonObject(InputStream input,
-    EventHandlerTestClass handler)
-    throws JsonProcessingException {
+    EventHandlerTestClass handler) {
     handler.handleRequest(input, outputStream, context);
     String output = outputStream.toString();
     assertThat(output, is(not(emptyString())));
@@ -94,8 +91,7 @@ public class EventHandlerTest extends AbstractEventHandlerTest {
     return IoUtils.stringToStream(filename);
   }
 
-  private AwsEventBridgeEvent<SampleEventDetail> parseEventFromSampleEventString()
-    throws JsonProcessingException {
+  private AwsEventBridgeEvent<SampleEventDetail> parseEventFromSampleEventString(){
     JavaType javatype = JSON.getTypeFactory()
       .constructParametricType(AwsEventBridgeEvent.class, SampleEventDetail.class);
     return JSON.readValue(AWS_EVENT_BRIDGE_EVENT, javatype);

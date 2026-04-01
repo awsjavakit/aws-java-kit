@@ -13,7 +13,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+	
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import java.net.MalformedURLException;
@@ -271,7 +271,7 @@ class DoesNotHaveEmptyValuesTest {
   }
 
   @Test
-  void shouldSucceedWhenInputContainsANonEmptyTextNode() throws JsonProcessingException {
+  void shouldSucceedWhenInputContainsANonEmptyTextNode()  {
     var sampleObject = new WithBaseTypes(STRING_FIELD,
       1,
       List.of("someString"),
@@ -286,7 +286,7 @@ class DoesNotHaveEmptyValuesTest {
     return node;
   }
 
-  private JsonNode randomTextNode() throws JsonProcessingException {
+  private JsonNode randomTextNode() {
     var someStringValue = String.format("\"%s\"", "someString");
     return JSON.readTree(someStringValue);
   }
