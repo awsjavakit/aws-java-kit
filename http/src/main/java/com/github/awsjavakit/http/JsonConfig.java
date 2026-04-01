@@ -2,16 +2,12 @@ package com.github.awsjavakit.http;
 
 import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 final class JsonConfig {
 
   static final ObjectMapper JSON = JsonMapper.builder()
-    .addModule(new Jdk8Module())
-    .addModule(new JavaTimeModule())
     .build();
 
   private JsonConfig() {

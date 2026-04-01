@@ -2,8 +2,8 @@ package com.github.awsjavakit.testingutils;
 
 import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.net.URI;
 import java.time.Instant;

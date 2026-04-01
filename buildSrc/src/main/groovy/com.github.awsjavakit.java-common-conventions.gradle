@@ -8,11 +8,10 @@ plugins {
 
 
 group 'io.github.awsjavakit'
-version = '0.31.0'
+version = '0.32.0'
 
 repositories {
     mavenCentral()
-    maven { url = "https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/release" }
 }
 
 java {

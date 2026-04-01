@@ -3,13 +3,11 @@ package com.github.awsjavakit.testingutils;
 import static com.github.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.nonNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.ApiGatewayEvent;
 import com.github.awsjavakit.apigateway.HttpMethod;
 import com.github.awsjavakit.misc.paths.UnixPath;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
@@ -91,12 +89,8 @@ public final class ApiGatewayRequestBuilder {
    * @return an InputStream containing a serialized ApiGateway event;
    */
   public InputStream build() {
-    try {
-      var eventString = objectMapper.writeValueAsString(event);
-      return new ByteArrayInputStream(eventString.getBytes());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    var eventString = objectMapper.writeValueAsString(event);
+    return new ByteArrayInputStream(eventString.getBytes());
   }
 
   public ApiGatewayRequestBuilder withMethod(HttpMethod httpMethod) {
@@ -104,7 +98,7 @@ public final class ApiGatewayRequestBuilder {
     return this;
   }
 
-  private <I> ApiGatewayRequestBuilder addBodyToEvent(I body) throws JsonProcessingException {
+  private <I> ApiGatewayRequestBuilder addBodyToEvent(I body) {
     if (body instanceof String string) {
       event.setBody(string);
     } else {

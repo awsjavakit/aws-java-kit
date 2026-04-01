@@ -10,10 +10,10 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.logutils.LogUtils;
 import com.github.awsjavakit.logutils.TestAppender;

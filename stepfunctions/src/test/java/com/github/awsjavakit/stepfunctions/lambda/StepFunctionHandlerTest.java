@@ -1,6 +1,6 @@
 package com.github.awsjavakit.stepfunctions.lambda;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES;
+import static tools.jackson.databind.DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInteger;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.awsjavakit.attempt.Try.attempt;
@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonInclude.Value;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -17,8 +17,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.github.awsjavakit.misc.SingletonCollector;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.io.ByteArrayOutputStream;
@@ -143,13 +143,13 @@ class StepFunctionHandlerTest {
     var event = createEvent(input, mapper);
     var exception = assertThrows(RuntimeException.class,
       () -> handler.handleRequest(event, outputStream, EMPTY_CONTEXT));
-    assertThat(exception.getCause().getMessage()).contains(MISSING_FIELD_NAME);
+    assertThat(exception.getMessage()).contains(MISSING_FIELD_NAME);
   }
 
   private static JsonMapper mapperFailingOnMissingRequiredProperties() {
     return JsonMapper.builder()
       .enable(FAIL_ON_MISSING_CREATOR_PROPERTIES)
-      .serializationInclusion(Include.NON_ABSENT)
+      .changeDefaultPropertyInclusion(ignored-> Value.ALL_NON_ABSENT)
       .build();
   }
 

@@ -10,8 +10,8 @@ import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+import tools.jackson.core.type.TypeReference;
 import com.github.awsjavakit.eventbridge.handlers.SampleEventDetail;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.nio.file.Path;

@@ -5,8 +5,8 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomJson;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+import tools.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;

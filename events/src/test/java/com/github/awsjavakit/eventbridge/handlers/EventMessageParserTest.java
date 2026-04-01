@@ -6,9 +6,8 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import java.util.Objects;
 import org.junit.jupiter.api.Test;
@@ -24,11 +23,11 @@ class EventMessageParserTest {
     EventParser<SampleEventDetail> eventParser = new EventParser<>(invalidJson, JSON);
     Executable action = () -> eventParser.parse(SampleEventDetail.class);
     RuntimeException exception = assertThrows(RuntimeException.class, action);
-    assertThat(exception.getCause(), is(instanceOf(JsonParseException.class)));
+    assertThat(exception.getCause(), is(instanceOf(StreamReadException.class)));
   }
 
   @Test
-  void parseParsesCorrectlyNestedGenericTypes() throws JsonProcessingException {
+  void parseParsesCorrectlyNestedGenericTypes()  {
     OuterClass<MiddleClass<InnerClass<String>>> expectedDetail = createdNestedGenericsObject();
     AwsEventBridgeEvent<OuterClass<MiddleClass<InnerClass<String>>>> event = createEventWithDetail(
       expectedDetail);

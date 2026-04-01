@@ -4,8 +4,8 @@ import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomEleme
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomInstant;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeDetail;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.misc.JacocoGenerated;

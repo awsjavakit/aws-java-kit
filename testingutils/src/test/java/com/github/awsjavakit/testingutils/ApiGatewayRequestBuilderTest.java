@@ -3,8 +3,8 @@ package com.github.awsjavakit.testingutils;
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+	
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.apigateway.ApiGatewayEvent;
 import com.github.awsjavakit.apigateway.HttpMethod;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
@@ -24,7 +24,7 @@ class ApiGatewayRequestBuilderTest {
   private static final ObjectMapper JSON = new ObjectMapper();
 
   @Test
-  void shouldGenerateValidEvent() throws JsonProcessingException {
+  void shouldGenerateValidEvent() {
     var sampleEvent = IoUtils.stringFromResources(Path.of("apigateway",
       "aws-proxy-event.json"));
     var deserialized = JSON.readValue(sampleEvent, ApiGatewayEvent.class);
@@ -51,19 +51,19 @@ class ApiGatewayRequestBuilderTest {
   }
 
   @Test
-  void shouldWriteBodyAsIsWhenItIsString() throws IOException {
+  void shouldWriteBodyAsIsWhenItIsString() {
     var expectedBodyContent = randomString();
     var event = ApiGatewayRequestBuilder.create(JSON)
       .withBody(expectedBodyContent)
       .build();
     var json = JSON.readTree(event);
 
-    assertThat(json.get(BODY_FIELD).isTextual()).isTrue();
-    assertThat(json.get(BODY_FIELD).asText()).isEqualTo(expectedBodyContent);
+    assertThat(json.get(BODY_FIELD).isString()).isTrue();
+    assertThat(json.get(BODY_FIELD).asString()).isEqualTo(expectedBodyContent);
   }
 
   @Test
-  void shouldWriteBodyAsValidJsonStringWhenBodyIsAnObject() throws IOException {
+  void shouldWriteBodyAsValidJsonStringWhenBodyIsAnObject() {
     var expectedBodyContent = new SampleInput(randomString(), randomString());
     var event = ApiGatewayRequestBuilder.create(JSON)
       .withBody(expectedBodyContent)

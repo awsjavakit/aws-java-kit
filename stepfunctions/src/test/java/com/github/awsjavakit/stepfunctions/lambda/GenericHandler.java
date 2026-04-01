@@ -1,7 +1,7 @@
 package com.github.awsjavakit.stepfunctions.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public class GenericHandler<T> extends StepFunctionHandler<T, T> {
 

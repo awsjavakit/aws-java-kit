@@ -3,7 +3,7 @@ package com.github.awsjavakit.eventbridge.handlers;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 
 public abstract class AbstractEventHandlerTest {
 

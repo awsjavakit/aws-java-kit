@@ -5,16 +5,15 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsEqual.equalTo;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.databind.json.JsonMapper.Builder;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.annotation.JsonInclude.Value;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;
+import tools.jackson.core.JsonPointer;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.json.JsonMapper.Builder;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeDetail;
 import com.github.awsjavakit.eventbridge.models.AwsEventBridgeEvent;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
@@ -32,10 +31,10 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
     Path.of("validAwsEventBridgeEvent.json"));
   private static final ObjectMapper JSON = jsonBuilder().build();
   private static final ObjectMapper JSON_INCLUDING_EMPTY_VALUES = jsonBuilder()
-    .serializationInclusion(Include.ALWAYS)
+    .changeDefaultPropertyInclusion(ignored -> Value.ALL_ALWAYS)
     .build();
   private static final ObjectMapper JSON_OMITTING_EMPTY_VALUES = jsonBuilder()
-    .serializationInclusion(Include.NON_EMPTY)
+    .changeDefaultPropertyInclusion(ignored -> Value.ALL_NON_EMPTY)
     .build();
   private static final JsonPointer RESPONSE_PAYLOAD_POINTER = JsonPointer.compile(
     "/detail/responsePayload");
@@ -85,9 +84,7 @@ public class DestinationsEventBridgeEventHandlerTest extends AbstractEventHandle
   }
 
   private static Builder jsonBuilder() {
-    return JsonMapper.builder()
-      .addModule(new JavaTimeModule())
-      .addModule(new Jdk8Module());
+    return JsonMapper.builder();
   }
 
   private SampleEventDetail extractInputFromValidAwsEventBridgeEvent(String awsEventBridgeEvent)

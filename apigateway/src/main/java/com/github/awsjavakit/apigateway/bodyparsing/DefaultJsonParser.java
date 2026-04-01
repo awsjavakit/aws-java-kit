@@ -3,7 +3,7 @@ package com.github.awsjavakit.apigateway.bodyparsing;
 import static com.github.awsjavakit.attempt.Try.attempt;
 import static java.util.Objects.nonNull;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public class DefaultJsonParser<I> implements BodyParser<I> {
 

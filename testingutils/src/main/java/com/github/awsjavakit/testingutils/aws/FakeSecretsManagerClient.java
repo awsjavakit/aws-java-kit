@@ -6,10 +6,9 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.attempt.Try.attempt;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import java.util.Map;
 import java.util.Optional;
@@ -102,11 +101,10 @@ public class FakeSecretsManagerClient implements SecretsManagerClient {
   }
 
   private FakeSecretsManagerClient putSecretAsJsonObject(
-    PutSecretValueRequest putSecretValueRequest)
-    throws JsonProcessingException {
+    PutSecretValueRequest putSecretValueRequest) {
     final var secretName = putSecretValueRequest.secretId();
     var objectNode = (ObjectNode) json.readTree(putSecretValueRequest.secretString());
-    var keys = objectNode.fieldNames();
+    var keys = objectNode.propertyNames().iterator();
     while (keys.hasNext()) {
       var key = keys.next();
       putSecret(secretName, key, asString(objectNode.get(key)));

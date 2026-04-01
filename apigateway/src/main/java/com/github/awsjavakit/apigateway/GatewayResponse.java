@@ -4,8 +4,8 @@ import static com.github.awsjavakit.attempt.Try.attempt;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import java.util.Objects;
@@ -47,7 +47,7 @@ public class GatewayResponse {
     var jsonString = outputStream.toString();
     try {
       return objectMapper.readValue(jsonString, GatewayResponse.class);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
 

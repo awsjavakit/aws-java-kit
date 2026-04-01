@@ -3,8 +3,8 @@ package com.github.awsjavakit.apigateway;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import software.amazon.awssdk.thirdparty.jackson.core.JsonProcessingException;	
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.misc.ioutils.IoUtils;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;

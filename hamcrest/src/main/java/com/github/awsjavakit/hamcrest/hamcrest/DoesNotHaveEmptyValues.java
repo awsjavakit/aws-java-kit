@@ -1,7 +1,7 @@
 package com.github.awsjavakit.hamcrest.hamcrest;
 
 import static java.util.Objects.isNull;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import java.net.URI;
 import java.net.URL;
 import java.time.Clock;
@@ -128,7 +128,7 @@ public class DoesNotHaveEmptyValues<T> extends BaseMatcher<T> {
   }
 
   private static boolean isEmptyContainer(JsonNode node) {
-    return node.isContainerNode() && node.isEmpty();
+    return node.isContainer() && node.isEmpty();
   }
 
   @SuppressWarnings("PMD.LooseCoupling")

@@ -2,21 +2,20 @@ package com.github.awsjavakit.testingutils.aws;
 
 import static com.github.awsjavakit.testingutils.RandomDataGenerator.randomString;
 import static com.github.awsjavakit.attempt.Try.attempt;
-import static com.spotify.hamcrest.jackson.JsonMatchers.jsonObject;
-import static com.spotify.hamcrest.jackson.JsonMatchers.jsonText;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 import com.githhub.awsjavakit.secrets.SecretsReader;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.PutSecretValueRequest;
+import tools.jackson.databind.node.StringNode;
 
 class FakeSecretsManagerClientTest {
 
@@ -72,8 +71,7 @@ class FakeSecretsManagerClientTest {
   }
 
   @Test
-  void shouldReplaceSecretWhenAddingAJsonSecretInThePlainTextSecret()
-    throws JsonProcessingException {
+  void shouldReplaceSecretWhenAddingAJsonSecretInThePlainTextSecret() {
     var secretName = randomString();
     var secretKey = randomString();
     var secretValue = randomString();
@@ -83,7 +81,8 @@ class FakeSecretsManagerClientTest {
     secretsClient.putSecretValue(createRequest(secretName, secretKey, secretValue));
     var actualValue = fetchSecret(secretName, secretsClient);
     var node = (ObjectNode) JSON.readTree(actualValue);
-    assertThat(node, is(jsonObject().where(secretKey, is(jsonText(secretValue)))));
+    assertThat(node.get(secretKey), instanceOf(StringNode.class));
+    assertThat(node.get(secretKey).stringValue(),is(equalTo(secretValue)) );
 
   }
 

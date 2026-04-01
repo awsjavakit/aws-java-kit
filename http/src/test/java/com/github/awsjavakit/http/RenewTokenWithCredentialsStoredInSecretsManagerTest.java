@@ -11,7 +11,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.github.awsjavakit.http.token.OAuthTokenResponse;
 import com.github.awsjavakit.misc.paths.UriWrapper;
 import com.github.awsjavakit.testingutils.aws.FakeSecretsManagerClient;
