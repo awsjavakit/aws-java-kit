@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.StringUtils;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -206,6 +207,12 @@ public final class UnixPath {
   }
 
   public Path toPath() {
+    if(isEmptyPath()){
+      return Path.of(EMPTY_STRING);
+    }
+    if(isRoot()){
+      return Path.of(File.separator);
+    }
     return Path.of(this.path.getFirst(), removeFirstElement());
   }
 

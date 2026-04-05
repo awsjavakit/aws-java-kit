@@ -42,9 +42,12 @@ class UnixPathTest {
     var absolutePathExpectedOutput = Path.of(FILE_SEPARATOR, "a", "b", "c");
     var relativePath = absolutePath.removeRoot();
     var relativePathExpectedOutput = Path.of(relativePath.toString());
+    var smallPath =  UnixPath.fromString("a");
+    var smallPathExpectedOutput = Path.of("a");
     return Stream.of(
       Arguments.of(absolutePath, absolutePathExpectedOutput),
-      Arguments.of(relativePath, relativePathExpectedOutput)
+      Arguments.of(relativePath, relativePathExpectedOutput),
+      Arguments.of(smallPath, smallPathExpectedOutput)
     );
   }
 
@@ -345,8 +348,20 @@ class UnixPathTest {
   @MethodSource("conversionToPathInputProvider")
   void shouldReturnJavaNioPath(UnixPath inputPath, Path expectedPath) {
     assertThat(inputPath.toPath(), is(equalTo(expectedPath)));
-
   }
+
+  @Test
+  void shouldReturnEmptyPathWhenInputPathIsEmpty() {
+    assertThat(UnixPath.EMPTY_PATH.toPath(),is(equalTo(Path.of(""))));
+  }
+
+  @Test
+  void shouldReturnRootPathWhenInputPathIsRoot() {
+    assertThat(UnixPath.ROOT_PATH.toPath(),is(equalTo(Path.of(File.separator))));
+  }
+
+
+
 
   private static final class ClassWithUnixPath {
 
