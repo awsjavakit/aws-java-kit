@@ -12,13 +12,17 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
@@ -30,6 +34,17 @@ class UnixPathTest {
   public static final String EMPTY_STRING = "";
   public static final String NULL_STRING = null;
   private static final ObjectMapper JSON = new ObjectMapper();
+
+  public static Stream<Arguments> conversionToPathInputProvider() {
+    var absolutePath = UnixPath.fromString("/a/b/c");
+    var absolutePathExpectedOutput = Path.of("/a/b/c/");
+    var relativePath = absolutePath.removeRoot();
+    var relativePathExpectedOutput = Path.of(relativePath.toString());
+    return Stream.of(
+      Arguments.of(absolutePath, absolutePathExpectedOutput),
+      Arguments.of(relativePath, relativePathExpectedOutput)
+    );
+  }
 
   @Test
   void shouldReturnPathWithAllPathElementsInOrderWhenInputArrayIsNotEmpty() {
@@ -322,6 +337,14 @@ class UnixPathTest {
   void shouldThrowExceptionWhenFromIndexIsLargerThanToIndex() {
     var path = UnixPath.fromString("/a/b/c");
     assertThrows(IllegalArgumentException.class, () -> path.subPath(2, 1));
+  }
+
+
+  @ParameterizedTest
+  @MethodSource("conversionToPathInputProvider")
+  void shouldReturnJavaNioPath(UnixPath inputPath, Path expectedPath){
+    assertThat(inputPath.toPath(),is(equalTo(expectedPath)));
+
   }
 
   private static final class ClassWithUnixPath {

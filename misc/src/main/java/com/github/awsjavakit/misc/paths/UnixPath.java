@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.awsjavakit.misc.JacocoGenerated;
 import com.github.awsjavakit.misc.StringUtils;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -202,5 +203,13 @@ public final class UnixPath {
 
   private String avoidWritingRootPathTwice() {
     return ROOT + formatPathAsString(path.subList(1, path.size()));
+  }
+
+  public Path toPath() {
+    return Path.of(this.path.getFirst(), removeFirstElement());
+  }
+
+  private String[] removeFirstElement() {
+    return this.path.subList(1, path.size()).toArray(String[]::new);
   }
 }
