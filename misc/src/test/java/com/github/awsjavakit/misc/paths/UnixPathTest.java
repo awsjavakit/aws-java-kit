@@ -12,6 +12,7 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,11 +34,12 @@ class UnixPathTest {
 
   public static final String EMPTY_STRING = "";
   public static final String NULL_STRING = null;
+  public static final String FILE_SEPARATOR = File.separator;
   private static final ObjectMapper JSON = new ObjectMapper();
 
   public static Stream<Arguments> conversionToPathInputProvider() {
     var absolutePath = UnixPath.fromString("/a/b/c");
-    var absolutePathExpectedOutput = Path.of("/a/b/c/");
+    var absolutePathExpectedOutput = Path.of(FILE_SEPARATOR, "a", "b", "c");
     var relativePath = absolutePath.removeRoot();
     var relativePathExpectedOutput = Path.of(relativePath.toString());
     return Stream.of(
@@ -219,7 +221,7 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldSerializesUnixPathAsString()  {
+  void shouldSerializesUnixPathAsString() {
     String unixPath = "/some/folder";
 
     ClassWithUnixPath classWithUnixPath = new ClassWithUnixPath();
@@ -234,7 +236,7 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldDeserializeValidUnixPath(){
+  void shouldDeserializeValidUnixPath() {
     String expectedPath = "/some/folder";
     ObjectNode json = JSON.createObjectNode();
     json.put(ClassWithUnixPath.fieldName(), expectedPath);
@@ -339,11 +341,10 @@ class UnixPathTest {
     assertThrows(IllegalArgumentException.class, () -> path.subPath(2, 1));
   }
 
-
   @ParameterizedTest
   @MethodSource("conversionToPathInputProvider")
-  void shouldReturnJavaNioPath(UnixPath inputPath, Path expectedPath){
-    assertThat(inputPath.toPath(),is(equalTo(expectedPath)));
+  void shouldReturnJavaNioPath(UnixPath inputPath, Path expectedPath) {
+    assertThat(inputPath.toPath(), is(equalTo(expectedPath)));
 
   }
 
