@@ -12,13 +12,18 @@ import static org.hamcrest.text.IsEmptyString.emptyString;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.io.File;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import tools.jackson.databind.JsonNode;
@@ -29,7 +34,20 @@ class UnixPathTest {
 
   public static final String EMPTY_STRING = "";
   public static final String NULL_STRING = null;
+  public static final String FILE_SEPARATOR = File.separator;
   private static final ObjectMapper JSON = new ObjectMapper();
+
+  public static Stream<Arguments> conversionToPathInputProvider() {
+    var absolutePath = UnixPath.fromString("/a/b/c");
+    var absolutePathExpectedOutput = Path.of(FILE_SEPARATOR, "a", "b", "c");
+    var relativePath = absolutePath.removeRoot();
+    var relativePathExpectedOutput = Path.of(relativePath.toString());
+    var smallPath = UnixPath.fromString("a");
+    var smallPathExpectedOutput = Path.of("a");
+    return Stream.of(Arguments.of(absolutePath, absolutePathExpectedOutput),
+      Arguments.of(relativePath, relativePathExpectedOutput),
+      Arguments.of(smallPath, smallPathExpectedOutput));
+  }
 
   @Test
   void shouldReturnPathWithAllPathElementsInOrderWhenInputArrayIsNotEmpty() {
@@ -106,8 +124,8 @@ class UnixPathTest {
     String parentPath = "first/second";
     String childPath = "third";
     String grandChildPath = "fourth/fifth";
-    UnixPath actualPath = UnixPath.fromString(parentPath).addChild(childPath)
-      .addChild(grandChildPath);
+    UnixPath actualPath = UnixPath.fromString(parentPath).addChild(childPath).addChild(
+      grandChildPath);
     String expectedPath = "first/second/third/fourth/fifth";
     assertThat(actualPath.toString(), is(equalTo(expectedPath)));
   }
@@ -154,7 +172,11 @@ class UnixPathTest {
 
   @Test
   void shouldReturnPathIgnoringEmptyStrings() {
-    UnixPath left = UnixPath.of("first", EMPTY_STRING, EMPTY_STRING, "second", EMPTY_STRING,
+    UnixPath left = UnixPath.of("first",
+      EMPTY_STRING,
+      EMPTY_STRING,
+      "second",
+      EMPTY_STRING,
       "third");
     UnixPath right = UnixPath.of("first", "second", "third");
     assertThat(left, is(equalTo(right)));
@@ -184,10 +206,8 @@ class UnixPathTest {
 
   @ParameterizedTest(name = "should return {1} when input is {0}")
   @DisplayName("should return the last element of the path")
-  @CsvSource({
-    "/some/existing/folder/, folder",
-    "/some/existing/folder/existingFile.ending, existingFile.ending"
-  })
+  @CsvSource({"/some/existing/folder/, folder",
+    "/some/existing/folder/existingFile.ending, existingFile.ending"})
   void shouldReturnTheLastElementOfaUnixPath(String inputPath, String expectedFilename) {
     UnixPath unixPath = UnixPath.of(inputPath);
     assertThat(unixPath.getLastPathElement(), is(equalTo(expectedFilename)));
@@ -204,7 +224,7 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldSerializesUnixPathAsString()  {
+  void shouldSerializesUnixPathAsString() {
     String unixPath = "/some/folder";
 
     ClassWithUnixPath classWithUnixPath = new ClassWithUnixPath();
@@ -219,13 +239,13 @@ class UnixPathTest {
   }
 
   @Test
-  void shouldDeserializeValidUnixPath(){
+  void shouldDeserializeValidUnixPath() {
     String expectedPath = "/some/folder";
     ObjectNode json = JSON.createObjectNode();
     json.put(ClassWithUnixPath.fieldName(), expectedPath);
     String jsonString = JSON.writeValueAsString(json);
-    ClassWithUnixPath objectContainingUnixPath =
-      JSON.readValue(jsonString, ClassWithUnixPath.class);
+    ClassWithUnixPath objectContainingUnixPath = JSON.readValue(jsonString,
+      ClassWithUnixPath.class);
 
     assertThat(objectContainingUnixPath.getField().toString(), is(equalTo(expectedPath)));
   }
@@ -248,7 +268,8 @@ class UnixPathTest {
   @Test
   void shouldRemoveRootFromAbsolutePath() {
     String expectedPathString = "some/path";
-    String actualPathString = UnixPath.fromString(UnixPath.ROOT + expectedPathString).removeRoot()
+    String actualPathString = UnixPath.fromString(UnixPath.ROOT + expectedPathString)
+      .removeRoot()
       .toString();
     assertThat(actualPathString, is(equalTo(expectedPathString)));
   }
@@ -322,6 +343,22 @@ class UnixPathTest {
   void shouldThrowExceptionWhenFromIndexIsLargerThanToIndex() {
     var path = UnixPath.fromString("/a/b/c");
     assertThrows(IllegalArgumentException.class, () -> path.subPath(2, 1));
+  }
+
+  @ParameterizedTest
+  @MethodSource("conversionToPathInputProvider")
+  void shouldReturnJavaNioPath(UnixPath inputPath, Path expectedPath) {
+    assertThat(inputPath.toPath(), is(equalTo(expectedPath)));
+  }
+
+  @Test
+  void shouldReturnEmptyPathWhenInputPathIsEmpty() {
+    assertThat(UnixPath.EMPTY_PATH.toPath(), is(equalTo(Path.of(""))));
+  }
+
+  @Test
+  void shouldReturnRootPathWhenInputPathIsRoot() {
+    assertThat(UnixPath.ROOT_PATH.toPath(), is(equalTo(Path.of(File.separator))));
   }
 
   private static final class ClassWithUnixPath {
