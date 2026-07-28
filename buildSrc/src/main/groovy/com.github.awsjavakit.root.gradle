@@ -2,6 +2,7 @@ plugins {
     // Apply the common convention plugin for shared build configuration between library and application projects.
     id 'com.github.awsjavakit.java-common-conventions'
     id 'io.github.gradle-nexus.publish-plugin'
+    id "org.gradle.toolchains.foojay-resolver-convention" version "1.0.0" // fix 'Class org.gradle.jvm.toolchain.JvmVendorSpec does not have member field 'org.gradle.jvm.toolchain.JvmVendorSpec IBM_SEMERU' error
 }
 
 wrapper {
