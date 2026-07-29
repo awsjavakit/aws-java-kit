@@ -18,6 +18,8 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeNameForSends;
+import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
@@ -40,7 +42,8 @@ class FakeSqsClientTest {
     client.sendMessage(writeRequest);
 
     var receiveMessageRequest = createReceiveMessageRequest(writeRequest);
-    assertThrows(UnsupportedOperationException.class, () -> client.receiveMessage(receiveMessageRequest));
+    assertThrows(UnsupportedOperationException.class,
+      () -> client.receiveMessage(receiveMessageRequest));
 
     assertThat(client.getSendMessageRequests()).containsExactly(writeRequest);
 
@@ -85,6 +88,46 @@ class FakeSqsClientTest {
   }
 
   @Test
+  void shouldRetainSystemMessageAttributes() {
+    var sendRequest = validMessage();
+    client.sendMessage(sendRequest);
+    var event = client.createEvent();
+
+    var messageAsInputToHandler =
+      event.getRecords().stream().collect(SingletonCollector.collect());
+    assertThat(messageAsInputToHandler.getBody()).isEqualTo(sendRequest.messageBody());
+    var actualAttributes = messageAsInputToHandler.getMessageAttributes();
+    var expectedEntry = sendRequest
+      .messageSystemAttributes().entrySet().stream()
+      .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
+      .collect(SingletonCollector.collect());
+
+    var actualValue = actualAttributes.get(expectedEntry.getKey()).getStringValue();
+    assertThat(actualValue).isEqualTo(expectedEntry.getValue());
+  }
+
+
+  @Test
+  void shouldRetainAwsTraceHeaderMessageAttribute() {
+    var traceHeader = randomString();
+    var sendRequest = validMessage(traceHeader);
+    client.sendMessage(sendRequest);
+    var event = client.createEvent();
+
+    var messageAsInputToHandler =
+      event.getRecords().stream().collect(SingletonCollector.collect());
+    assertThat(messageAsInputToHandler.getBody()).isEqualTo(sendRequest.messageBody());
+    var actualAttributes = messageAsInputToHandler.getMessageAttributes();
+    var expectedEntry = sendRequest
+      .messageSystemAttributes().entrySet().stream()
+      .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
+      .collect(SingletonCollector.collect());
+
+    var actualValue = actualAttributes.get(expectedEntry.getKey()).getStringValue();
+    assertThat(actualValue).isEqualTo(expectedEntry.getValue());
+  }
+
+  @Test
   void shouldReturnSomeServiceName() {
     assertThat(client.serviceName()).isNotNull();
   }
@@ -115,16 +158,26 @@ class FakeSqsClientTest {
       expectedAttribute.getValue().stringValue());
   }
 
-  private static SendMessageRequest validMessage() {
+  private static SendMessageRequest validMessage(String traceHeader) {
     return SendMessageRequest.builder()
       .queueUrl(randomUri().toString())
       .messageBody(randomString())
       .messageAttributes(randomMessageAttributes())
+      .messageSystemAttributes(constructTraceHeader(traceHeader))
       .build();
+  }
+
+  private static SendMessageRequest validMessage() {
+    return validMessage(randomString());
   }
 
   private static Map<String, MessageAttributeValue> randomMessageAttributes() {
     return Map.of(randomString(), randomMessageAttributeValue());
+  }
+
+  private static Map<MessageSystemAttributeNameForSends, MessageSystemAttributeValue> constructTraceHeader(String traceHeader) {
+    return Map.of(MessageSystemAttributeNameForSends.AWS_TRACE_HEADER,
+      MessageSystemAttributeValue.builder().stringValue(traceHeader).build());
   }
 
   private static MessageAttributeValue randomMessageAttributeValue() {
