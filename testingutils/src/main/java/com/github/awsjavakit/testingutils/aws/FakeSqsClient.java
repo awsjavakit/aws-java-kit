@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
@@ -83,21 +84,40 @@ public class FakeSqsClient implements SqsClient {
   private SQSMessage convertSendRequestToSqsMessage(SendMessageRequest request) {
     var message = new SQSEvent.SQSMessage();
     message.setBody(request.messageBody());
-    message.setMessageAttributes(convertMessageAttributes(request.messageAttributes()));
+    message.setMessageAttributes(convertMessageAttributes(request));
     return message;
   }
 
   private Map<String, MessageAttribute> convertMessageAttributes(
-    Map<String, MessageAttributeValue> messageAttributeValues) {
-    return messageAttributeValues.entrySet().stream()
+    SendMessageRequest request) {
+    var messageAttributes= request.messageAttributes()
+      .entrySet().stream()
       .map(entry -> Map.entry(entry.getKey(), attributeValueToAttribute(entry.getValue())))
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
+    var messageSystemAttributes = request.messageSystemAttributes()
+      .entrySet().stream()
+      .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
+      .map(entry->Map.entry(entry.getKey(),stringToAttribute(entry.getValue())))
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+    var result= Stream.of(messageAttributes.entrySet().stream(), messageSystemAttributes.entrySet().stream())
+      .flatMap(s -> s)
+      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    return result;
+  }
+
+  private MessageAttribute stringToAttribute(String value) {
+    var attribute = new MessageAttribute();
+    attribute.setStringValue(value);
+    attribute.setDataType("string");
+    return attribute;
   }
 
   private MessageAttribute attributeValueToAttribute(MessageAttributeValue value) {
     var attribute = new MessageAttribute();
     attribute.setStringValue(value.stringValue());
+    attribute.setDataType("string");
     return attribute;
   }
 
@@ -106,6 +126,7 @@ public class FakeSqsClient implements SqsClient {
     return SendMessageRequest.builder()
       .messageBody(entry.messageBody())
       .messageAttributes(entry.messageAttributes())
+      .messageSystemAttributes(entry.messageSystemAttributes())
       .queueUrl(sendMessageBatchRequest.queueUrl())
       .build();
   }
