@@ -95,20 +95,19 @@ class FakeSqsClientTest {
 
     var messageAsInputToHandler =
       event.getRecords().stream().collect(SingletonCollector.collect());
-    assertThat(messageAsInputToHandler.getBody()).isEqualTo(sendRequest.messageBody());
-    var actualAttributes = messageAsInputToHandler.getMessageAttributes();
+    var actualAttributes = messageAsInputToHandler.getAttributes();
     var expectedEntry = sendRequest
       .messageSystemAttributes().entrySet().stream()
       .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
       .collect(SingletonCollector.collect());
 
-    var actualValue = actualAttributes.get(expectedEntry.getKey()).getStringValue();
+    var actualValue = actualAttributes.get(expectedEntry.getKey());
     assertThat(actualValue).isEqualTo(expectedEntry.getValue());
   }
 
 
   @Test
-  void shouldRetainAwsTraceHeaderMessageAttribute() {
+  void shouldRetainAwsTraceHeaderAttribute() {
     var traceHeader = randomString();
     var sendRequest = validMessage(traceHeader);
     client.sendMessage(sendRequest);
@@ -117,13 +116,13 @@ class FakeSqsClientTest {
     var messageAsInputToHandler =
       event.getRecords().stream().collect(SingletonCollector.collect());
     assertThat(messageAsInputToHandler.getBody()).isEqualTo(sendRequest.messageBody());
-    var actualAttributes = messageAsInputToHandler.getMessageAttributes();
+    var actualAttributes = messageAsInputToHandler.getAttributes();
     var expectedEntry = sendRequest
       .messageSystemAttributes().entrySet().stream()
       .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
       .collect(SingletonCollector.collect());
 
-    var actualValue = actualAttributes.get(expectedEntry.getKey()).getStringValue();
+    var actualValue = actualAttributes.get(expectedEntry.getKey());
     assertThat(actualValue).isEqualTo(expectedEntry.getValue());
   }
 

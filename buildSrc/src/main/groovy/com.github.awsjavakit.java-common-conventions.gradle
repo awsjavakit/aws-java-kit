@@ -8,7 +8,7 @@ plugins {
 
 
 group 'io.github.awsjavakit'
-version = '0.32.3'
+version = '0.33.0'
 
 repositories {
     mavenCentral()
