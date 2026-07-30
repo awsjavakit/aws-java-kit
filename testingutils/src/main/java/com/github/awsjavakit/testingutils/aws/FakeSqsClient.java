@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
@@ -85,33 +84,26 @@ public class FakeSqsClient implements SqsClient {
     var message = new SQSEvent.SQSMessage();
     message.setBody(request.messageBody());
     message.setMessageAttributes(convertMessageAttributes(request));
+    message.setAttributes(createAttributes(request));
     return message;
   }
 
   private Map<String, MessageAttribute> convertMessageAttributes(
     SendMessageRequest request) {
-    var messageAttributes= request.messageAttributes()
+    return request.messageAttributes()
       .entrySet().stream()
       .map(entry -> Map.entry(entry.getKey(), attributeValueToAttribute(entry.getValue())))
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
 
-    var messageSystemAttributes = request.messageSystemAttributes()
+  private  Map<String, String> createAttributes(SendMessageRequest request) {
+    return request.messageSystemAttributes()
       .entrySet().stream()
       .map(entry -> Map.entry(entry.getKey().toString(), entry.getValue().stringValue()))
-      .map(entry->Map.entry(entry.getKey(),stringToAttribute(entry.getValue())))
-      .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
-
-    return Stream.of(messageAttributes.entrySet().stream(), messageSystemAttributes.entrySet().stream())
-      .flatMap(s -> s)
+      .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
       .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  private MessageAttribute stringToAttribute(String value) {
-    var attribute = new MessageAttribute();
-    attribute.setStringValue(value);
-    attribute.setDataType("string");
-    return attribute;
-  }
 
   private MessageAttribute attributeValueToAttribute(MessageAttributeValue value) {
     var attribute = new MessageAttribute();
